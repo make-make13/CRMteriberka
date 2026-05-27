@@ -26,6 +26,28 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 02:51 +03:00 — Cleanup of legacy documents and old backups
+
+Files changed:
+- `docs/WORKLOG.md`
+- `Plan.md` (deleted/archived)
+- `CLAUDE.md` (deleted/archived)
+- `ARCHITECTURE_ANALYSIS.md` (deleted/archived)
+- `test-smtp.js` (deleted/archived)
+- `docs/superpowers/` (deleted/archived)
+- `Документ/` (deleted/archived)
+
+Completed:
+- Created archive directory `D:\CRM Teriberka\CRM-main\CRM-main_legacy_archive_before_big_medveditsa_cleanup` adjacent to the project directory.
+- Moved legacy planning files (`Plan.md`, `CLAUDE.md`, `ARCHITECTURE_ANALYSIS.md`, `test-smtp.js`, `Документ/`, `docs/superpowers/`) to the archive.
+- Moved unneeded dev logs (`.codex-dev-server*.log`, `.dev-server.log`, `server-dev.err`), temp files (`tmp/`, `template_out.json`, `user_requested_schema*.json`), cache (`.agents/`), and old database backups (`manual-backups/`, `data/backups/*`) to the archive.
+- Retained the current active database `data/crm.sqlite` and the recent control backup `data/backups/manual-clean-before-2026-05-27-19-43-20.crm.sqlite` intact inside the project.
+- Absolutely no files were deleted permanently.
+
+Checks run:
+- Verified directories and files relocation in the filesystem.
+- `git status --short`
+
 ### 2026-05-28 00:48 +03:00 — Big Medveditsa branding and safety settings
 
 Files changed:
