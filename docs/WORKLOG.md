@@ -26,6 +26,28 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 19:56 +03:00 — Local SQLite working data cleanup
+
+Files changed:
+- `docs/WORKLOG.md`
+
+Completed:
+- verified backup exists at `data/backups/manual-clean-before-2026-05-27-19-43-20.crm.sqlite`;
+- cleared local working data from `bookings`, `contracts`, `clients`, `leads`, and `email_history`;
+- preserved `settings`, `email_settings`, `managers`, `organizations`, `pdf_templates`, `html_templates`, and `templates_meta`;
+- verified the CRM UI opens after cleanup.
+
+Checks run:
+- SQLite counts before and after cleanup;
+- browser check for login, empty Guests, empty Contracts, empty Leads, empty chessboard state, Settings, and Additional;
+- `git status --short`.
+
+Next:
+- Заявка → Создать гостя.
+
+Risks/TODOs:
+- Supabase was not changed; the previously pulled Supabase test lead will not re-sync unless a new lead is created or `pulled_to_crm` is reset in Supabase.
+
 ### 2026-05-27 19:33 +03:00 — Leads UI runtime safety cleanup
 
 Files changed:
