@@ -26,6 +26,39 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 20:38 +03:00 — Lead to guest conversion
+
+Files changed:
+- `server.ts`
+- `server/localDatabase.ts`
+- `src/services/localApi.ts`
+- `src/components/leads/Leads.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `src/App.tsx`
+- `scripts/leadCreateClientTest.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- added `POST /api/leads/:id/create-client` for safe lead-to-guest conversion;
+- added frontend API and a `Создать гостя` action in the lead modal;
+- linked converted leads to `clientId` and moved them to `client_created`;
+- protected repeated conversion by returning the already linked guest;
+- did not add contract creation, prebooking creation, or Supabase changes.
+
+Checks run:
+- `npx tsx scripts/leadCreateClientTest.ts`
+- `npx tsx scripts/leadsRuntimeSafetyTest.ts`
+- `npx tsx scripts/supabaseLeadSyncUiTest.ts`
+- `npm run lint`
+- `npm run build`
+- browser check: Supabase lead converted to guest, Guests section shows the created guest, reopening the lead hides `Создать гостя`, and console errors are empty.
+
+Next:
+- Заявка → Создать предбронь or Заявка → Создать договор.
+
+Risks/TODOs:
+- build still reports existing large PDFMe-related chunk warnings.
+
 ### 2026-05-27 20:19 +03:00 — Compact lead modal layout
 
 Files changed:

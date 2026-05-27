@@ -433,6 +433,7 @@ function AppShell() {
         return (
           <LeadsView
             isDarkMode={isDarkMode}
+            onClientCreated={(client) => setClients(prev => prev.some(item => item.id === client.id) ? prev : [client, ...prev])}
           />
         );
       case 'contracts':

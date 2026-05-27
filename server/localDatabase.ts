@@ -454,6 +454,11 @@ export class LocalDatabase {
     return rows.map(row => safeJsonParse<T>(row.data_json, {} as T));
   }
 
+  getClientById<T>(id: string) {
+    const row = this.db.prepare('SELECT data_json FROM clients WHERE id = ?').get(id) as { data_json: string } | undefined;
+    return row ? safeJsonParse<T>(row.data_json, {} as T) : null;
+  }
+
   saveClient<T extends { id: string; createdAt?: string }>(client: T) {
     const updatedAt = nowIso();
     const createdAt = client.createdAt || updatedAt;

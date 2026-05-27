@@ -10,6 +10,7 @@ import { authService } from './server/authService';
 import { syncSupabaseLeads } from './server/supabaseLeadSync';
 import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
+import type { Client } from './src/types';
 
 dotenv.config({ path: '.env.local' });
 dotenv.config();
@@ -78,6 +79,14 @@ const requireAdmin: express.RequestHandler = (req, res, next) => {
 
 function getRequestManager(req: express.Request) {
   return (req as express.Request & { manager?: ReturnType<typeof authService.getByToken> }).manager || null;
+}
+
+function createId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function cleanString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 function getSmtpConfig(body: any) {
@@ -249,6 +258,60 @@ async function startServer() {
   app.post('/api/leads/sync', requireAuth, async (_req, res) => {
     try {
       res.json(await syncSupabaseLeads());
+    } catch (error) {
+      res.status(400).json({ error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/leads/:id/create-client', requireAuth, (req, res) => {
+    try {
+      const lead = localDb.getLeadById(req.params.id);
+      if (!lead) {
+        res.status(404).json({ error: 'Заявка не найдена' });
+        return;
+      }
+
+      if (lead.clientId) {
+        const existingClient = localDb.getClientById<Client>(lead.clientId);
+        if (!existingClient) {
+          res.status(409).json({ error: 'Заявка уже связана с гостем, но гость не найден' });
+          return;
+        }
+
+        res.json({ ok: true, client: existingClient, lead });
+        return;
+      }
+
+      const phone = cleanString(lead.phone);
+      if (!phone) {
+        res.status(400).json({ error: 'Для создания гостя нужен телефон заявки' });
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const client: Client = {
+        id: createId('client'),
+        type: 'physical',
+        firstName: cleanString(lead.guestName) || 'Гость без имени',
+        lastName: '',
+        middleName: '',
+        birthDate: '',
+        phone,
+        email: cleanString(lead.email) || undefined,
+        passportSeries: '',
+        passportNumber: '',
+        passportIssuedBy: '',
+        passportIssueDate: '',
+        registrationAddress: '',
+        additionalInfo: '',
+        isBlacklisted: false,
+        createdAt: now,
+      };
+
+      const savedClient = localDb.saveClient(client);
+      const updatedLead = localDb.linkLeadToClient(lead.id, savedClient.id);
+
+      res.json({ ok: true, client: savedClient, lead: updatedLead });
     } catch (error) {
       res.status(400).json({ error: asErrorMessage(error) });
     }

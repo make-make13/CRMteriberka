@@ -45,6 +45,7 @@ interface LeadModalProps {
   onClose: () => void;
   onCreate: (input: LeadCreateInput) => Promise<void>;
   onUpdate: (id: string, patch: LeadUpdateInput) => Promise<void>;
+  onCreateClient: (id: string) => Promise<void>;
 }
 
 function textInputValue(value: unknown) {
@@ -95,7 +96,7 @@ function getInitialState(lead: Lead | null): LeadFormState {
   };
 }
 
-export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, onClose, onCreate, onUpdate }: LeadModalProps) {
+export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, onClose, onCreate, onUpdate, onCreateClient }: LeadModalProps) {
   const [form, setForm] = useState<LeadFormState>(() => getInitialState(lead));
   const [isTechOpen, setIsTechOpen] = useState(false);
 
@@ -160,6 +161,14 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
     if (lead) {
       await onUpdate(lead.id, { status, managerNote: next.managerNote.trim() || undefined });
     }
+  };
+
+  const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
+  const canCreateClient = Boolean(lead && !lead.clientId && !isClientCreateBlockedStatus);
+
+  const handleCreateClient = async () => {
+    if (!lead || !canCreateClient) return;
+    await onCreateClient(lead.id);
   };
 
   const inputClass = cn(
@@ -273,6 +282,25 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
                   Отклонить
                 </button>
               </div>
+              {lead && (
+                <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+                  {lead.clientId ? (
+                    <span className={cn('rounded-lg px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-emerald-500/10 text-emerald-300' : 'bg-emerald-50 text-emerald-700')}>
+                      Гость создан
+                    </span>
+                  ) : canCreateClient ? (
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={handleCreateClient}
+                      className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isSaving && <Loader2 size={15} className="animate-spin" />}
+                      Создать гостя
+                    </button>
+                  ) : null}
+                </div>
+              )}
               <label className="space-y-1.5 md:col-span-2">
                 <span className={labelClass}>Заметка менеджера</span>
                 <textarea className={cn(inputClass, 'min-h-[64px] resize-none')} value={form.managerNote} onChange={event => setField('managerNote', event.target.value)} />

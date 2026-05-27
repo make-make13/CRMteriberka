@@ -5,7 +5,7 @@ import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
+import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
 import { leadApi } from '../../services/localApi';
 import { getErrorMessage } from '../../utils/errors';
 import { useToast } from '../../context/ToastContext';
@@ -31,6 +31,7 @@ const STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
 
 interface LeadsProps {
   isDarkMode: boolean;
+  onClientCreated?: (client: Client) => void;
 }
 
 function formatDateTime(value: unknown) {
@@ -52,7 +53,7 @@ function formatDateRange(lead: Lead) {
   return startDate || endDate || 'Не указаны';
 }
 
-export default function Leads({ isDarkMode }: LeadsProps) {
+export default function Leads({ isDarkMode, onClientCreated }: LeadsProps) {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,6 +119,22 @@ export default function Leads({ isDarkMode }: LeadsProps) {
     } catch (error) {
       console.error('Error updating lead:', error);
       toast(getErrorMessage(error, 'Ошибка при сохранении заявки'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreateClient = async (id: string) => {
+    setIsSaving(true);
+    try {
+      const result = await leadApi.createClient(id);
+      setLeads(prev => prev.map(lead => lead.id === result.lead.id ? result.lead : lead));
+      setEditingLead(result.lead);
+      onClientCreated?.(result.client);
+      toast('Гость создан', 'success');
+    } catch (error) {
+      console.error('Error creating client from lead:', error);
+      toast(getErrorMessage(error, 'Ошибка при создании гостя'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -316,6 +333,7 @@ export default function Leads({ isDarkMode }: LeadsProps) {
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
+        onCreateClient={handleCreateClient}
       />
     </div>
   );

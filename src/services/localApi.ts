@@ -103,6 +103,12 @@ export interface LeadSyncResult {
   errors: string[];
 }
 
+export interface LeadCreateClientResult {
+  ok: true;
+  client: Client;
+  lead: Lead;
+}
+
 function buildLeadQuery(filters?: LeadListFilters) {
   const params = new URLSearchParams();
   if (filters?.status && filters.status !== 'all') params.set('status', filters.status);
@@ -129,6 +135,10 @@ export const leadApi = {
   updateStatus: (id: string, status: LeadStatus) => apiRequest<Lead>(`/api/leads/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
+  }),
+  createClient: (id: string) => apiRequest<LeadCreateClientResult>(`/api/leads/${id}/create-client`, {
+    method: 'POST',
+    body: JSON.stringify({}),
   }),
 };
 
