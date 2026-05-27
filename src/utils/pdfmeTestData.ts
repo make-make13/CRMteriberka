@@ -1,0 +1,197 @@
+import {
+  PDFME_BANYA_CONTRACT_TEMPLATE_ID,
+  PDFME_CC_CONTRACT_TEMPLATE_ID,
+  PDFME_GB_CONTRACT_TEMPLATE_ID,
+  type PdfmeTemplateId,
+} from './pdfmeTemplateIds';
+
+export const pdfmeTestData: Record<string, string> = {
+  contract_number: 'ГБ207911',
+  sign_date: '18 апреля 2026 г.',
+  sign_date_short: '18.04.2026',
+  current_date: '18 апреля 2026 г.',
+  current_date_short: '18.04.2026',
+  date_in: '21 марта 2026 г.',
+  date_in_short: '21.03.2026',
+  time_in: '14:00',
+  date_out: '29 марта 2026 г.',
+  date_out_short: '29.03.2026',
+  time_out: '12:00',
+  nights: '8',
+  nights_label: '8 суток',
+  guests: '4',
+  cottage_number: '3/3',
+  property_address: 'Мурманская обл., Кольский р-н, п. Мурмаши',
+  property_address_cc: 'Мурманская обл., Кольский р-н, п. Мурмаши (Чунга-Чанга)',
+  property_address_gb: 'Мурманская обл., Кольский р-н, п. Мурмаши (Голубая Бухта)',
+
+  client_name: 'Иванов Иван Иванович',
+  client_name_gen: 'Иванова Ивана Ивановича',
+  client_name_dat: 'Иванову Ивану Ивановичу',
+  client_name_short: 'И.И. Иванов',
+  client_dob: '15 июня 1985 г.',
+  client_passport: '5112 345678',
+  client_passport_date: '20 августа 2010 г.',
+  client_passport_date_short: '20.08.2010',
+  client_passport_by: 'УМВД России по г. Мурманску',
+  client_address: 'г. Мурманск, ул. Ленина, д. 1, кв. 5',
+  client_phone: '+7 (911) 316-46-09',
+  client_email: 'ivanov@mail.ru',
+  client_inn: '5105099999',
+  client_kpp: '510501001',
+  client_ogrn: '',
+
+  total: '304 000,00',
+  certificate_amount: '10 000',
+  certificate_issue_date: '25.04.2026',
+  certificate_number: '001',
+  total_words: 'Триста четыре тысячи рублей 00 копеек',
+  total_words_only: 'Триста четыре тысячи рублей 00 копеек',
+  total_no_vat: '289 523,81',
+  prepayment: '152 000,00',
+  prepayment_words: 'Сто пятьдесят две тысячи рублей 00 копеек',
+  prepayment_words_only: 'Сто пятьдесят две тысячи',
+  balance: '152 000,00',
+  balance_words: 'Сто пятьдесят две тысячи рублей 00 копеек',
+  balance_words_only: 'Сто пятьдесят две тысячи',
+  vat_rate: '5%',
+  vat_amount: '14 476,19',
+
+  exec_name: 'ООО "Золото Арктики"',
+  exec_director: 'Сташ Екатерина Александровна',
+  exec_director_short: 'Е.А. Сташ',
+  exec_director_short2: 'Е.А. Сташ',
+  exec_inn: '5105013870',
+  exec_kpp: '510501001',
+  exec_ogrn: '1025100530123',
+  exec_address: '184630, Мурманская обл., г. Заполярный, ул. Мира, 1',
+  exec_post_address: '184630, Мурманская обл., г. Заполярный, ул. Мира, 1',
+  exec_phone: '88152 994411',
+  exec_rs: '40702810941710000190',
+  exec_bik: '044705615',
+  exec_ks: '30101810300000000615',
+  exec_bank: 'ОТДЕЛЕНИЕ №8627 СБЕРБАНКА РОССИИ Г. МУРМАНСК',
+  bank_inn: '',
+  bank_kpp: '',
+
+  invoice_number: 'ГБ207911',
+  doc_date: '18 апреля 2026 г.',
+  act_header: 'Акт №ГБ207911 от 18 апреля 2026 г.',
+  act_client_name: 'Иванов Иван Иванович',
+  act_client_name_short: '/И.И. Иванов/',
+  service_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ГБ207911',
+  service_qty: '1',
+  service_unit: 'усл.',
+  service_price: '304 000,00',
+  service_total: '304 000,00',
+  service_row_no: '1',
+  service_row_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ГБ207911',
+  service_row_qty: '1',
+  service_row_unit: 'усл.',
+  service_row_price: '304 000,00',
+  service_row_total: '304 000,00',
+  act_service_row_no: '1',
+  act_service_row_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ГБ207911',
+  act_service_row_qty: '1',
+  act_service_row_unit: 'усл.',
+  act_service_row_price: '304 000,00',
+  act_service_row_total: '304 000,00',
+  act_service_total: '304 000,00',
+  act_vat_amount: '14 476,19',
+  act_total: '304 000,00',
+  act_qty_words: 'Всего наименований 1, на сумму 304 000 руб.',
+  act_total_words_only: 'Триста четыре тысячи рублей 00 копеек',
+
+  invoice_header: 'Счёт №ГБ207911 от 18 апреля 2026 г.',
+  supplier_text: 'ООО "Золото Арктики", ИНН 5105013870, КПП 510501001, р/с 40702810941710000190 в ОТДЕЛЕНИЕ №8627 СБЕРБАНКА РОССИИ Г. МУРМАНСК, БИК 044705615, к/с 30101810300000000615',
+  qty_words: 'Всего наименований 1, на сумму 304 000 руб.',
+  contract_header: 'ДОГОВОР №ЧЧ216067',
+  contract_period: 'в период с 25.04.2026 по 25.04.2026',
+  addendum_reference: 'к Договору оказания услуг по размещению №ЧЧ216067 от 06 апреля 2026 г.',
+  addendum_checkout_date: '25.04.2026',
+  cc_client_name_full_page2: 'Великая Виктория Алексеевна',
+  cc_client_sign_name: '/В.А. Великая/',
+  cc_addendum_date: '06 апреля 2026 г.',
+  cc_addendum_checkin_client_sign: '/В.А. Великая/',
+  cc_addendum_checkout_client_sign: '/В.А. Великая/',
+  cc_addendum_checkout_date: '25.04.2026',
+  cc_addendum_final_client_label: 'Великая Виктория Алексеевна:',
+  cc_addendum_final_client_sign: '/В.А. Великая/',
+  cc_addendum_final_date: '25.04.2026',
+};
+
+const ccPdfmePreviewOverrides: Record<string, string> = {
+  contract_number: '216067',
+  invoice_number: '216067',
+  contract_header: 'ДОГОВОР №ЧЧ216067',
+  invoice_header: 'Счёт №ЧЧ216067 от 18 апреля 2026 г.',
+  act_header: 'Акт №ЧЧ216067 от 18 апреля 2026 г.',
+  service_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ЧЧ216067',
+  service_row_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ЧЧ216067',
+  act_service_row_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ЧЧ216067',
+  addendum_reference: 'к Договору оказания услуг по размещению №ЧЧ216067 от 06 апреля 2026 г.',
+};
+
+const banyaPdfmePreviewOverrides: Record<string, string> = {
+  contract_number: '210016',
+  invoice_number: '210016',
+  contract_header: 'ДОГОВОР №БК210016',
+  contract_period: 'в банном комплексе 14.03.2026',
+  invoice_header: 'Счёт №БК210016 от 13 марта 2026 г.',
+  act_header: 'Акт №БК210016 от 14 марта 2026 г.',
+  service_name: 'Услуги по временному размещению в банном комплексе 14.03.2026 с 18:00 по 21:00',
+  service_row_name: 'Услуги по временному размещению в банном комплексе 14.03.2026 с 18:00 по 21:00',
+  service_qty: '1',
+  service_row_qty: '1',
+  service_unit: 'усл',
+  service_row_unit: 'усл',
+  service_price: '10 000,00',
+  service_row_price: '10 000,00',
+  service_total: '10 000,00',
+  service_row_total: '10 000,00',
+  act_service_row_name: 'Услуги по временному размещению в банном комплексе 14.03.2026 с 18:00 по 21:00',
+  act_service_row_qty: '1',
+  act_service_row_unit: 'усл',
+  act_service_row_price: '10 000,00',
+  act_service_row_total: '10 000,00',
+  act_service_total: '10 000,00',
+  act_total: '10 000,00',
+  act_qty_words: 'Всего наименований 1, на сумму 10 000 руб.',
+};
+
+const gbPdfmePreviewOverrides: Record<string, string> = {
+  contract_number: '216067',
+  invoice_number: '216067',
+  contract_header: 'ДОГОВОР №ГБ216067',
+  invoice_header: 'Счёт №ГБ216067 от 18 апреля 2026 г.',
+  act_header: 'Акт №ГБ216067 от 18 апреля 2026 г.',
+  service_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ГБ216067',
+  service_row_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ГБ216067',
+  act_service_row_name: 'Услуги по временному размещению в коттедже №3/3 с 21.03.2026 по 29.03.2026 по договору №ГБ216067',
+  addendum_reference: 'к Договору оказания услуг по размещению №ГБ216067 от 06 апреля 2026 г.',
+};
+
+export function getPdfmePreviewData(templateId?: PdfmeTemplateId): Record<string, string> {
+  if (templateId === PDFME_CC_CONTRACT_TEMPLATE_ID) {
+    return {
+      ...pdfmeTestData,
+      ...ccPdfmePreviewOverrides,
+    };
+  }
+
+  if (templateId === PDFME_BANYA_CONTRACT_TEMPLATE_ID) {
+    return {
+      ...pdfmeTestData,
+      ...banyaPdfmePreviewOverrides,
+    };
+  }
+
+  if (templateId === PDFME_GB_CONTRACT_TEMPLATE_ID) {
+    return {
+      ...pdfmeTestData,
+      ...gbPdfmePreviewOverrides,
+    };
+  }
+
+  return { ...pdfmeTestData };
+}

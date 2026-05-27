@@ -1,0 +1,37 @@
+node_modules/
+build/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+
+data/*.sqlite
+data/*.sqlite-*
+data/*.db
+data/*.db-*
+data/backups/
+data/backup*/
+
+*.log
+logs/
+.DS_Store
+.vscode/
+.idea/
+
+server-dev.err
+tmp/
+tools/rclone/
+template_out.json
+user_requested_schema*.json
+.git_old_before_big_medveditsa/
+
+# Local Claude Code files
+.claude/
+
+# Local Claude Code files
+.claude/
+.agents/
+
+# Manual database backups
+manual-backups/

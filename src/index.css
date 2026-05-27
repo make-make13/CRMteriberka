@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .prose-contract .contract-title {
+    @apply text-xl font-bold text-center mb-6 uppercase;
+  }
+  .prose-contract .contract-section {
+    @apply text-lg font-bold text-center mt-6 mb-4;
+  }
+  .prose-contract .contract-paragraph {
+    @apply mb-3 text-justify leading-relaxed;
+  }
+  .prose-contract p {
+    @apply mb-3 text-justify leading-relaxed;
+  }
+  .prose-contract strong {
+    @apply font-semibold;
+  }
+  .prose-contract ul, .prose-contract ol {
+    @apply pl-8 mb-3 list-decimal;
+  }
+  .prose-contract li {
+    @apply mb-1 text-justify;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .a4-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+}
+
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
+}

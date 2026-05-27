@@ -1,0 +1,281 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { CalendarDays, Inbox, Loader2, Plus, RefreshCw, Search, UserRound } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import type { Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
+import { leadApi } from '../../services/localApi';
+import { getErrorMessage } from '../../utils/errors';
+import { useToast } from '../../context/ToastContext';
+import EmptyState from '../common/EmptyState';
+import LeadModal from './LeadModal';
+import LeadStatusBadge from './LeadStatusBadge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+const STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
+  { id: 'all', label: 'Все' },
+  { id: 'new', label: 'Новые' },
+  { id: 'in_progress', label: 'В работе' },
+  { id: 'client_created', label: 'Гость создан' },
+  { id: 'prebooking_created', label: 'Предбронь' },
+  { id: 'contract_created', label: 'Договор' },
+  { id: 'rejected', label: 'Отказ' },
+  { id: 'duplicate', label: 'Дубль' },
+];
+
+interface LeadsProps {
+  isDarkMode: boolean;
+}
+
+function formatDateTime(value: string) {
+  try {
+    return format(parseISO(value), 'd MMM yyyy, HH:mm', { locale: ru });
+  } catch {
+    return value;
+  }
+}
+
+function formatDateRange(lead: Lead) {
+  if (!lead.desiredStartDate && !lead.desiredEndDate) return 'Не указаны';
+  if (lead.desiredStartDate && lead.desiredEndDate) return `${lead.desiredStartDate} - ${lead.desiredEndDate}`;
+  return lead.desiredStartDate || lead.desiredEndDate || 'Не указаны';
+}
+
+export default function Leads({ isDarkMode }: LeadsProps) {
+  const { toast } = useToast();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+
+  const loadLeads = async () => {
+    setIsLoading(true);
+    try {
+      setLeads(await leadApi.list());
+    } catch (error) {
+      console.error('Error loading leads:', error);
+      toast(getErrorMessage(error, 'Ошибка при загрузке заявок'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadLeads();
+  }, []);
+
+  const filteredLeads = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return leads.filter(lead => {
+      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
+      const matchesSearch = !query
+        || (lead.guestName || '').toLowerCase().includes(query)
+        || lead.phone.toLowerCase().includes(query)
+        || (lead.email || '').toLowerCase().includes(query);
+      return matchesStatus && matchesSearch;
+    });
+  }, [leads, searchQuery, statusFilter]);
+
+  const handleCreate = async (input: LeadCreateInput) => {
+    setIsSaving(true);
+    try {
+      const saved = await leadApi.create(input);
+      setLeads(prev => [saved, ...prev]);
+      setIsModalOpen(false);
+      toast('Заявка создана', 'success');
+    } catch (error) {
+      console.error('Error creating lead:', error);
+      toast(getErrorMessage(error, 'Ошибка при создании заявки'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdate = async (id: string, patch: LeadUpdateInput) => {
+    setIsSaving(true);
+    try {
+      const saved = await leadApi.update(id, patch);
+      setLeads(prev => prev.map(lead => lead.id === saved.id ? saved : lead));
+      setEditingLead(saved);
+      setIsModalOpen(false);
+      toast('Заявка сохранена', 'success');
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      toast(getErrorMessage(error, 'Ошибка при сохранении заявки'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openNewLead = () => {
+    setEditingLead(null);
+    setIsModalOpen(true);
+  };
+
+  const openLead = (lead: Lead) => {
+    setEditingLead(lead);
+    setIsModalOpen(true);
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold">Заявки</h2>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled
+            title="Синхронизация будет добавлена позже"
+            className={cn(
+              'inline-flex cursor-not-allowed items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold opacity-60',
+              isDarkMode ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'
+            )}
+          >
+            <RefreshCw size={17} />
+            Проверить заявки
+          </button>
+          <motion.button
+            type="button"
+            onClick={openNewLead}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-orange-400"
+          >
+            <Plus size={18} />
+            Новая заявка
+          </motion.button>
+        </div>
+      </div>
+
+      <div className={cn('rounded-2xl border p-4', isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-white')}>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className={cn(
+            'flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border px-3 py-2',
+            isDarkMode ? 'border-white/10 bg-black/20' : 'border-gray-200 bg-gray-50'
+          )}>
+            <Search size={18} className="text-gray-500" />
+            <input
+              value={searchQuery}
+              onChange={event => setSearchQuery(event.target.value)}
+              placeholder="Поиск по имени, телефону, email"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-gray-500"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {STATUS_FILTERS.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setStatusFilter(item.id)}
+                className={cn(
+                  'rounded-xl px-3 py-2 text-xs font-bold transition-colors',
+                  statusFilter === item.id
+                    ? 'bg-orange-500 text-black'
+                    : (isDarkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-white')}>
+        {isLoading ? (
+          <div className="flex min-h-[260px] items-center justify-center">
+            <Loader2 className="animate-spin text-orange-500" size={28} />
+          </div>
+        ) : filteredLeads.length === 0 ? (
+          <EmptyState
+            isDarkMode={isDarkMode}
+            icon={<Inbox size={32} />}
+            title="Заявок пока нет"
+            description="Заявок пока нет. Позже здесь будут отображаться обращения с сайта."
+            action={leads.length === 0 ? (
+              <button type="button" onClick={openNewLead} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-black">
+                <Plus size={17} />
+                Новая заявка
+              </button>
+            ) : undefined}
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] border-collapse text-sm">
+              <thead>
+                <tr className={cn('text-left text-xs font-bold uppercase tracking-wider', isDarkMode ? 'bg-white/[0.02] text-gray-500' : 'bg-gray-50 text-gray-400')}>
+                  <th className="border-b border-white/5 p-4">Дата</th>
+                  <th className="border-b border-white/5 p-4">Гость</th>
+                  <th className="border-b border-white/5 p-4">Контакты</th>
+                  <th className="border-b border-white/5 p-4">Даты</th>
+                  <th className="border-b border-white/5 p-4">Гостей</th>
+                  <th className="border-b border-white/5 p-4">Источник</th>
+                  <th className="border-b border-white/5 p-4">Статус</th>
+                  <th className="border-b border-white/5 p-4 text-right">Действия</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredLeads.map(lead => (
+                  <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-white/[0.035]' : 'hover:bg-gray-50')}>
+                    <td className="p-4 text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays size={15} />
+                        <span>{formatDateTime(lead.createdAt)}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <UserRound size={16} className="text-gray-500" />
+                        <div>
+                          <div className="font-bold">{lead.guestName || 'Без имени'}</div>
+                          <div className="text-xs text-gray-500">{lead.objectType || lead.objectId || 'Номер не выбран'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="font-medium">{lead.phone}</div>
+                      <div className="text-xs text-gray-500">{lead.email || 'Email не указан'}</div>
+                    </td>
+                    <td className="p-4">
+                      <div>{formatDateRange(lead)}</div>
+                      <div className="text-xs text-gray-500">{lead.desiredTime || 'Время не указано'}</div>
+                    </td>
+                    <td className="p-4">{lead.guestsCount || '-'}</td>
+                    <td className="p-4">{lead.source}</td>
+                    <td className="p-4"><LeadStatusBadge status={lead.status} /></td>
+                    <td className="p-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openLead(lead)}
+                        className={cn('rounded-xl px-3 py-2 text-xs font-bold transition-colors', isDarkMode ? 'bg-white/5 text-gray-200 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+                      >
+                        Открыть
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <LeadModal
+        isOpen={isModalOpen}
+        isDarkMode={isDarkMode}
+        lead={editingLead}
+        isSaving={isSaving}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+      />
+    </div>
+  );
+}
