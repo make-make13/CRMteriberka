@@ -5,6 +5,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
 import LeadStatusBadge, { LEAD_STATUS_LABELS } from './LeadStatusBadge';
+import { formatLeadSource, getLeadOriginLabel, normalizeLeadStatus, summarizeJsonValue } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -46,21 +47,25 @@ interface LeadModalProps {
   onUpdate: (id: string, patch: LeadUpdateInput) => Promise<void>;
 }
 
+function textInputValue(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
 function getInitialState(lead: Lead | null): LeadFormState {
   return {
-    guestName: lead?.guestName || '',
-    phone: lead?.phone || '',
-    email: lead?.email || '',
-    desiredStartDate: lead?.desiredStartDate || '',
-    desiredEndDate: lead?.desiredEndDate || '',
-    desiredTime: lead?.desiredTime || '',
-    guestsCount: lead?.guestsCount ? String(lead.guestsCount) : '',
-    objectType: lead?.objectType || '',
-    objectId: lead?.objectId || '',
-    message: lead?.message || '',
-    source: lead?.source || 'Локально',
-    status: lead?.status || 'new',
-    managerNote: lead?.managerNote || '',
+    guestName: textInputValue(lead?.guestName),
+    phone: textInputValue(lead?.phone),
+    email: textInputValue(lead?.email),
+    desiredStartDate: textInputValue(lead?.desiredStartDate),
+    desiredEndDate: textInputValue(lead?.desiredEndDate),
+    desiredTime: textInputValue(lead?.desiredTime),
+    guestsCount: lead?.guestsCount != null ? String(lead.guestsCount) : '',
+    objectType: textInputValue(lead?.objectType),
+    objectId: textInputValue(lead?.objectId),
+    message: textInputValue(lead?.message),
+    source: textInputValue(lead?.source) || 'local',
+    status: normalizeLeadStatus(lead?.status),
+    managerNote: textInputValue(lead?.managerNote),
   };
 }
 
@@ -88,7 +93,7 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
     objectType: form.objectType.trim() || undefined,
     objectId: form.objectId.trim() || undefined,
     message: form.message.trim() || undefined,
-    source: form.source.trim() || 'Локально',
+    source: form.source.trim() || 'local',
     status: form.status,
     managerNote: form.managerNote.trim() || undefined,
   });
@@ -116,6 +121,8 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
   );
 
   const labelClass = 'text-[11px] font-bold uppercase tracking-wide text-gray-500';
+  const utmSummary = summarizeJsonValue(lead?.utmJson);
+  const rawSummary = summarizeJsonValue(lead?.rawJson);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
@@ -132,9 +139,9 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
           <div className="flex items-center gap-3">
             <div>
               <h2 className="text-xl font-bold">{lead ? 'Заявка' : 'Новая заявка'}</h2>
-              <p className="mt-1 text-xs text-gray-500">Локальная заявка без синхронизации</p>
+              <p className="mt-1 text-xs text-gray-500">{getLeadOriginLabel(lead)}</p>
             </div>
-            <LeadStatusBadge status={form.status} />
+            <LeadStatusBadge status={lead?.status || form.status} />
           </div>
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-white/10 hover:text-white">
             <X size={20} />
@@ -154,10 +161,10 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
             <span className={labelClass}>Email</span>
             <input className={inputClass} type="email" value={form.email} onChange={event => setField('email', event.target.value)} />
           </label>
-          <label className="space-y-1.5">
+          <div className="space-y-1.5">
             <span className={labelClass}>Источник</span>
-            <input className={inputClass} value={form.source} onChange={event => setField('source', event.target.value)} />
-          </label>
+            <div className={cn(inputClass, 'min-h-[38px]')}>{formatLeadSource(form.source)}</div>
+          </div>
           <label className="space-y-1.5">
             <span className={labelClass}>Желаемая дата заезда</span>
             <input className={inputClass} type="date" value={form.desiredStartDate} onChange={event => setField('desiredStartDate', event.target.value)} />
@@ -194,6 +201,14 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
             <span className={labelClass}>Комментарий гостя</span>
             <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.message} onChange={event => setField('message', event.target.value)} />
           </label>
+          {(utmSummary || rawSummary) && (
+            <div className="space-y-1.5 md:col-span-2">
+              <span className={labelClass}>Данные источника</span>
+              <div className={cn(inputClass, 'min-h-[38px]')}>
+                {[utmSummary && `UTM: ${utmSummary}`, rawSummary && `RAW: ${rawSummary}`].filter(Boolean).join(' · ')}
+              </div>
+            </div>
+          )}
           <label className="space-y-1.5 md:col-span-2">
             <span className={labelClass}>Заметка менеджера</span>
             <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.managerNote} onChange={event => setField('managerNote', event.target.value)} />

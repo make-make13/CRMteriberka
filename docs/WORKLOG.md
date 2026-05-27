@@ -26,6 +26,36 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 19:33 +03:00 — Leads UI runtime safety cleanup
+
+Files changed:
+- `src/components/leads/Leads.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `src/components/leads/LeadStatusBadge.tsx`
+- `src/components/leads/leadDisplay.ts`
+- `scripts/leadsRuntimeSafetyTest.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- normalized lead source labels for site/local/API values;
+- fixed Supabase/local origin labels in the lead modal;
+- added safe fallbacks for empty lead fields and unknown statuses;
+- added safe JSON parsing helpers for `utmJson`/`rawJson`;
+- verified the Leads UI manually in the browser.
+
+Checks run:
+- `npx tsx scripts/leadsRuntimeSafetyTest.ts`
+- `npx tsx scripts/supabaseLeadSyncUiTest.ts`
+- `npx tsx scripts/leadsModuleUiTest.ts`
+- `npm run lint`
+- `npm run build`
+
+Next:
+- Заявка → Создать гостя.
+
+Risks/TODOs:
+- Vite still reports existing large chunk warnings during build.
+
 ### Initial checkpoint
 
 Status:

@@ -38,21 +38,24 @@ const statusIcon: Record<LeadStatus, typeof CircleDot> = {
 };
 
 interface LeadStatusBadgeProps {
-  status: LeadStatus;
+  status?: LeadStatus | string | null;
   className?: string;
 }
 
 export default function LeadStatusBadge({ status, className }: LeadStatusBadgeProps) {
-  const Icon = statusIcon[status];
+  const knownStatus = status as LeadStatus;
+  const Icon = statusIcon[knownStatus] || CircleDot;
+  const classNameForStatus = statusClass[knownStatus] || 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+  const label = LEAD_STATUS_LABELS[knownStatus] || 'Неизвестный статус';
 
   return (
     <span className={cn(
       'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold',
-      statusClass[status],
+      classNameForStatus,
       className
     )}>
       <Icon size={13} />
-      {LEAD_STATUS_LABELS[status]}
+      {label}
     </span>
   );
 }

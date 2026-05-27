@@ -12,6 +12,7 @@ import { useToast } from '../../context/ToastContext';
 import EmptyState from '../common/EmptyState';
 import LeadModal from './LeadModal';
 import LeadStatusBadge from './LeadStatusBadge';
+import { cleanText, formatDateValue, formatLeadSource } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -32,7 +33,9 @@ interface LeadsProps {
   isDarkMode: boolean;
 }
 
-function formatDateTime(value: string) {
+function formatDateTime(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return 'Не указано';
+
   try {
     return format(parseISO(value), 'd MMM yyyy, HH:mm', { locale: ru });
   } catch {
@@ -41,9 +44,12 @@ function formatDateTime(value: string) {
 }
 
 function formatDateRange(lead: Lead) {
-  if (!lead.desiredStartDate && !lead.desiredEndDate) return 'Не указаны';
-  if (lead.desiredStartDate && lead.desiredEndDate) return `${lead.desiredStartDate} - ${lead.desiredEndDate}`;
-  return lead.desiredStartDate || lead.desiredEndDate || 'Не указаны';
+  const startDate = formatDateValue(lead.desiredStartDate, '');
+  const endDate = formatDateValue(lead.desiredEndDate, '');
+
+  if (!startDate && !endDate) return 'Не указаны';
+  if (startDate && endDate) return `${startDate} - ${endDate}`;
+  return startDate || endDate || 'Не указаны';
 }
 
 export default function Leads({ isDarkMode }: LeadsProps) {
@@ -56,6 +62,7 @@ export default function Leads({ isDarkMode }: LeadsProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [leadOpenError, setLeadOpenError] = useState('');
 
   const loadLeads = async () => {
     setIsLoading(true);
@@ -79,7 +86,7 @@ export default function Leads({ isDarkMode }: LeadsProps) {
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
       const matchesSearch = !query
         || (lead.guestName || '').toLowerCase().includes(query)
-        || lead.phone.toLowerCase().includes(query)
+        || (lead.phone || '').toLowerCase().includes(query)
         || (lead.email || '').toLowerCase().includes(query);
       return matchesStatus && matchesSearch;
     });
@@ -136,13 +143,22 @@ export default function Leads({ isDarkMode }: LeadsProps) {
   };
 
   const openNewLead = () => {
+    setLeadOpenError('');
     setEditingLead(null);
     setIsModalOpen(true);
   };
 
   const openLead = (lead: Lead) => {
-    setEditingLead(lead);
-    setIsModalOpen(true);
+    try {
+      setLeadOpenError('');
+      setEditingLead(lead);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error opening lead:', error);
+      setEditingLead(null);
+      setIsModalOpen(false);
+      setLeadOpenError(getErrorMessage(error, 'Не удалось открыть заявку. Список заявок продолжает работать.'));
+    }
   };
 
   return (
@@ -209,6 +225,11 @@ export default function Leads({ isDarkMode }: LeadsProps) {
       </div>
 
       <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-white')}>
+        {leadOpenError && (
+          <div className={cn('border-b px-4 py-3 text-sm font-medium', isDarkMode ? 'border-white/10 bg-red-500/10 text-red-200' : 'border-red-100 bg-red-50 text-red-700')}>
+            {leadOpenError}
+          </div>
+        )}
         {isLoading ? (
           <div className="flex min-h-[260px] items-center justify-center">
             <Loader2 className="animate-spin text-orange-500" size={28} />
@@ -254,21 +275,21 @@ export default function Leads({ isDarkMode }: LeadsProps) {
                       <div className="flex items-center gap-2">
                         <UserRound size={16} className="text-gray-500" />
                         <div>
-                          <div className="font-bold">{lead.guestName || 'Без имени'}</div>
-                          <div className="text-xs text-gray-500">{lead.objectType || lead.objectId || 'Номер не выбран'}</div>
+                          <div className="font-bold">{cleanText(lead.guestName, 'Без имени')}</div>
+                          <div className="text-xs text-gray-500">{cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}</div>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="font-medium">{lead.phone}</div>
-                      <div className="text-xs text-gray-500">{lead.email || 'Email не указан'}</div>
+                      <div className="font-medium">{cleanText(lead.phone, 'Телефон не указан')}</div>
+                      <div className="text-xs text-gray-500">{cleanText(lead.email, 'Email не указан')}</div>
                     </td>
                     <td className="p-4">
                       <div>{formatDateRange(lead)}</div>
-                      <div className="text-xs text-gray-500">{lead.desiredTime || 'Время не указано'}</div>
+                      <div className="text-xs text-gray-500">{cleanText(lead.desiredTime, 'Время не указано')}</div>
                     </td>
-                    <td className="p-4">{lead.guestsCount || '-'}</td>
-                    <td className="p-4">{lead.source}</td>
+                    <td className="p-4">{lead.guestsCount ?? '-'}</td>
+                    <td className="p-4">{formatLeadSource(lead.source)}</td>
                     <td className="p-4"><LeadStatusBadge status={lead.status} /></td>
                     <td className="p-4 text-right">
                       <button
