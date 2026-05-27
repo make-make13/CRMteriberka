@@ -34,6 +34,7 @@ interface ContractModalProps {
   initialMode?: 'view' | 'edit';
   canDeleteContract?: boolean;
   onDelete?: (contractId: string) => void;
+  isPrebookingConversion?: boolean;
 }
 
 interface FormValues {
@@ -141,6 +142,12 @@ const formatHistoryDate = (value?: string) => {
   }
 };
 
+const getStatusFromPayment = (prepayment: number, totalAmount: number): ContractStatus => {
+  if (prepayment <= 0) return 'signed_not_paid';
+  if (prepayment >= totalAmount) return 'paid';
+  return 'partial_paid';
+};
+
 export default function ContractModal({ 
   isOpen, 
   isDarkMode, 
@@ -154,11 +161,17 @@ export default function ContractModal({
   initialMode = 'edit',
   canDeleteContract = false,
   onDelete,
+  isPrebookingConversion = false,
 }: ContractModalProps) {
   const { toast } = useToast();
   const baseType = 'chunga-changa' as BaseType;
   const isLegacyGbContract = initialData?.baseType === 'golubaya-bukhta';
-  const [status, setStatus] = useState<ContractStatus>(initialData?.status || 'signed_not_paid');
+  const isConvertingPreBooking = Boolean(isPrebookingConversion && initialData?.status === 'pre_booking');
+  const [status, setStatus] = useState<ContractStatus>(
+    isConvertingPreBooking
+      ? getStatusFromPayment(initialData?.prepayment || 0, initialData?.totalAmount || 0)
+      : initialData?.status || 'signed_not_paid'
+  );
   const [mode, setMode] = useState<'view' | 'edit'>(initialMode);
   const [clientSearch, setClientSearch] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(initialData?.clientId || null);
@@ -212,6 +225,11 @@ export default function ContractModal({
     return getNextContractNumberValue(relevantContracts.map(contract => contract.number), initialCategory);
   }, [contracts, initialCategory]);
 
+  const isPrebookingNumberReplaced = Boolean(isConvertingPreBooking && initialData?.number.startsWith('ПБ-'));
+  const initialContractNumber = isPrebookingNumberReplaced
+    ? initialNextContractNumber
+    : initialData?.number || initialNextContractNumber;
+
   const safeFormat = (dateStr: string | undefined, formatStr: string, fallback: string) => {
     if (!dateStr) return fallback;
     try {
@@ -246,7 +264,7 @@ export default function ContractModal({
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
-      number: initialData?.number || initialNextContractNumber,
+      number: initialContractNumber,
       dateSigned: initialData?.dateSigned || format(new Date(), 'yyyy-MM-dd'),
       totalAmount: initialData?.totalAmount || 0,
       prepayment: initialData?.prepayment || 0,
@@ -316,6 +334,7 @@ export default function ContractModal({
     }
   });
 
+  const contractNumber = watch('number') || initialContractNumber;
   const totalAmount = watch('totalAmount') || 0;
   const prepayment = watch('prepayment') || 0;
   const remainder = totalAmount - prepayment;
@@ -367,12 +386,13 @@ export default function ContractModal({
   }, [currentCategory, contracts, initialData, setValue, getValues]);
 
   useEffect(() => {
+    if (isConvertingPreBooking) return;
     if (baseType === 'chunga-changa' && ccCottageId !== 'cc-6' && ccCottageId !== 'cc-9') {
       if (getValues('ccIsDaily')) {
         setValue('ccIsDaily', false);
       }
     }
-  }, [ccCottageId, baseType, setValue, getValues]);
+  }, [ccCottageId, baseType, setValue, getValues, isConvertingPreBooking]);
 
   useEffect(() => {
     if (baseType !== 'chunga-changa') return;
@@ -633,7 +653,7 @@ export default function ContractModal({
         
         if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
           bookings.push({
-            id: Math.random().toString(36).substr(2, 9),
+            id: initialMainBooking?.id || Math.random().toString(36).substr(2, 9),
             contractId,
             objectId: data.ccCottageId,
             baseType: 'chunga-changa',
@@ -651,7 +671,7 @@ export default function ContractModal({
 
         if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime())) {
           bookings.push({
-            id: Math.random().toString(36).substr(2, 9),
+            id: initialMainBooking?.id || Math.random().toString(36).substr(2, 9),
             contractId,
             objectId: data.gbCottageId,
             baseType: 'golubaya-bukhta',
@@ -664,11 +684,12 @@ export default function ContractModal({
       }
 
       if (data.gbHasBath && data.gbBathDate && data.gbBathTimeFrom && data.gbBathTimeTo) {
+        const initialBathBooking = initialData?.bookings.find(b => b.objectId === 'gb-bath');
         const bathStart = new Date(`${data.gbBathDate}T${data.gbBathTimeFrom}`);
         const bathEnd = new Date(`${data.gbBathDate}T${data.gbBathTimeTo}`);
         if (!isNaN(bathStart.getTime()) && !isNaN(bathEnd.getTime())) {
           bookings.push({
-            id: Math.random().toString(36).substr(2, 9),
+            id: initialBathBooking?.id || Math.random().toString(36).substr(2, 9),
             contractId,
             objectId: 'gb-bath',
             baseType: 'golubaya-bukhta',
@@ -681,11 +702,12 @@ export default function ContractModal({
       }
 
       if (data.gbHasFurako && data.gbFurakoDate && data.gbFurakoTimeFrom && data.gbFurakoTimeTo) {
+        const initialFurakoBooking = initialData?.bookings.find(b => b.objectId === 'gb-furako');
         const furakoStart = new Date(`${data.gbFurakoDate}T${data.gbFurakoTimeFrom}`);
         const furakoEnd = new Date(`${data.gbFurakoDate}T${data.gbFurakoTimeTo}`);
         if (!isNaN(furakoStart.getTime()) && !isNaN(furakoEnd.getTime())) {
           bookings.push({
-            id: Math.random().toString(36).substr(2, 9),
+            id: initialFurakoBooking?.id || Math.random().toString(36).substr(2, 9),
             contractId,
             objectId: 'gb-furako',
             baseType: 'golubaya-bukhta',
@@ -769,7 +791,7 @@ export default function ContractModal({
         {/* Header */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-6">
-            <h2 className="text-xl font-bold">{initialData ? `Договор №${initialData.number}` : 'Новый договор'}</h2>
+            <h2 className="text-xl font-bold">{initialData ? `Договор №${contractNumber}` : 'Новый договор'}</h2>
             
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-white/5 border border-white/5">
               <div className="w-2 h-2 rounded-full bg-orange-500" />
@@ -835,6 +857,14 @@ export default function ContractModal({
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
           <form id="contract-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <fieldset disabled={mode === 'view'} className="space-y-6 border-none p-0 m-0">
+            {isConvertingPreBooking && isPrebookingNumberReplaced && (
+              <div className={cn(
+                "rounded-xl border px-4 py-3 text-sm font-medium",
+                isDarkMode ? "border-orange-500/20 bg-orange-500/10 text-orange-200" : "border-orange-200 bg-orange-50 text-orange-800"
+              )}>
+                Предбронь будет сохранена как договор. Номер договора обновлён автоматически.
+              </div>
+            )}
             <div className="flex justify-end gap-6 mb-4">
               <div className="flex items-center gap-2">
                 <div className="text-[10px] text-gray-500 uppercase font-bold">№</div>

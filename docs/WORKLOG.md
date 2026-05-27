@@ -26,6 +26,37 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 23:59 +03:00 — Prebooking to contract flow
+
+Files changed:
+- `src/App.tsx`
+- `src/components/contracts/ContractModal.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `scripts/prebookingToContractTest.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- added the explicit `pre_booking` to contract conversion mode;
+- converted the same `Contract.id` instead of creating a duplicate contract;
+- replaced `ПБ-...` numbers with the next normal contract number when opening the contract modal;
+- updated the linked lead to `contract_created` after successful save;
+- kept PDFMe, document templates, Supabase, and `saveContract()` unchanged.
+
+Checks run:
+- `npx tsx scripts/prebookingToContractTest.ts`
+- `npx tsx scripts/leadCreatePrebookingTest.ts`
+- `npx tsx scripts/leadCreateClientTest.ts`
+- `npm run lint`
+- `npm run build`
+- browser check: prebooking opened through `PreBookingModal` -> `ContractModal`, contract number changed from `ПБ-...` to `ЧЧ...`, dates stayed prefilled, save changed the chessboard status from `Ожидает` to contract occupancy, lead status became `Договор`, and console errors were empty.
+
+Next:
+- decide whether to add a direct `Заявка → Договор` shortcut or polish the prebooking/contract manager workflow.
+
+Risks/TODOs:
+- PDF generation remains manual from `ContractModal`.
+- build still reports existing large PDFMe-related chunk warnings.
+
 ### 2026-05-27 20:59 +03:00 — Lead to prebooking flow
 
 Files changed:

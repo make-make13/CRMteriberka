@@ -176,7 +176,8 @@ export default function LeadModal({
 
   const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
   const canCreateClient = Boolean(lead && !lead.clientId && !isClientCreateBlockedStatus);
-  const hasPrebooking = Boolean(lead?.prebookingId || lead?.contractId);
+  const hasCreatedContract = form.status === 'contract_created';
+  const hasPrebooking = Boolean((lead?.prebookingId || lead?.contractId) && !hasCreatedContract);
   const isPrebookingBlockedStatus = ['rejected', 'duplicate'].includes(form.status);
   const canCreatePrebooking = Boolean(lead && lead.clientId && !hasPrebooking && !isPrebookingBlockedStatus);
 
@@ -318,7 +319,11 @@ export default function LeadModal({
                       Создать гостя
                     </button>
                   ) : null}
-                  {hasPrebooking ? (
+                  {hasCreatedContract ? (
+                    <span className={cn('rounded-lg px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-violet-500/10 text-violet-300' : 'bg-violet-50 text-violet-700')}>
+                      Договор создан
+                    </span>
+                  ) : hasPrebooking ? (
                     <span className={cn('rounded-lg px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-cyan-500/10 text-cyan-300' : 'bg-cyan-50 text-cyan-700')}>
                       Предбронь создана
                     </span>

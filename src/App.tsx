@@ -302,12 +302,16 @@ function AppShell() {
   const [prefilledBooking, setPrefilledBooking] = useState<{ objectId: string; date: Date; baseType: BaseType } | null>(null);
   const [leadPrebookingPrefill, setLeadPrebookingPrefill] = useState<LeadPrebookingPrefill | null>(null);
   const [updatedLeadFromPrebooking, setUpdatedLeadFromPrebooking] = useState<Lead | null>(null);
+  const [isPrebookingConversionMode, setIsPrebookingConversionMode] = useState(false);
+  const [contractConversionLeadId, setContractConversionLeadId] = useState<string | null>(null);
 
   const handleNewBooking = (objectId: string, date: Date, baseType: BaseType) => {
     setPrefilledBooking({ objectId, date, baseType });
     setLeadPrebookingPrefill(null);
     setEditingContract(null);
     setEditingPreBooking(null);
+    setIsPrebookingConversionMode(false);
+    setContractConversionLeadId(null);
     setModalMode('edit');
     setIsPreBookingModalOpen(true);
   };
@@ -332,8 +336,21 @@ function AppShell() {
     setPrefilledBooking(null);
     setEditingContract(null);
     setEditingPreBooking(null);
+    setIsPrebookingConversionMode(false);
+    setContractConversionLeadId(null);
     setModalMode('edit');
     setIsPreBookingModalOpen(true);
+  };
+
+  const resolveLeadForConvertedPrebooking = async (contractId: string) => {
+    try {
+      const leads = await leadApi.list();
+      const lead = leads.find(item => item.prebookingId === contractId || item.contractId === contractId);
+      setContractConversionLeadId(lead?.id || null);
+    } catch (error) {
+      console.error('Error resolving lead for prebooking conversion:', error);
+      setContractConversionLeadId(null);
+    }
   };
 
   const handleEditContract = (contractId: string, mode: 'view' | 'edit' = 'view') => {
@@ -342,10 +359,14 @@ function AppShell() {
       if (contract.status === 'pre_booking') {
         setEditingPreBooking(contract);
         setPrefilledBooking(null);
+        setIsPrebookingConversionMode(false);
+        setContractConversionLeadId(null);
         setIsPreBookingModalOpen(true);
       } else {
         setEditingContract(contract);
         setPrefilledBooking(null);
+        setIsPrebookingConversionMode(false);
+        setContractConversionLeadId(null);
         setModalMode(mode);
         setIsContractModalOpen(true);
       }
@@ -355,6 +376,15 @@ function AppShell() {
   const handleSaveContract = async (contract: Contract) => {
     try {
       await contractApi.save(contract);
+      if (isPrebookingConversionMode && contract.status !== 'pre_booking' && contractConversionLeadId) {
+        const updatedLead = await leadApi.update(contractConversionLeadId, {
+          contractId: contract.id,
+          status: 'contract_created',
+          convertedAt: new Date().toISOString(),
+        });
+        setUpdatedLeadFromPrebooking(updatedLead);
+        toast('Договор создан', 'success');
+      }
       if (leadPrebookingPrefill && contract.status === 'pre_booking') {
         const updatedLead = await leadApi.update(leadPrebookingPrefill.leadId, {
           prebookingId: contract.id,
@@ -371,6 +401,8 @@ function AppShell() {
       setEditingContract(null);
       setEditingPreBooking(null);
       setLeadPrebookingPrefill(null);
+      setIsPrebookingConversionMode(false);
+      setContractConversionLeadId(null);
     } catch (error) {
       console.error('Error saving contract:', error);
       const conflict = getErrorConflict(error);
@@ -694,15 +726,21 @@ function AppShell() {
               setIsPreBookingModalOpen(false);
               setEditingPreBooking(null);
               setLeadPrebookingPrefill(null);
+              setIsPrebookingConversionMode(false);
+              setContractConversionLeadId(null);
             }}
             onSave={(contract) => {
               void handleSaveContract(contract);
             }}
             onOpenContract={() => {
+              const prebooking = editingPreBooking;
               setIsPreBookingModalOpen(false);
-              setEditingContract(editingPreBooking);
+              setEditingContract(prebooking);
               setEditingPreBooking(null);
               setModalMode('edit');
+              setIsPrebookingConversionMode(Boolean(prebooking && prebooking.status === 'pre_booking'));
+              setContractConversionLeadId(null);
+              if (prebooking) void resolveLeadForConvertedPrebooking(prebooking.id);
               setIsContractModalOpen(true);
             }}
             onDelete={(contractId) => {
@@ -721,6 +759,8 @@ function AppShell() {
             onClose={() => {
               setIsContractModalOpen(false);
               setEditingContract(null);
+              setIsPrebookingConversionMode(false);
+              setContractConversionLeadId(null);
             }}
             onSave={handleSaveContract}
             clients={clients}
@@ -729,6 +769,7 @@ function AppShell() {
             initialData={editingContract || undefined}
             initialMode={modalMode}
             prefilledBooking={prefilledBooking || undefined}
+            isPrebookingConversion={isPrebookingConversionMode}
             isDarkMode={isDarkMode}
           />
         )}
