@@ -163,12 +163,12 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
   };
 
   const inputClass = cn(
-    'w-full rounded-xl border px-3 py-2 text-sm outline-none transition-colors',
+    'w-full rounded-lg border px-3 py-1.5 text-sm outline-none transition-colors',
     isDarkMode ? 'border-white/10 bg-white/5 text-white placeholder:text-gray-600 focus:border-orange-500/60' : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400'
   );
 
   const sectionClass = cn(
-    'rounded-xl border p-4',
+    'rounded-xl border p-3',
     isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-gray-50'
   );
   const labelClass = 'text-[11px] font-bold uppercase tracking-wide text-gray-500';
@@ -182,30 +182,29 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         onSubmit={handleSubmit}
         className={cn(
-          'flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border shadow-2xl',
+          'flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border shadow-2xl',
           isDarkMode ? 'border-white/10 bg-[#111]' : 'border-gray-200 bg-white'
         )}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div>
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+          <div className="flex min-w-0 flex-wrap items-start gap-3">
+            <div className="min-w-0">
               <h2 className="text-xl font-bold">{lead ? 'Заявка' : 'Новая заявка'}</h2>
-              <p className="mt-1 text-xs text-gray-500">{getLeadOriginLabel(lead)}</p>
-              <p className="mt-1 text-xs text-gray-500">
-                Источник: {formatLeadSource(form.source)} · Получена: {receivedAt}
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-gray-500">
+                {getLeadOriginLabel(lead)} · Источник: {formatLeadSource(form.source)} · Получена: {receivedAt}
               </p>
             </div>
-            <LeadStatusBadge status={lead?.status || form.status} />
+            <LeadStatusBadge status={lead?.status || form.status} className="mt-0.5 shrink-0" />
           </div>
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-gray-500 transition-colors hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={onClose} className="shrink-0 rounded-xl p-2 text-gray-500 transition-colors hover:bg-white/10 hover:text-white">
             <X size={20} />
           </button>
         </div>
 
-        <div className="grid gap-4 overflow-y-auto p-6">
+        <div className="grid gap-3 overflow-y-auto p-5">
           <section className={sectionClass}>
             <h3 className={sectionTitleClass}>Гость</h3>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
               <label className="space-y-1.5">
                 <span className={labelClass}>Имя гостя</span>
                 <input className={inputClass} value={form.guestName} onChange={event => setField('guestName', event.target.value)} />
@@ -223,7 +222,7 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
 
           <section className={sectionClass}>
             <h3 className={sectionTitleClass}>Проживание</h3>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
               <label className="space-y-1.5">
                 <span className={labelClass}>Желаемая дата заезда</span>
                 <input className={inputClass} type="date" value={form.desiredStartDate} onChange={event => setField('desiredStartDate', event.target.value)} />
@@ -249,15 +248,15 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
 
           <section className={sectionClass}>
             <h3 className={sectionTitleClass}>Комментарий гостя</h3>
-            <label className="mt-4 block space-y-1.5">
+            <label className="mt-3 block space-y-1.5">
               <span className={labelClass}>Комментарий</span>
-              <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.message} onChange={event => setField('message', event.target.value)} />
+              <textarea className={cn(inputClass, 'min-h-[64px] resize-none')} value={form.message} onChange={event => setField('message', event.target.value)} />
             </label>
           </section>
 
           <section className={sectionClass}>
             <h3 className={sectionTitleClass}>Работа с заявкой</h3>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
               <label className="space-y-1.5">
                 <span className={labelClass}>Статус</span>
                 <select className={inputClass} value={form.status} onChange={event => setField('status', event.target.value as LeadStatus)}>
@@ -266,14 +265,22 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
                   ))}
                 </select>
               </label>
+              <div className="flex items-end gap-2">
+                <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('in_progress')} className={cn('rounded-lg px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/5 text-gray-200 hover:bg-white/10' : 'bg-white text-gray-700 hover:bg-gray-100')}>
+                  В работу
+                </button>
+                <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('rejected')} className="rounded-lg bg-red-500/10 px-3 py-1.5 text-sm font-bold text-red-400 transition-colors hover:bg-red-500/20">
+                  Отклонить
+                </button>
+              </div>
               <label className="space-y-1.5 md:col-span-2">
                 <span className={labelClass}>Заметка менеджера</span>
-                <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.managerNote} onChange={event => setField('managerNote', event.target.value)} />
+                <textarea className={cn(inputClass, 'min-h-[64px] resize-none')} value={form.managerNote} onChange={event => setField('managerNote', event.target.value)} />
               </label>
             </div>
           </section>
 
-          <section className={sectionClass}>
+          <section className={cn(sectionClass, 'py-2.5')}>
             <button
               type="button"
               onClick={() => setIsTechOpen(prev => !prev)}
@@ -283,7 +290,7 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
               <ChevronDown size={17} className={cn('transition-transform', isTechOpen && 'rotate-180')} />
             </button>
             {isTechOpen && (
-              <div className={cn('mt-4 rounded-xl border p-3 text-xs', isDarkMode ? 'border-white/10 bg-black/20 text-gray-300' : 'border-gray-200 bg-white text-gray-700')}>
+              <div className={cn('mt-3 rounded-xl border p-3 text-xs', isDarkMode ? 'border-white/10 bg-black/20 text-gray-300' : 'border-gray-200 bg-white text-gray-700')}>
                 {technicalRows.length === 0 ? (
                   <div className="text-gray-500">Нет технических данных</div>
                 ) : (
@@ -301,15 +308,7 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
           </section>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('in_progress')} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/5 text-gray-200 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
-              В работу
-            </button>
-            <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('rejected')} className="rounded-xl bg-red-500/10 px-4 py-2 text-sm font-bold text-red-400 transition-colors hover:bg-red-500/20">
-              Отклонить
-            </button>
-          </div>
+        <div className="flex justify-end border-t border-white/10 px-5 py-3">
           <div className="flex items-center gap-2">
             <button type="button" disabled={isSaving} onClick={onClose} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
               Отмена

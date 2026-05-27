@@ -26,6 +26,29 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 20:19 +03:00 — Compact lead modal layout
+
+Files changed:
+- `src/components/leads/LeadModal.tsx`
+- `scripts/leadModalSimplificationTest.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- made the lead modal more compact by reducing section spacing, field padding, and textarea height;
+- moved `В работу` and `Отклонить` into the `Работа с заявкой` section;
+- left only `Отмена` and `Сохранить` in the modal footer;
+- kept `Технические данные` collapsed by default as a compact single row.
+
+Checks run:
+- `npx tsx scripts/leadModalSimplificationTest.ts`
+- browser check for Supabase and local lead modals, collapsed technical data, compact layout, and no console errors.
+
+Next:
+- Заявка → Создать гостя.
+
+Risks/TODOs:
+- `npm run lint` and `npm run build` were not run per task instruction.
+
 ### 2026-05-27 20:09 +03:00 — Simplified lead modal
 
 Files changed:
