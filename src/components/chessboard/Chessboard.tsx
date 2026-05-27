@@ -118,9 +118,19 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
     return { name: name || 'Гость', phone };
   };
 
-  const getRoomName = (object: ObjectDefinition) => object.name.replace('ДОМ ', 'НОМЕР ');
+  const getRoomName = (object: ObjectDefinition) => object.name;
 
-  const getRoomCategory = (_object: ObjectDefinition) => 'Номер размещения';
+  const getRoomCategory = (object: ObjectDefinition) => object.category || 'Номер размещения';
+
+  const formatRoomPrice = (price?: number) => (
+    price ? `${price.toLocaleString('ru-RU')} ₽/ночь` : ''
+  );
+
+  const getRoomMeta = (object: ObjectDefinition) => [
+    object.capacity ? `${object.capacity} чел` : '',
+    object.seaView ? 'вид на море' : '',
+    formatRoomPrice(object.pricePerNight),
+  ].filter(Boolean);
 
   const getStatusClasses = (status: string | undefined) => {
     if (status === 'pre_booking') return 'bg-blue-500/20 text-blue-100 border-blue-400/40';
@@ -158,11 +168,13 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
     const rows = [
       [`Шахматка номеров: ${periodLabel}`],
       ['Большая Медведица'],
-      ['Номер', 'Категория', 'Вместимость', ...visibleDays.map(day => format(day, 'd EEE', { locale: ru }))],
+      ['Номер', 'Категория', 'Вместимость', 'Вид', 'Цена/ночь', ...visibleDays.map(day => format(day, 'd EEE', { locale: ru }))],
       ...visibleObjects.map(object => [
         getRoomName(object),
         getRoomCategory(object),
         object.capacity ? `${object.capacity} чел` : '',
+        object.seaView ? 'вид на море' : '',
+        formatRoomPrice(object.pricePerNight),
         ...visibleDays.map(day => {
           const booking = getBookingForObjectOnDay(object.id, day);
           const contract = booking ? contractsById.get(booking.contractId) : null;
@@ -366,9 +378,9 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
       )}>
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
-            <div className="grid grid-cols-[240px_1fr] border-b border-white/5">
+            <div className="grid grid-cols-[220px_1fr] border-b border-white/5">
               <div className={cn(
-                "p-4 text-[10px] uppercase tracking-wider font-semibold border-r",
+                "p-3 text-[10px] uppercase tracking-wider font-semibold border-r",
                 isDarkMode ? "text-gray-500 border-white/5" : "text-gray-400 border-gray-100",
               )}>
                 Номера
@@ -381,7 +393,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      "p-3 text-center border-r last:border-r-0",
+                      "p-2 text-center border-r last:border-r-0",
                       isDarkMode ? "border-white/5" : "border-gray-100",
                     )}
                   >
@@ -396,21 +408,25 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               const visibleBookings = getVisibleBookingsForObject(object.id);
 
               return (
-                <div key={object.id} className="grid grid-cols-[240px_1fr] min-h-[92px] border-b border-white/5 last:border-b-0">
+                <div key={object.id} className="grid grid-cols-[220px_1fr] min-h-[72px] border-b border-white/5 last:border-b-0">
                   <div className={cn(
-                    "p-4 border-r flex flex-col justify-center",
+                    "p-3 border-r flex flex-col justify-center",
                     isDarkMode ? "border-white/5" : "border-gray-100",
                   )}>
-                    <div className="text-sm font-black">{getRoomName(object)}</div>
-                    <div className="mt-1 text-xs text-gray-500">{getRoomCategory(object)}</div>
-                    <div className="mt-2 text-[11px] text-gray-500">
-                      {object.capacity ? `${object.capacity} чел` : 'Вместимость не указана'}
+                    <div className="flex items-baseline gap-2">
+                      <div className="text-sm font-black leading-none">{getRoomName(object)}</div>
+                      <div className="min-w-0 truncate text-[11px] font-semibold text-gray-400">{getRoomCategory(object)}</div>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] leading-tight text-gray-500">
+                      {getRoomMeta(object).map(item => (
+                        <span key={item}>{item}</span>
+                      ))}
                     </div>
                   </div>
 
                   <div className="relative">
                     <div
-                      className="grid h-full min-h-[92px]"
+                      className="grid h-full min-h-[72px]"
                       style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(72px, 1fr))` }}
                     >
                       {visibleDays.map(day => {
@@ -438,7 +454,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                           key={booking.id}
                           onClick={() => handleBookingClick(booking.contractId)}
                           className={cn(
-                            "absolute top-1/2 -translate-y-1/2 h-12 rounded-lg border px-3 text-left shadow-sm overflow-hidden transition-all hover:brightness-110",
+                            "absolute top-1/2 -translate-y-1/2 h-10 rounded-md border px-2.5 text-left shadow-sm overflow-hidden transition-all hover:brightness-110",
                             getStatusClasses(contract.status),
                           )}
                           style={{

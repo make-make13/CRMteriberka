@@ -336,6 +336,9 @@ export interface ObjectDefinition {
   id: string;
   name: string;
   capacity?: number;
+  category?: string;
+  pricePerNight?: number;
+  seaView?: boolean;
   baseType: BaseType;
   type: 'house' | 'cottage' | 'service';
 }

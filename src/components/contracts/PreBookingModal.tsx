@@ -251,6 +251,13 @@ export default function PreBookingModal({
 
   const isGBCottage = GB_OBJECTS.some(obj => obj.id === currentObjectId);
   const isCC = currentBaseType === 'chunga-changa';
+  const formatObjectOptionLabel = (object: typeof objectOptions[number]) => [
+    object.name,
+    object.category,
+    object.capacity ? `${object.capacity} чел` : '',
+    object.seaView ? 'вид на море' : '',
+    object.pricePerNight ? `${object.pricePerNight.toLocaleString('ru-RU')} ₽/ночь` : '',
+  ].filter(Boolean).join(' · ');
 
   const handleSave = () => {
     const phoneDigits = phone.replace(/\D/g, '');
@@ -356,7 +363,7 @@ export default function PreBookingModal({
               >
                 <option value="">Выберите номер</option>
                 {objectOptions.map(object => (
-                  <option key={object.id} value={object.id}>{object.name}</option>
+                  <option key={object.id} value={object.id}>{formatObjectOptionLabel(object)}</option>
                 ))}
               </select>
             </div>

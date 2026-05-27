@@ -259,8 +259,16 @@ export default function ContractModal({
 
   const getCcObjectLabel = (objectId: string) => {
     const object = ccObjectOptions.find(o => o.id === objectId);
-    return object ? (object.name.split('№')[1]?.trim() || object.name) : 'Старый объект / неактивный объект';
+    return object ? object.name : 'Старый объект / неактивный объект';
   };
+
+  const formatObjectOptionLabel = (object: typeof ccObjectOptions[number]) => [
+    object.name,
+    object.category,
+    object.capacity ? `${object.capacity} чел` : '',
+    object.seaView ? 'вид на море' : '',
+    object.pricePerNight ? `${object.pricePerNight.toLocaleString('ru-RU')} ₽/ночь` : '',
+  ].filter(Boolean).join(' · ');
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
@@ -988,7 +996,7 @@ export default function ContractModal({
                                       setShowCcCottageDropdown(false);
                                     }}
                                   >
-                                    {obj.name.split('№')[1]?.trim() || obj.name}
+                                    {formatObjectOptionLabel(obj)}
                                   </div>
                                 ))}
                               </div>

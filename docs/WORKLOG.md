@@ -26,6 +26,32 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 00:10 +03:00 — Hotel rooms catalog
+
+Files changed:
+- `src/constants.ts`
+- `src/types.ts`
+- `src/components/chessboard/Chessboard.tsx`
+- `src/components/contracts/PreBookingModal.tsx`
+- `src/components/contracts/ContractModal.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- replaced the old object list with 20 real rooms for boutique hotel `Большая Медведица`;
+- added room category, capacity, sea-view flag, and nightly price to the shared room catalog;
+- kept room ids like `cc-1` so existing bookings remain linked;
+- made the chessboard rows and left room column more compact;
+- reused the same catalog in the chessboard, prebooking room select, contract room dropdown, and Excel export.
+
+Checks run:
+- browser check only: chessboard shows `№1` through `№20`; prebooking select has 20 room options; sea-view text appears only for sea-view rooms; rooms without sea view do not show view text.
+
+Next:
+- review pricing autofill only if managers want room prices to populate booking price automatically.
+
+Risks/TODOs:
+- `npm run lint`, `npm run build`, and tests were not run per task instruction.
+
 ### 2026-05-27 23:59 +03:00 — Prebooking to contract flow
 
 Files changed:
