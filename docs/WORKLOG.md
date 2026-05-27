@@ -26,6 +26,20 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 02:53 +03:00 — Added GEMINI.md agent rules
+
+Files changed:
+- `GEMINI.md` (new)
+- `docs/WORKLOG.md`
+
+Completed:
+- Added `GEMINI.md` with guidelines and rules for Antigravity/Gemini agents.
+- AGENTS.md remains.
+- WORKLOG remains the primary short log.
+
+Checks run:
+- `git status --short`
+
 ### 2026-05-28 02:51 +03:00 — Cleanup of legacy documents and old backups
 
 Files changed:
