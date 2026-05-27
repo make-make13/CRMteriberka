@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { BookingConflictError, localDb } from './server/localDatabase';
 import { backupService } from './server/backupService';
 import { authService } from './server/authService';
+import { syncSupabaseLeads } from './server/supabaseLeadSync';
 import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
 
@@ -240,6 +241,14 @@ async function startServer() {
   app.post('/api/leads', requireAuth, (req, res) => {
     try {
       res.json(localDb.createLead(req.body));
+    } catch (error) {
+      res.status(400).json({ error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/leads/sync', requireAuth, async (_req, res) => {
+    try {
+      res.json(await syncSupabaseLeads());
     } catch (error) {
       res.status(400).json({ error: asErrorMessage(error) });
     }

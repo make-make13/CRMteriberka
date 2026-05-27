@@ -102,6 +102,32 @@ export interface LeadListFilters {
   search?: string;
 }
 
+export interface SupabaseLeadRow {
+  id: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  source?: string | null;
+  status?: string | null;
+  guest_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  desired_start_date?: string | null;
+  desired_end_date?: string | null;
+  desired_time?: string | null;
+  guests_count?: number | string | null;
+  object_type?: string | null;
+  object_id?: string | null;
+  message?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  utm_term?: string | null;
+  page_url?: string | null;
+  referrer?: string | null;
+  user_agent?: string | null;
+}
+
 type JsonObject = Record<string, unknown>;
 
 interface LeadDbRow {
@@ -639,6 +665,11 @@ export class LocalDatabase {
     return row ? this.mapLeadRow(row) : null;
   }
 
+  getLeadBySupabaseId(supabaseId: string) {
+    const row = this.db.prepare('SELECT * FROM leads WHERE supabase_id = ?').get(supabaseId) as LeadDbRow | undefined;
+    return row ? this.mapLeadRow(row) : null;
+  }
+
   createLead(input: LeadCreateRecordInput) {
     const now = nowIso();
     const phone = cleanOptionalString(input.phone);
@@ -674,6 +705,63 @@ export class LocalDatabase {
       pulledToCrmAt: cleanOptionalString(input.pulledToCrmAt),
       convertedAt: cleanOptionalString(input.convertedAt),
       lastError: cleanOptionalString(input.lastError),
+    };
+
+    this.insertLead(lead);
+    return lead;
+  }
+
+  createLeadFromSupabase(row: SupabaseLeadRow) {
+    const supabaseId = cleanOptionalString(row.id);
+    if (!supabaseId) {
+      throw new Error('Supabase lead id is required');
+    }
+
+    const existing = this.getLeadBySupabaseId(supabaseId);
+    if (existing) return existing;
+
+    const phone = cleanOptionalString(row.phone);
+    if (!phone) {
+      throw new Error('Телефон заявки обязателен');
+    }
+
+    const createdAt = cleanOptionalString(row.created_at) || nowIso();
+    const updatedAt = cleanOptionalString(row.updated_at) || createdAt;
+    const status = this.normalizeLeadStatus(row.status);
+    const utm = {
+      utm_source: cleanOptionalString(row.utm_source),
+      utm_medium: cleanOptionalString(row.utm_medium),
+      utm_campaign: cleanOptionalString(row.utm_campaign),
+      utm_content: cleanOptionalString(row.utm_content),
+      utm_term: cleanOptionalString(row.utm_term),
+      page_url: cleanOptionalString(row.page_url),
+      referrer: cleanOptionalString(row.referrer),
+      user_agent: cleanOptionalString(row.user_agent),
+    };
+    const cleanUtm = Object.fromEntries(Object.entries(utm).filter(([, value]) => Boolean(value)));
+
+    const lead: LeadRecord = {
+      id: generateLocalId('lead'),
+      supabaseId,
+      source: cleanOptionalString(row.source) || 'bolshaya-medveditsa-landing',
+      status,
+      syncStatus: 'pulled',
+      guestName: cleanOptionalString(row.guest_name),
+      phone,
+      email: cleanOptionalString(row.email),
+      desiredStartDate: cleanOptionalString(row.desired_start_date),
+      desiredEndDate: cleanOptionalString(row.desired_end_date),
+      desiredTime: cleanOptionalString(row.desired_time),
+      guestsCount: row.guests_count === undefined || row.guests_count === null ? undefined : Number(row.guests_count),
+      objectType: cleanOptionalString(row.object_type),
+      objectId: cleanOptionalString(row.object_id),
+      message: cleanOptionalString(row.message),
+      utmJson: Object.keys(cleanUtm).length ? JSON.stringify(cleanUtm) : undefined,
+      rawJson: JSON.stringify(row),
+      createdAt,
+      updatedAt,
+      supabaseCreatedAt: cleanOptionalString(row.created_at),
+      pulledToCrmAt: nowIso(),
     };
 
     this.insertLead(lead);
@@ -1032,6 +1120,22 @@ export class LocalDatabase {
       convertedAt: row.converted_at || undefined,
       lastError: row.last_error || undefined,
     };
+  }
+
+  private normalizeLeadStatus(status: unknown): LeadStatusRecord {
+    const value = cleanOptionalString(status);
+    if (
+      value === 'new'
+      || value === 'in_progress'
+      || value === 'client_created'
+      || value === 'prebooking_created'
+      || value === 'contract_created'
+      || value === 'rejected'
+      || value === 'duplicate'
+    ) {
+      return value;
+    }
+    return 'new';
   }
 
   private insertLead(lead: LeadRecord) {

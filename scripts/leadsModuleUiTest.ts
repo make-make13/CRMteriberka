@@ -33,6 +33,7 @@ assert.match(apiSource, /\/api\/leads/, 'leadApi must call /api/leads');
 assert.match(serverSource, /app\.get\('\/api\/leads', requireAuth/, 'GET /api/leads must be protected');
 assert.match(serverSource, /app\.get\('\/api\/leads\/:id', requireAuth/, 'GET /api/leads/:id must be protected');
 assert.match(serverSource, /app\.post\('\/api\/leads', requireAuth/, 'POST /api/leads must be protected');
+assert.match(serverSource, /app\.post\('\/api\/leads\/sync', requireAuth/, 'POST /api/leads/sync must be protected');
 assert.match(serverSource, /app\.patch\('\/api\/leads\/:id', requireAuth/, 'PATCH /api/leads/:id must be protected');
 assert.match(serverSource, /app\.patch\('\/api\/leads\/:id\/status', requireAuth/, 'PATCH /api/leads/:id/status must be protected');
 
@@ -53,6 +54,6 @@ for (const file of forbiddenSupabaseUiFiles) {
 }
 
 assert.equal(serverSource.includes('/api/public/leads'), false, 'Public leads endpoint must not be added yet');
-assert.equal(serverSource.includes('/api/leads/sync'), false, 'Lead sync endpoint must not be added yet');
+assert.equal(serverSource.includes('/api/public/leads/sync'), false, 'Public lead sync endpoint must not be added');
 
 console.log('leads module UI tests passed');

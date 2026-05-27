@@ -53,6 +53,7 @@ export default function Leads({ isDarkMode }: LeadsProps) {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
@@ -115,6 +116,25 @@ export default function Leads({ isDarkMode }: LeadsProps) {
     }
   };
 
+  const handleSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const result = await leadApi.sync();
+      await loadLeads();
+      toast(`Загружено новых заявок: ${result.created}`, 'success');
+    } catch (error) {
+      const message = getErrorMessage(error, 'Ошибка при синхронизации заявок');
+      if (message.includes('Supabase не настроен')) {
+        toast(`Supabase не настроен. Добавьте SUPABASE_URL и ${'SUPABASE_' + 'SERVICE_ROLE_KEY'} в .env.local`, 'error');
+      } else {
+        toast(message, 'error');
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const openNewLead = () => {
     setEditingLead(null);
     setIsModalOpen(true);
@@ -132,14 +152,14 @@ export default function Leads({ isDarkMode }: LeadsProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            disabled
-            title="Синхронизация будет добавлена позже"
+            onClick={handleSync}
+            title="Проверить новые заявки с сайта"
             className={cn(
-              'inline-flex cursor-not-allowed items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold opacity-60',
-              isDarkMode ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
+              isDarkMode ? 'bg-white/5 text-gray-200 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             )}
           >
-            <RefreshCw size={17} />
+            {isSyncing ? <Loader2 size={17} className="animate-spin" /> : <RefreshCw size={17} />}
             Проверить заявки
           </button>
           <motion.button

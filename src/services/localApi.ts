@@ -94,6 +94,15 @@ export interface LeadListFilters {
   search?: string;
 }
 
+export interface LeadSyncResult {
+  ok: true;
+  fetched: number;
+  created: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
+}
+
 function buildLeadQuery(filters?: LeadListFilters) {
   const params = new URLSearchParams();
   if (filters?.status && filters.status !== 'all') params.set('status', filters.status);
@@ -105,6 +114,10 @@ function buildLeadQuery(filters?: LeadListFilters) {
 export const leadApi = {
   list: (filters?: LeadListFilters) => apiRequest<Lead[]>(buildLeadQuery(filters)),
   get: (id: string) => apiRequest<Lead>(`/api/leads/${id}`),
+  sync: () => apiRequest<LeadSyncResult>('/api/leads/sync', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
   create: (input: LeadCreateInput) => apiRequest<Lead>('/api/leads', {
     method: 'POST',
     body: JSON.stringify(input),
