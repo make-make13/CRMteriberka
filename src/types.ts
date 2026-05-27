@@ -178,6 +178,21 @@ export interface Lead {
   lastError?: string;
 }
 
+export interface LeadPrebookingPrefill {
+  leadId: string;
+  clientId: string;
+  guestName?: string;
+  phone?: string;
+  email?: string;
+  desiredStartDate?: string;
+  desiredEndDate?: string;
+  desiredTime?: string;
+  guestsCount?: number;
+  message?: string;
+  baseType: BaseType;
+  objectId?: string;
+}
+
 export interface LeadCreateInput {
   supabaseId?: string;
   source?: string;

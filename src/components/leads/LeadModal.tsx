@@ -46,6 +46,7 @@ interface LeadModalProps {
   onCreate: (input: LeadCreateInput) => Promise<void>;
   onUpdate: (id: string, patch: LeadUpdateInput) => Promise<void>;
   onCreateClient: (id: string) => Promise<void>;
+  onCreatePrebookingFromLead: (lead: Lead) => void;
 }
 
 function textInputValue(value: unknown) {
@@ -96,7 +97,17 @@ function getInitialState(lead: Lead | null): LeadFormState {
   };
 }
 
-export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, onClose, onCreate, onUpdate, onCreateClient }: LeadModalProps) {
+export default function LeadModal({
+  isOpen,
+  isDarkMode,
+  lead,
+  isSaving = false,
+  onClose,
+  onCreate,
+  onUpdate,
+  onCreateClient,
+  onCreatePrebookingFromLead,
+}: LeadModalProps) {
   const [form, setForm] = useState<LeadFormState>(() => getInitialState(lead));
   const [isTechOpen, setIsTechOpen] = useState(false);
 
@@ -165,10 +176,18 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
 
   const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
   const canCreateClient = Boolean(lead && !lead.clientId && !isClientCreateBlockedStatus);
+  const hasPrebooking = Boolean(lead?.prebookingId || lead?.contractId);
+  const isPrebookingBlockedStatus = ['rejected', 'duplicate'].includes(form.status);
+  const canCreatePrebooking = Boolean(lead && lead.clientId && !hasPrebooking && !isPrebookingBlockedStatus);
 
   const handleCreateClient = async () => {
     if (!lead || !canCreateClient) return;
     await onCreateClient(lead.id);
+  };
+
+  const handleCreatePrebooking = () => {
+    if (!lead || !canCreatePrebooking) return;
+    onCreatePrebookingFromLead(lead);
   };
 
   const inputClass = cn(
@@ -298,6 +317,22 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
                       {isSaving && <Loader2 size={15} className="animate-spin" />}
                       Создать гостя
                     </button>
+                  ) : null}
+                  {hasPrebooking ? (
+                    <span className={cn('rounded-lg px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-cyan-500/10 text-cyan-300' : 'bg-cyan-50 text-cyan-700')}>
+                      Предбронь создана
+                    </span>
+                  ) : canCreatePrebooking ? (
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={handleCreatePrebooking}
+                      className={cn('rounded-lg px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'bg-cyan-500/15 text-cyan-200 hover:bg-cyan-500/25' : 'bg-cyan-50 text-cyan-800 hover:bg-cyan-100')}
+                    >
+                      Создать предбронь
+                    </button>
+                  ) : !lead.clientId && !isPrebookingBlockedStatus ? (
+                    <span className="text-sm font-medium text-gray-500">Сначала создайте гостя</span>
                   ) : null}
                 </div>
               )}

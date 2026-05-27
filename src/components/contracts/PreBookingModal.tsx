@@ -4,7 +4,7 @@ import { X, Plus } from 'lucide-react';
 import { format, addHours, addDays } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { BaseType, Contract, ContractStatus } from '../../types';
+import { BaseType, Contract, ContractStatus, LeadPrebookingPrefill } from '../../types';
 import { CC_OBJECTS, GB_OBJECTS, GB_SERVICES } from '../../constants';
 import { validateBookingPeriod } from '../../utils/bookingValidation';
 
@@ -20,6 +20,7 @@ interface PreBookingModalProps {
   onOpenContract: () => void;
   onDelete?: (contractId: string) => void;
   prefilledBooking: { objectId: string; date: Date; baseType: BaseType } | null;
+  leadPrefill?: LeadPrebookingPrefill | null;
   initialData?: Contract | null;
 }
 
@@ -31,6 +32,7 @@ export default function PreBookingModal({
   onOpenContract,
   onDelete,
   prefilledBooking,
+  leadPrefill,
   initialData
 }: PreBookingModalProps) {
   const [name, setName] = useState('');
@@ -38,6 +40,8 @@ export default function PreBookingModal({
   const [email, setEmail] = useState('');
   const [guestsCount, setGuestsCount] = useState('1');
   const [comment, setComment] = useState('');
+  const [bookingPrice, setBookingPrice] = useState('0');
+  const [selectedObjectId, setSelectedObjectId] = useState('');
   const [showComment, setShowComment] = useState(false);
 
   const [startDate, setStartDate] = useState('');
@@ -174,6 +178,8 @@ export default function PreBookingModal({
         setEmail(parsedEmail);
         setGuestsCount(initialData.guestsCount.toString());
         setComment(parsedComment);
+        setBookingPrice(String(initialData.bookings[0]?.price || initialData.totalAmount || 0));
+        setSelectedObjectId(initialData.bookings[0]?.objectId || '');
         setShowComment(!!parsedComment);
         setError(null);
 
@@ -186,12 +192,31 @@ export default function PreBookingModal({
           setStartTime(format(start, 'HH:mm'));
           setEndTime(format(end, 'HH:mm'));
         }
+      } else if (leadPrefill) {
+        const start = leadPrefill.desiredStartDate ? new Date(`${leadPrefill.desiredStartDate}T${leadPrefill.desiredTime || '14:00'}`) : new Date();
+        const fallbackEnd = addDays(start, 1);
+
+        setName(leadPrefill.guestName || 'Гость без имени');
+        setPhone(leadPrefill.phone || '+7 ');
+        setEmail(leadPrefill.email || '');
+        setGuestsCount(leadPrefill.guestsCount ? String(leadPrefill.guestsCount) : '1');
+        setComment(leadPrefill.message || '');
+        setBookingPrice('0');
+        setSelectedObjectId(leadPrefill.objectId || '');
+        setShowComment(Boolean(leadPrefill.message));
+        setError(null);
+        setStartDate(leadPrefill.desiredStartDate || format(start, 'yyyy-MM-dd'));
+        setEndDate(leadPrefill.desiredEndDate || format(fallbackEnd, 'yyyy-MM-dd'));
+        setStartTime(leadPrefill.desiredTime || '14:00');
+        setEndTime('12:00');
       } else if (prefilledBooking) {
         setName('');
         setPhone('+7 ');
         setEmail('');
         setGuestsCount('1');
         setComment('');
+        setBookingPrice('0');
+        setSelectedObjectId(prefilledBooking.objectId);
         setShowComment(false);
         setError(null);
 
@@ -216,12 +241,13 @@ export default function PreBookingModal({
         }
       }
     }
-  }, [isOpen, prefilledBooking, initialData]);
+  }, [isOpen, prefilledBooking, leadPrefill, initialData]);
 
-  if (!isOpen || (!prefilledBooking && !initialData)) return null;
+  if (!isOpen || (!prefilledBooking && !leadPrefill && !initialData)) return null;
 
-  const currentObjectId = initialData ? initialData.bookings[0]?.objectId : prefilledBooking?.objectId;
-  const currentBaseType = initialData ? initialData.baseType : prefilledBooking?.baseType;
+  const currentObjectId = initialData ? initialData.bookings[0]?.objectId : selectedObjectId;
+  const currentBaseType = initialData ? initialData.baseType : leadPrefill?.baseType || prefilledBooking?.baseType;
+  const objectOptions = currentBaseType === 'golubaya-bukhta' ? [...GB_OBJECTS, ...GB_SERVICES] : CC_OBJECTS;
 
   const isGBCottage = GB_OBJECTS.some(obj => obj.id === currentObjectId);
   const isCC = currentBaseType === 'chunga-changa';
@@ -230,6 +256,10 @@ export default function PreBookingModal({
     const phoneDigits = phone.replace(/\D/g, '');
     if (!name || phoneDigits.length < 11) {
       setError('Пожалуйста, заполните обязательные поля (Имя и корректный Телефон)');
+      return;
+    }
+    if (!currentObjectId) {
+      setError('Выберите номер для предброни');
       return;
     }
 
@@ -248,16 +278,17 @@ export default function PreBookingModal({
     }
 
     const contractId = initialData ? initialData.id : Math.random().toString(36).substr(2, 9);
+    const price = Number(bookingPrice) || 0;
 
     const newContract: Contract = {
       id: contractId,
       number: initialData ? initialData.number : `ПБ-${format(new Date(), 'yyMMdd-HHmm')}`,
-      clientId: initialData ? initialData.clientId : '',
+      clientId: initialData ? initialData.clientId : leadPrefill?.clientId || '',
       baseType: currentBaseType!,
       status: 'pre_booking',
-      totalAmount: initialData ? initialData.totalAmount : 0,
+      totalAmount: initialData ? initialData.totalAmount : price,
       prepayment: initialData ? initialData.prepayment : 0,
-      remainder: initialData ? initialData.remainder : 0,
+      remainder: initialData ? initialData.remainder : price,
       createdAt: initialData ? initialData.createdAt : new Date().toISOString(),
       dateSigned: initialData ? initialData.dateSigned : format(new Date(), 'yyyy-MM-dd'),
       nextReminderAt: initialData ? initialData.nextReminderAt : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -272,7 +303,7 @@ export default function PreBookingModal({
           type: isGBCottage ? 'main' : (isCC ? 'main' : 'service'),
           startTime: bookingPeriod.startDateTime,
           endTime: bookingPeriod.endDateTime,
-          price: initialData?.bookings?.[0]?.price || 0
+          price: initialData?.bookings?.[0]?.price || price
         }
       ]
     };
@@ -309,6 +340,28 @@ export default function PreBookingModal({
             </div>
           )}
 
+          {leadPrefill && (
+            <div>
+              <label className="block text-xs font-bold mb-1.5">Номер <span className="text-red-500">*</span></label>
+              <select
+                value={selectedObjectId}
+                onChange={event => {
+                  setSelectedObjectId(event.target.value);
+                  setError(null);
+                }}
+                className={cn(
+                  "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
+                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                )}
+              >
+                <option value="">Выберите номер</option>
+                {objectOptions.map(object => (
+                  <option key={object.id} value={object.id}>{object.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold mb-1.5">Имя <span className="text-red-500">*</span></label>
             <input 
@@ -339,6 +392,34 @@ export default function PreBookingModal({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            {leadPrefill && (
+              <>
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">Дата заезда</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    className={cn(
+                      "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
+                      isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">Дата выезда</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className={cn(
+                      "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
+                      isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                    )}
+                  />
+                </div>
+              </>
+            )}
             <div>
               <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">
                 {isGBCottage ? 'Дата заезда' : 'Заезд'}
@@ -414,6 +495,19 @@ export default function PreBookingModal({
                 placeholder="email@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                className={cn(
+                  "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
+                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                )}
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-bold mb-1.5">Цена</label>
+              <input
+                type="number"
+                min="0"
+                value={bookingPrice}
+                onChange={e => setBookingPrice(e.target.value)}
                 className={cn(
                   "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
                   isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"

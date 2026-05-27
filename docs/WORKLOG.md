@@ -26,6 +26,40 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 20:59 +03:00 — Lead to prebooking flow
+
+Files changed:
+- `src/types.ts`
+- `src/App.tsx`
+- `src/components/leads/Leads.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `src/components/contracts/PreBookingModal.tsx`
+- `scripts/leadCreatePrebookingTest.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- added the `Заявка → Создать предбронь` UI flow;
+- opened the existing `PreBookingModal` from a lead with guest/contact/date/comment prefill;
+- required manual room selection when the lead has no object id;
+- saved prebookings only through `contractApi.save()` and the existing `saveContract()` path;
+- linked the lead to the saved prebooking with `prebookingId`, `contractId`, and `prebooking_created`;
+- kept duplicate protection by hiding the action after `prebookingId`/`contractId` exists.
+
+Checks run:
+- `npx tsx scripts/leadCreatePrebookingTest.ts`
+- `npx tsx scripts/leadCreateClientTest.ts`
+- `npx tsx scripts/leadsRuntimeSafetyTest.ts`
+- `npm run lint`
+- `npm run build`
+- browser check: lead prefill opens `PreBookingModal`, room is selected manually, saved prebooking appears in the chessboard as `Ожидает`, lead status becomes `Предбронь`, and the duplicate create action is hidden.
+
+Next:
+- Предбронь → Договор or Заявка → Договор.
+
+Risks/TODOs:
+- PDFMe, document templates, Supabase SQL, and `saveContract()` were not changed.
+- build still reports existing large PDFMe-related chunk warnings.
+
 ### 2026-05-27 20:38 +03:00 — Lead to guest conversion
 
 Files changed:

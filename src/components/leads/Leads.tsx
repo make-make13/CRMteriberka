@@ -32,6 +32,8 @@ const STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
 interface LeadsProps {
   isDarkMode: boolean;
   onClientCreated?: (client: Client) => void;
+  onCreatePrebookingFromLead?: (lead: Lead) => void;
+  updatedLeadFromPrebooking?: Lead | null;
 }
 
 function formatDateTime(value: unknown) {
@@ -53,7 +55,7 @@ function formatDateRange(lead: Lead) {
   return startDate || endDate || 'Не указаны';
 }
 
-export default function Leads({ isDarkMode, onClientCreated }: LeadsProps) {
+export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingFromLead, updatedLeadFromPrebooking }: LeadsProps) {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,6 +82,12 @@ export default function Leads({ isDarkMode, onClientCreated }: LeadsProps) {
   useEffect(() => {
     void loadLeads();
   }, []);
+
+  useEffect(() => {
+    if (!updatedLeadFromPrebooking) return;
+    setLeads(prev => prev.map(lead => lead.id === updatedLeadFromPrebooking.id ? updatedLeadFromPrebooking : lead));
+    setEditingLead(prev => prev?.id === updatedLeadFromPrebooking.id ? updatedLeadFromPrebooking : prev);
+  }, [updatedLeadFromPrebooking]);
 
   const filteredLeads = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -138,6 +146,12 @@ export default function Leads({ isDarkMode, onClientCreated }: LeadsProps) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCreatePrebookingFromLead = (lead: Lead) => {
+    setIsModalOpen(false);
+    setEditingLead(null);
+    onCreatePrebookingFromLead?.(lead);
   };
 
   const handleSync = async () => {
@@ -334,6 +348,7 @@ export default function Leads({ isDarkMode, onClientCreated }: LeadsProps) {
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         onCreateClient={handleCreateClient}
+        onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
       />
     </div>
   );

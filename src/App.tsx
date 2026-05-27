@@ -32,13 +32,13 @@ import SettingsView from './components/settings/SettingsView';
 import NotificationCenter from './components/ui/NotificationCenter';
 import ContractModal from './components/contracts/ContractModal';
 import PreBookingModal from './components/contracts/PreBookingModal';
-import { Client, Contract, Settings, View, BaseType, TaskReminder } from './types';
+import { Client, Contract, Settings, View, BaseType, TaskReminder, Lead, LeadPrebookingPrefill } from './types';
 import { INITIAL_SETTINGS } from './constants';
 import { Toaster } from 'react-hot-toast';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginModal from './components/auth/LoginModal';
-import { backupApi, clientApi, contractApi, settingsApi, taskApi } from './services/localApi';
+import { backupApi, clientApi, contractApi, leadApi, settingsApi, taskApi } from './services/localApi';
 import { getErrorMessage, getErrorConflict } from './utils/errors';
 import ConfirmDialog from './components/common/ConfirmDialog';
 import { getLogoutBackupDecision } from './utils/logoutBackupDecision';
@@ -300,9 +300,36 @@ function AppShell() {
   const [editingPreBooking, setEditingPreBooking] = useState<Contract | null>(null);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('edit');
   const [prefilledBooking, setPrefilledBooking] = useState<{ objectId: string; date: Date; baseType: BaseType } | null>(null);
+  const [leadPrebookingPrefill, setLeadPrebookingPrefill] = useState<LeadPrebookingPrefill | null>(null);
+  const [updatedLeadFromPrebooking, setUpdatedLeadFromPrebooking] = useState<Lead | null>(null);
 
   const handleNewBooking = (objectId: string, date: Date, baseType: BaseType) => {
     setPrefilledBooking({ objectId, date, baseType });
+    setLeadPrebookingPrefill(null);
+    setEditingContract(null);
+    setEditingPreBooking(null);
+    setModalMode('edit');
+    setIsPreBookingModalOpen(true);
+  };
+
+  const handleCreatePrebookingFromLead = (lead: Lead) => {
+    if (!lead.clientId || lead.prebookingId || lead.contractId || lead.status === 'rejected' || lead.status === 'duplicate') return;
+
+    setLeadPrebookingPrefill({
+      leadId: lead.id,
+      clientId: lead.clientId,
+      guestName: lead.guestName,
+      phone: lead.phone,
+      email: lead.email,
+      desiredStartDate: lead.desiredStartDate,
+      desiredEndDate: lead.desiredEndDate,
+      desiredTime: lead.desiredTime,
+      guestsCount: lead.guestsCount,
+      message: lead.message,
+      baseType: 'chunga-changa',
+      objectId: lead.objectId,
+    });
+    setPrefilledBooking(null);
     setEditingContract(null);
     setEditingPreBooking(null);
     setModalMode('edit');
@@ -328,11 +355,22 @@ function AppShell() {
   const handleSaveContract = async (contract: Contract) => {
     try {
       await contractApi.save(contract);
+      if (leadPrebookingPrefill && contract.status === 'pre_booking') {
+        const updatedLead = await leadApi.update(leadPrebookingPrefill.leadId, {
+          prebookingId: contract.id,
+          contractId: contract.id,
+          status: 'prebooking_created',
+          convertedAt: new Date().toISOString(),
+        });
+        setUpdatedLeadFromPrebooking(updatedLead);
+        toast('Предбронь создана', 'success');
+      }
       await refreshData();
       setIsContractModalOpen(false);
       setIsPreBookingModalOpen(false);
       setEditingContract(null);
       setEditingPreBooking(null);
+      setLeadPrebookingPrefill(null);
     } catch (error) {
       console.error('Error saving contract:', error);
       const conflict = getErrorConflict(error);
@@ -434,6 +472,8 @@ function AppShell() {
           <LeadsView
             isDarkMode={isDarkMode}
             onClientCreated={(client) => setClients(prev => prev.some(item => item.id === client.id) ? prev : [client, ...prev])}
+            onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
+            updatedLeadFromPrebooking={updatedLeadFromPrebooking}
           />
         );
       case 'contracts':
@@ -653,10 +693,10 @@ function AppShell() {
             onClose={() => {
               setIsPreBookingModalOpen(false);
               setEditingPreBooking(null);
+              setLeadPrebookingPrefill(null);
             }}
             onSave={(contract) => {
-              handleSaveContract(contract);
-              setIsPreBookingModalOpen(false);
+              void handleSaveContract(contract);
             }}
             onOpenContract={() => {
               setIsPreBookingModalOpen(false);
@@ -670,6 +710,7 @@ function AppShell() {
               setIsPreBookingModalOpen(false);
             }}
             prefilledBooking={prefilledBooking}
+            leadPrefill={leadPrebookingPrefill}
             initialData={editingPreBooking}
           />
         )}
