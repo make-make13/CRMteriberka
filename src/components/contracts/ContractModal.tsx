@@ -8,7 +8,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Contract, Client, Settings, BaseType, ContractStatus, Booking } from '../../types';
 import { CC_OBJECTS, GB_OBJECTS, GB_SERVICES } from '../../constants';
-import { getNextContractNumberValue, resolveContractNumberCategory, type ContractNumberCategory } from '../../utils/contractNumbers';
+import { formatVisibleContractNumber, getNextContractNumberValue, resolveContractNumberCategory, type ContractNumberCategory } from '../../utils/contractNumbers';
 import DocumentPreviewModal, { type DocumentPreviewMode } from '../common/DocumentPreviewModal';
 import { emailService } from '../../services/emailService';
 import { emailSettingsApi } from '../../services/localApi';
@@ -228,7 +228,7 @@ export default function ContractModal({
   const isPrebookingNumberReplaced = Boolean(isConvertingPreBooking && initialData?.number.startsWith('ПБ-'));
   const initialContractNumber = isPrebookingNumberReplaced
     ? initialNextContractNumber
-    : initialData?.number || initialNextContractNumber;
+    : initialData ? formatVisibleContractNumber(initialData.number, initialData.baseType) : initialNextContractNumber;
 
   const safeFormat = (dateStr: string | undefined, formatStr: string, fallback: string) => {
     if (!dateStr) return fallback;

@@ -193,7 +193,7 @@ export default function LeadModal({
 
   const inputClass = cn(
     'w-full rounded-lg border px-3 py-1.5 text-sm outline-none transition-colors',
-    isDarkMode ? 'border-white/10 bg-white/5 text-white placeholder:text-gray-600 focus:border-orange-500/60' : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400'
+    isDarkMode ? 'border-white/10 bg-white/5 text-white placeholder:text-gray-600 focus:border-[#8CAFBE]/60' : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400'
   );
 
   const sectionClass = cn(
@@ -313,7 +313,7 @@ export default function LeadModal({
                       type="button"
                       disabled={isSaving}
                       onClick={handleCreateClient}
-                      className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#8CAFBE] px-3 py-1.5 text-sm font-bold text-black transition-colors hover:bg-[#B4CDD2] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSaving && <Loader2 size={15} className="animate-spin" />}
                       Создать гостя
@@ -381,7 +381,7 @@ export default function LeadModal({
             <button type="button" disabled={isSaving} onClick={onClose} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
               Отмена
             </button>
-            <button type="submit" disabled={isSaving} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2 text-sm font-bold text-black transition-colors hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-70">
+            <button type="submit" disabled={isSaving} className="inline-flex items-center gap-2 rounded-xl bg-[#8CAFBE] px-5 py-2 text-sm font-bold text-black transition-colors hover:bg-[#B4CDD2] disabled:cursor-not-allowed disabled:opacity-70">
               {isSaving && <Loader2 size={16} className="animate-spin" />}
               Сохранить
             </button>

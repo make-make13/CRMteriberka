@@ -79,7 +79,7 @@ const MOCK_CLIENTS: Client[] = [
     bik: '044525225',
     bankAccount: '40702810123456789012',
     contactPerson: 'Петров Петр Петрович',
-    phone: '+7 (495) 765-43-21',
+    phone: '+7 (931) 802-21-51',
     email: 'info@vector.ru',
     isBlacklisted: true,
     createdAt: new Date().toISOString()
@@ -187,6 +187,11 @@ function AppShell() {
   const runShutdownBackup = async () => {
     try {
       setLogoutFlowStep('creating-backup');
+      const status = await backupApi.status();
+      if (!status.rclone.available) {
+        toast('Облачные резервные копии не настроены: rclone недоступен. Выход выполнен без отправки архива в облако.', 'error');
+        return true;
+      }
       const result = await backupApi.run('shutdown');
       if (result.success) {
         toast('Резервная копия создана и отправлена в оба облака.', 'success');
@@ -558,9 +563,9 @@ function AppShell() {
     return (
       <div className={cn(
         "min-h-screen flex items-center justify-center transition-colors duration-300 font-sans",
-        isDarkMode ? "bg-[#050505] text-white" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-[#080807] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
       )}>
-        <Loader2 className="animate-spin text-orange-500" size={32} />
+        <Loader2 className="animate-spin text-[#8CAFBE]" size={32} />
       </div>
     );
   }
@@ -572,12 +577,12 @@ function AppShell() {
   return (
       <div className={cn(
         "min-h-screen transition-colors duration-300 font-sans",
-        isDarkMode ? "bg-[#050505] text-white" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-[#080807] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
       )}>
         {/* Header */}
         <header className={cn(
           "sticky top-0 z-50 border-b backdrop-blur-md",
-          isDarkMode ? "bg-[#050505]/80 border-white/5" : "bg-white/80 border-gray-200"
+          isDarkMode ? "bg-[#080807]/88 border-[#6E6964]/25" : "bg-white/80 border-gray-200"
         )}>
           <div className={cn(
             "mx-auto px-6 h-20 flex items-center justify-between transition-all duration-300",
@@ -611,8 +616,8 @@ function AppShell() {
                     className={cn(
                       "group relative flex items-center gap-2 overflow-hidden px-4 py-2 rounded-xl text-sm font-bold transition-colors duration-200",
                       currentView === item.id 
-                        ? "text-white"
-                        : (isDarkMode ? "text-gray-500 hover:bg-white/[0.06] hover:text-gray-200" : "text-gray-500 hover:bg-orange-50 hover:text-gray-900")
+                        ? "text-[#F4F1EA]"
+                        : (isDarkMode ? "text-[#B4CDD2]/65 hover:bg-[#8CAFBE]/10 hover:text-[#F4F1EA]" : "text-gray-500 hover:bg-orange-50 hover:text-gray-900")
                     )}
                   >
                     {currentView === item.id && (
@@ -620,7 +625,7 @@ function AppShell() {
                         layoutId="main-nav-active-bg"
                         className={cn(
                           "absolute inset-0 rounded-xl",
-                          isDarkMode ? "bg-white/[0.065] ring-1 ring-white/[0.07]" : "bg-orange-500/80 shadow-sm shadow-orange-500/10"
+                          isDarkMode ? "bg-[#6E6964]/28 ring-1 ring-[#B4CDD2]/20" : "bg-orange-500/80 shadow-sm shadow-orange-500/10"
                         )}
                         transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                       />
@@ -641,12 +646,12 @@ function AppShell() {
                   whileTap={{ scale: 0.9 }}
                   className={cn(
                     "p-2.5 rounded-xl border transition-all relative",
-                    isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                    isDarkMode ? "bg-[#6E6964]/12 border-[#B4CDD2]/15 hover:bg-[#8CAFBE]/10" : "bg-white border-gray-200 hover:bg-gray-50"
                   )}
                 >
                   <Bell size={20} className="text-gray-500" />
                   {activeAlertsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-500 text-black text-[10px] font-bold flex items-center justify-center border-2 border-[#050505]">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#8CAFBE] text-black text-[10px] font-bold flex items-center justify-center border-2 border-[#080807]">
                       {activeAlertsCount}
                     </span>
                   )}
@@ -666,14 +671,15 @@ function AppShell() {
               </div>
 
               <motion.button 
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={() => setIsDarkMode(true)}
                 whileTap={{ scale: 0.9 }}
+                title="Тёмная фирменная тема включена"
                 className={cn(
                   "p-2.5 rounded-xl border transition-all",
-                  isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                  isDarkMode ? "bg-[#6E6964]/12 border-[#B4CDD2]/15 hover:bg-[#8CAFBE]/10" : "bg-white border-gray-200 hover:bg-gray-50"
                 )}
               >
-                {isDarkMode ? <Sun size={20} className="text-orange-500" /> : <Moon size={20} className="text-gray-500" />}
+                {isDarkMode ? <Sun size={20} className="text-[#B4CDD2]" /> : <Moon size={20} className="text-gray-500" />}
               </motion.button>
 
               <div className="flex items-center gap-3 pl-4 border-l border-white/5">
@@ -683,7 +689,7 @@ function AppShell() {
                     {auth.manager.role === 'admin' ? 'Админ' : 'Менеджер'}
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center font-bold text-white shadow-lg shadow-orange-500/20">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8CAFBE] to-[#6E6964] flex items-center justify-center font-bold text-[#080807] shadow-lg shadow-[#8CAFBE]/15">
                   {auth.manager.name.slice(0, 1).toUpperCase()}
                 </div>
                 <motion.button
@@ -693,10 +699,10 @@ function AppShell() {
                   title={auth.canManageBackups ? 'Выйти с проверкой резервной копии' : 'Выйти'}
                   className={cn(
                     "p-2.5 rounded-xl border transition-all disabled:opacity-60",
-                    isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                    isDarkMode ? "bg-[#6E6964]/12 border-[#B4CDD2]/15 hover:bg-[#8CAFBE]/10" : "bg-white border-gray-200 hover:bg-gray-50"
                   )}
                 >
-                  <LogOut size={18} className={cn(isLogoutFlowRunning ? "text-orange-500" : "text-gray-500")} />
+                  <LogOut size={18} className={cn(isLogoutFlowRunning ? "text-[#8CAFBE]" : "text-gray-500")} />
                 </motion.button>
               </div>
             </div>
@@ -796,7 +802,7 @@ function AppShell() {
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#8CAFBE]/10 text-[#B4CDD2]">
                     <Loader2 size={22} className="animate-spin" />
                   </div>
                   <div>
@@ -845,7 +851,7 @@ function AppShell() {
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <div className="flex items-start gap-4 border-b border-white/5 p-6">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#8CAFBE]/10 text-[#B4CDD2]">
                     {isLogoutFlowRunning ? <Loader2 size={22} className="animate-spin" /> : <ShieldCheck size={22} />}
                   </div>
                   <div>
@@ -889,7 +895,7 @@ function AppShell() {
                     type="button"
                     onClick={logoutWithBackup}
                     disabled={isLogoutFlowRunning}
-                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-bold text-black transition-all hover:bg-orange-400 disabled:opacity-60"
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#8CAFBE] px-5 text-sm font-bold text-black transition-all hover:bg-[#B4CDD2] disabled:opacity-60"
                   >
                     {isLogoutFlowRunning && <Loader2 size={16} className="animate-spin" />}
                     {logoutBackupPrompt === 'already-backed-up' ? 'Создать ещё и выйти' : 'Создать и выйти'}

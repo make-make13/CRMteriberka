@@ -213,7 +213,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             type="button"
             onClick={openNewLead}
             whileTap={{ scale: 0.96 }}
-            className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-orange-400"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#8CAFBE] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[#B4CDD2]"
           >
             <Plus size={18} />
             Новая заявка
@@ -244,7 +244,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
                 className={cn(
                   'rounded-xl px-3 py-2 text-xs font-bold transition-colors',
                   statusFilter === item.id
-                    ? 'bg-orange-500 text-black'
+                    ? 'bg-[#8CAFBE] text-black'
                     : (isDarkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
                 )}
               >
@@ -263,7 +263,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         )}
         {isLoading ? (
           <div className="flex min-h-[260px] items-center justify-center">
-            <Loader2 className="animate-spin text-orange-500" size={28} />
+            <Loader2 className="animate-spin text-[#8CAFBE]" size={28} />
           </div>
         ) : filteredLeads.length === 0 ? (
           <EmptyState
@@ -272,7 +272,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             title="Заявок пока нет"
             description="Заявок пока нет. Позже здесь будут отображаться обращения с сайта."
             action={leads.length === 0 ? (
-              <button type="button" onClick={openNewLead} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-black">
+              <button type="button" onClick={openNewLead} className="inline-flex items-center gap-2 rounded-xl bg-[#8CAFBE] px-4 py-2 text-sm font-bold text-black">
                 <Plus size={17} />
                 Новая заявка
               </button>

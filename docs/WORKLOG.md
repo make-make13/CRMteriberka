@@ -26,6 +26,46 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 00:48 +03:00 — Big Medveditsa branding and safety settings
+
+Files changed:
+- `src/types.ts`
+- `src/constants.ts`
+- `src/utils/contractNumbers.ts`
+- `server/backupService.ts`
+- `src/App.tsx`
+- `src/components/auth/LoginModal.tsx`
+- `src/components/chessboard/Chessboard.tsx`
+- `src/components/clients/Clients.tsx`
+- `src/components/contracts/Contracts.tsx`
+- `src/components/leads/Leads.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `src/components/settings/SettingsView.tsx`
+- `src/components/settings/BackupSettingsTab.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- corrected company requisites for ООО `Золото Арктики` and added hotel registry/contact fields in settings;
+- removed the inactive object address from the settings UI and replaced the old object address label with `Фактический адрес бутик-отеля`;
+- changed new visible Chunga/Big Medveditsa contract numbers from `ЧЧ` to `БМ`;
+- isolated backup defaults to `big_medveditsa_cloud_1`, `big_medveditsa_cloud_2`, and `BigMedveditsaCRM/backups`;
+- disabled cloud backup actions when rclone is unavailable so old remotes are not used;
+- kept the UI dark and moved key accents toward the Big Medveditsa taupe/blue palette;
+- kept the 20-room hotel catalog and compact chessboard layout.
+
+Checks run:
+- browser check for settings requisites, backup settings, dark UI, chessboard rooms, and contract number prefix.
+- `git status --short`
+- `git diff --stat`
+- `git diff --check`
+
+Next:
+- continue business-flow polish after confirming the updated requisites and backup settings in production use.
+
+Risks/TODOs:
+- `npm run lint`, `npm run build`, and tests were not run per task instruction.
+- PDFMe generator and document templates were not changed.
+
 ### 2026-05-28 00:10 +03:00 — Hotel rooms catalog
 
 Files changed:

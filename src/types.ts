@@ -284,6 +284,12 @@ export interface Organization {
   bank_kpp?: string;
   property_address_cc: string;
   property_address_gb: string;
+  exec_email?: string;
+  exec_site?: string;
+  admin_working_hours?: string;
+  hotel_registry_number?: string;
+  hotel_category?: string;
+  hotel_approval_date?: string;
 }
 
 export interface TemplateMeta {

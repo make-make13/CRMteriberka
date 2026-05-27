@@ -67,14 +67,22 @@ export interface BackupStatus {
 
 const DEFAULT_BACKUP_SETTINGS: BackupSettings = {
   enabled: true,
-  remote1: 'crm_cloud_1',
-  remote2: 'crm_cloud_2',
-  cloudPath: 'MyCRM/backups',
+  remote1: 'big_medveditsa_cloud_1',
+  remote2: 'big_medveditsa_cloud_2',
+  cloudPath: 'BigMedveditsaCRM/backups',
   localDir: SCHEDULED_BACKUP_DIR,
   retentionDaily: 30,
   retentionWeekly: 12,
   retentionMonthly: 12,
 };
+
+const LEGACY_BACKUP_VALUES = new Set(['crm_cloud_1', 'crm_cloud_2', 'MyCRM/backups']);
+
+function normalizeCloudValue(value: unknown, fallback: string) {
+  const raw = String(value || '').trim();
+  if (!raw || LEGACY_BACKUP_VALUES.has(raw)) return fallback;
+  return raw;
+}
 
 const crcTable = new Uint32Array(256).map((_, index) => {
   let value = index;
@@ -218,6 +226,9 @@ function normalizeSettings(settings: Partial<BackupSettings> | null | undefined,
   return {
     ...getDefaultSettings(),
     ...(settings || {}),
+    remote1: normalizeCloudValue(settings?.remote1, DEFAULT_BACKUP_SETTINGS.remote1),
+    remote2: normalizeCloudValue(settings?.remote2, DEFAULT_BACKUP_SETTINGS.remote2),
+    cloudPath: normalizeCloudValue(settings?.cloudPath, DEFAULT_BACKUP_SETTINGS.cloudPath),
     localDir: normalizeLocalDir(settings?.localDir, strict),
     retentionDaily: normalizeRetention(settings?.retentionDaily, DEFAULT_BACKUP_SETTINGS.retentionDaily, 'retentionDaily', strict),
     retentionWeekly: normalizeRetention(settings?.retentionWeekly, DEFAULT_BACKUP_SETTINGS.retentionWeekly, 'retentionWeekly', strict),
@@ -330,7 +341,7 @@ async function createArchive(kind: BackupKind, settings: BackupSettings, options
   const archiveName = `crm-${safeKind}-${stamp}.zip`;
   const archivePath = path.join(settings.localDir, archiveName);
   const manifest = {
-    app: 'MyCRM',
+    app: 'BigMedveditsaCRM',
     createdAt: createdAt.toISOString(),
     kind,
     schemaVersion: 1,

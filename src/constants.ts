@@ -51,7 +51,7 @@ export const INITIAL_SETTINGS: Settings = {
   companyName: 'Большая Медведица',
   inn: '5105013870',
   address: '184433, Мурманская область, Печенгский район, г. Заполярный, ул. Ленина, д.1А, помещение 34',
-  phone: '(815-2) 99-44-21',
+  phone: '+7 (931) 802-21-51',
   vatRate: 0.05,
-  emailForReports: '',
+  emailForReports: 'medvedica.hotel@vk.com',
 };

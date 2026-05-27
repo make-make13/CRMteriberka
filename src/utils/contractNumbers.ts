@@ -3,7 +3,7 @@ import type { BaseType } from '../types';
 export type ContractNumberCategory = 'cc' | 'gb' | 'bath' | 'furako';
 
 const CONTRACT_NUMBER_PREFIX: Record<ContractNumberCategory, string> = {
-  cc: 'ЧЧ',
+  cc: 'БМ',
   gb: 'ГБ',
   bath: 'Б',
   furako: 'Ф',
@@ -25,6 +25,12 @@ export function extractContractNumberSequence(value: string) {
 
 export function formatContractNumber(category: ContractNumberCategory, sequence: number) {
   return `${getContractNumberPrefix(category)}${sequence}`;
+}
+
+export function formatVisibleContractNumber(value: string, baseType?: BaseType) {
+  const raw = String(value || '').trim();
+  if (baseType === 'chunga-changa') return raw.replace(/^ЧЧ/i, getContractNumberPrefix('cc'));
+  return raw;
 }
 
 export function getNextContractNumberValue(existingNumbers: string[], category: ContractNumberCategory) {

@@ -25,6 +25,12 @@ const formatBytes = (bytes?: number) => {
   return `${(bytes / 1024 / 1024).toFixed(1)} МБ`;
 };
 
+const displayRemoteName = (remote: string, settings: BackupSettings) => {
+  if (remote === 'crm_cloud_1') return settings.remote1;
+  if (remote === 'crm_cloud_2') return settings.remote2;
+  return remote;
+};
+
 function StatusCard({
   title,
   subtitle,
@@ -45,7 +51,7 @@ function StatusCard({
     )}>
       <div className={cn(
         "w-10 h-10 rounded-xl flex items-center justify-center",
-        ok ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
+        ok ? "bg-green-500/10 text-green-500" : "bg-[#8CAFBE]/10 text-[#B4CDD2]"
       )}>
         {icon}
       </div>
@@ -144,6 +150,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
 
   const cloudOk = Boolean(status.lastSuccessfulCloudBackupAt && status.todayCloudBackupDone);
   const localOk = Boolean(status.lastSuccessfulLocalBackupAt);
+  const cloudBackupConfigured = status.rclone.available;
 
   return (
     <div className="space-y-8">
@@ -178,8 +185,13 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
         <div>
           <h3 className="font-bold text-lg">Настройки облаков</h3>
           <p className="text-xs text-gray-500 mt-1">
-            Настройте в rclone два remote с такими именами. CRM будет отправлять архив в оба хранилища.
+            Настройте в rclone два remote с такими именами. CRM будет отправлять архив в оба хранилища только когда rclone доступен.
           </p>
+          {!cloudBackupConfigured && (
+            <p className="mt-2 rounded-xl border border-[#8CAFBE]/25 bg-[#8CAFBE]/10 px-3 py-2 text-xs font-medium text-[#B4CDD2]">
+              Резервные копии в облако не настроены: rclone недоступен. Облачные действия отключены, архивы не будут отправляться в старые хранилища.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-4">
@@ -190,7 +202,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
               onChange={event => setSettings(prev => prev ? { ...prev, remote1: event.target.value } : prev)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
               )}
             />
           </label>
@@ -201,7 +213,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
               onChange={event => setSettings(prev => prev ? { ...prev, remote2: event.target.value } : prev)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
               )}
             />
           </label>
@@ -212,7 +224,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
               onChange={event => setSettings(prev => prev ? { ...prev, cloudPath: event.target.value } : prev)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
               )}
             />
           </label>
@@ -224,7 +236,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
             onClick={saveSettings}
             disabled={isBusy}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-black text-sm font-bold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8CAFBE] hover:bg-[#B4CDD2] text-black text-sm font-bold transition-all disabled:opacity-50"
           >
             <Save size={18} />
             Сохранить настройки
@@ -271,9 +283,9 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <motion.button
             type="button"
             onClick={() => runBackup('daily-cloud')}
-            disabled={isBusy}
+            disabled={isBusy || !cloudBackupConfigured}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-black text-sm font-bold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8CAFBE] hover:bg-[#B4CDD2] text-black text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isBusy ? <Loader2 className="animate-spin" size={18} /> : <Cloud size={18} />}
             Создать бэкап сейчас
@@ -294,7 +306,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <motion.button
             type="button"
             onClick={() => runBackup('shutdown')}
-            disabled={isBusy}
+            disabled={isBusy || !cloudBackupConfigured}
             whileTap={{ scale: 0.95 }}
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50",
@@ -311,7 +323,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
             "rounded-2xl border p-4 text-sm space-y-2",
             lastResult.success
               ? "border-green-500/20 bg-green-500/10"
-              : "border-orange-500/20 bg-orange-500/10"
+              : "border-[#8CAFBE]/20 bg-[#8CAFBE]/10"
           )}>
             <div className="font-bold">
               Последний запуск: {formatDateTime(lastResult.createdAt)}
@@ -324,13 +336,13 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
               <div className="text-xs">
                 {lastResult.remotes.map(remote => (
                   <div key={remote.key}>
-                    {remote.remote}: {remote.ok ? 'успешно' : remote.message}
+                    {displayRemoteName(remote.remote, settings)}: {remote.ok ? 'успешно' : remote.message}
                   </div>
                 ))}
               </div>
             )}
             {lastResult.errors.length > 0 && (
-              <div className="text-xs text-orange-500">
+              <div className="text-xs text-[#B4CDD2]">
                 {lastResult.errors.join('; ')}
               </div>
             )}

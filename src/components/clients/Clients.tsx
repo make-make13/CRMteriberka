@@ -135,7 +135,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
           whileTap={{ scale: 0.95 }}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-            isDarkMode ? "bg-[#f59e0b] text-black hover:bg-[#d97706]" : "bg-orange-500 text-white hover:bg-orange-600"
+            isDarkMode ? "bg-[#8CAFBE] text-black hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
           <Plus size={18} />
@@ -168,7 +168,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                 filter === item.id 
-                  ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
+                  ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
                   : "text-gray-500 hover:text-gray-300"
               )}
             >
@@ -181,7 +181,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
 
       <div className={cn(
         "rounded-2xl border overflow-hidden",
-        isDarkMode ? "bg-[#111111] border-white/5" : "bg-white border-gray-200 shadow-sm"
+        isDarkMode ? "bg-[#111111] border-[#6E6964]/20" : "bg-white border-gray-200 shadow-sm"
       )}>
         {filteredClients.length > 0 ? (
           <table className="w-full border-collapse">
@@ -288,7 +288,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                 onClick={handleAddClient}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all",
-                  isDarkMode ? "bg-[#f59e0b] text-black hover:bg-[#d97706]" : "bg-orange-500 text-white hover:bg-orange-600"
+                  isDarkMode ? "bg-[#8CAFBE] text-black hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
                 )}
               >
                 <Plus size={17} />

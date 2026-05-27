@@ -56,7 +56,7 @@ function PdfmeEditorLoadingFallback({ isDarkMode }: { isDarkMode: boolean }) {
           isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white'
         )}
       >
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-500">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8CAFBE]/15 text-[#B4CDD2]">
           <Loader2 size={24} className="animate-spin" />
         </div>
         <div className={cn('text-lg font-bold', isDarkMode ? 'text-white' : 'text-gray-950')}>
@@ -78,18 +78,43 @@ const DEFAULT_COMPANY_DETAILS: Organization = {
   exec_inn: '5105013870',
   exec_kpp: '510501001',
   exec_ogrn: '1215100000158',
-  exec_address: '184433, Мурманская область, Печенгский район, г. Заполярный, ул. Ленина, д.1А, помещение 34',
-  exec_post_address: '183038, г. Мурманск, пер. Терский, д. З',
-  exec_phone: '(815-2) 99-44-21',
+  exec_address: '184433, Мурманская область, Печенгский район, г. Заполярный, ул. Ленина, д. 1А, помещение 34',
+  exec_post_address: '',
+  exec_phone: '+7 (931) 802-21-51',
   exec_bank: 'МУРМАНСКОЕ ОТДЕЛЕНИЕ N8627 ПАО СБЕРБАНК',
   exec_rs: '40702810941710000190',
   exec_bik: '044705615',
   exec_ks: '30101810300000000615',
   bank_inn: '7707083893',
   bank_kpp: '519002001',
-  property_address_cc: '183017, г. Мурманск, ул. Маяковского, д. 12',
-  property_address_gb: 'Неактивный объект'
+  property_address_cc: 'Мурманская обл., Кольский р-н, с. Териберка, ул. 1-я Пятилетка, д. 1',
+  property_address_gb: '',
+  exec_email: 'medvedica.hotel@vk.com',
+  exec_site: 'medvedica-hotel.ru',
+  admin_working_hours: 'Круглосуточно',
+  hotel_registry_number: 'C512026024350',
+  hotel_category: 'без звезд',
+  hotel_approval_date: '',
 };
+
+const normalizeCompanyDetails = (organization?: Organization): Organization => ({
+  ...DEFAULT_COMPANY_DETAILS,
+  ...(organization || {}),
+  exec_name: 'Общество с ограниченной ответственностью «Золото Арктики»',
+  exec_inn: '5105013870',
+  exec_kpp: '510501001',
+  exec_ogrn: '1215100000158',
+  exec_address: '184433, Мурманская область, Печенгский район, г. Заполярный, ул. Ленина, д. 1А, помещение 34',
+  exec_phone: '+7 (931) 802-21-51',
+  property_address_cc: 'Мурманская обл., Кольский р-н, с. Териберка, ул. 1-я Пятилетка, д. 1',
+  property_address_gb: '',
+  exec_email: 'medvedica.hotel@vk.com',
+  exec_site: 'medvedica-hotel.ru',
+  admin_working_hours: 'Круглосуточно',
+  hotel_registry_number: 'C512026024350',
+  hotel_category: 'без звезд',
+  hotel_approval_date: organization?.hotel_approval_date || '',
+});
 
 export default function SettingsView({
   isDarkMode,
@@ -120,7 +145,10 @@ export default function SettingsView({
           organizationApi.list(),
           templateApi.listMeta(),
         ]);
-        setOrganizations(orgsData);
+        setOrganizations({
+          ...orgsData,
+          company_details: normalizeCompanyDetails(orgsData.company_details),
+        });
         setTemplatesMeta(metaData);
       } catch (error) {
         console.error('Local settings load error:', error);
@@ -155,7 +183,8 @@ export default function SettingsView({
   const onSaveOrg = async (data: Organization, baseId: string) => {
     setIsSaving(true);
     try {
-      const saved = await organizationApi.save(baseId, { ...data, id: baseId });
+      const payload = baseId === 'company_details' ? normalizeCompanyDetails(data) : { ...data, id: baseId };
+      const saved = await organizationApi.save(baseId, { ...payload, id: baseId });
       setOrganizations(prev => ({ ...prev, [baseId]: saved }));
       toast('Реквизиты организации сохранены');
     } catch (error) {
@@ -210,7 +239,7 @@ export default function SettingsView({
               className={cn(
                 "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
                 activeTab === 'general' 
-                  ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
+                  ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
                   : "text-gray-500 hover:text-gray-300"
               )}
             >
@@ -223,7 +252,7 @@ export default function SettingsView({
                 className={cn(
                   "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
                   activeTab === 'templates'
-                    ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
+                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
                     : "text-gray-500 hover:text-gray-300"
                 )}
               >
@@ -237,7 +266,7 @@ export default function SettingsView({
                 className={cn(
                   "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
                   activeTab === 'email'
-                    ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
+                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
                     : "text-gray-500 hover:text-gray-300"
                 )}
               >
@@ -251,7 +280,7 @@ export default function SettingsView({
                 className={cn(
                   "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
                   activeTab === 'backups'
-                    ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
+                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
                     : "text-gray-500 hover:text-gray-300"
                 )}
               >
@@ -265,7 +294,7 @@ export default function SettingsView({
                 className={cn(
                   "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
                   activeTab === 'managers'
-                    ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
+                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
                     : "text-gray-500 hover:text-gray-300"
                 )}
               >
@@ -281,7 +310,7 @@ export default function SettingsView({
             whileTap={{ scale: 0.95 }}
             className={cn(
               "shrink-0 flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50",
-              isDarkMode ? "bg-[#f59e0b] text-black hover:bg-[#d97706]" : "bg-orange-500 text-white hover:bg-orange-600"
+              isDarkMode ? "bg-[#8CAFBE] text-black hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
             )}
           >
             <Save size={15} />
@@ -311,7 +340,7 @@ export default function SettingsView({
                   {...registerGeneral('companyName')}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                    isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                   )}
                 />
               </div>
@@ -321,7 +350,7 @@ export default function SettingsView({
                   {...registerGeneral('emailForReports')}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                    isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                   )}
                 />
               </div>
@@ -333,7 +362,7 @@ export default function SettingsView({
                     {...registerGeneral('phone')}
                     className={cn(
                       "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                      isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                     )}
                   />
                 </div>
@@ -363,7 +392,7 @@ export default function SettingsView({
                     {...registerGeneral('vatRate')}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                      isDarkMode ? "bg-white/5 border-white/10 focus:border-[#8CAFBE]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                     )}
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
@@ -409,7 +438,7 @@ export default function SettingsView({
             <OrgSettingsForm 
               baseId="company_details"
               isDarkMode={isDarkMode}
-              initialData={organizations['company_details'] || DEFAULT_COMPANY_DETAILS}
+              initialData={normalizeCompanyDetails(organizations['company_details'])}
               onSave={(data) => onSaveOrg(data, 'company_details')}
             />
           </div>
@@ -519,7 +548,7 @@ export default function SettingsView({
                             "shrink-0 px-2 py-1 rounded-md text-[10px] font-mono transition-all flex items-center gap-1.5",
                             copiedVar === v.name
                               ? "bg-green-500/20 text-green-500"
-                              : (isDarkMode ? "bg-white/5 text-orange-500" : "bg-gray-100 text-orange-600")
+                              : (isDarkMode ? "bg-white/5 text-[#B4CDD2]" : "bg-gray-100 text-orange-600")
                           )}>
                             {`{${v.name}}`}
                             {copiedVar === v.name && <Check size={10} />}
@@ -593,7 +622,7 @@ function OrgSettingsForm({ baseId, isDarkMode, initialData, onSave }: OrgSetting
     )}>
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[#8CAFBE]/10 text-[#B4CDD2] flex items-center justify-center">
             <Building2 size={20} />
           </div>
           <h3 className="font-bold text-lg">Карточка компании</h3>
@@ -612,7 +641,7 @@ function OrgSettingsForm({ baseId, isDarkMode, initialData, onSave }: OrgSetting
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Наименование ООО</label>
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Исполнитель</label>
           <input {...register('exec_name')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
         </div>
         <div className="space-y-1">
@@ -636,16 +665,40 @@ function OrgSettingsForm({ baseId, isDarkMode, initialData, onSave }: OrgSetting
           <input {...register('exec_ogrn')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
         </div>
         <div className="col-span-2 space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Юр. адрес</label>
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Юридический адрес</label>
           <input {...register('exec_address')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-        </div>
-        <div className="col-span-2 space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Почтовый адрес</label>
-          <input {...register('exec_post_address')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
         </div>
         <div className="space-y-1">
           <label className="text-[10px] font-bold text-gray-500 uppercase">Телефон</label>
           <input {...register('exec_phone')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">E-mail</label>
+          <input {...register('exec_email')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Сайт</label>
+          <input {...register('exec_site')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Режим работы администратора</label>
+          <input {...register('admin_working_hours')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="col-span-2 space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Фактический адрес бутик-отеля</label>
+          <input {...register('property_address_cc')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Уникальный номер реестровой записи</label>
+          <input {...register('hotel_registry_number')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Категория бутик-отеля</label>
+          <input {...register('hotel_category')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-gray-500 uppercase">Дата утверждения</label>
+          <input {...register('hotel_approval_date')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
         </div>
         <div className="space-y-1">
           <label className="text-[10px] font-bold text-gray-500 uppercase">Банк</label>
@@ -670,14 +723,6 @@ function OrgSettingsForm({ baseId, isDarkMode, initialData, onSave }: OrgSetting
         <div className="space-y-1">
           <label className="text-[10px] font-bold text-gray-500 uppercase">Корр. счет</label>
           <input {...register('exec_ks')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-        </div>
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Адрес объекта (Большая Медведица)</label>
-          <input {...register('property_address_cc')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-        </div>
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">Адрес неактивного объекта</label>
-          <input {...register('property_address_gb')} className={cn("w-full px-3 py-2 rounded-xl text-xs outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
         </div>
       </div>
     </section>

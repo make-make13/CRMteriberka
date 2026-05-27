@@ -49,7 +49,7 @@ export default function LoginModal({ isDarkMode }: LoginModalProps) {
         )}
       >
         <div className="mb-8 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-black shadow-lg shadow-orange-500/20">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8CAFBE] text-black shadow-lg shadow-[#8CAFBE]/20">
             <ShieldCheck size={28} />
           </div>
           <div>
@@ -67,7 +67,7 @@ export default function LoginModal({ isDarkMode }: LoginModalProps) {
                 value={loginValue}
                 onChange={event => setLoginValue(event.target.value)}
                 autoComplete="username"
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 text-sm font-bold outline-none transition-all focus:border-orange-500 focus:bg-white/10"
+                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 text-sm font-bold outline-none transition-all focus:border-[#8CAFBE] focus:bg-white/10"
               />
             </div>
           </div>
@@ -82,7 +82,7 @@ export default function LoginModal({ isDarkMode }: LoginModalProps) {
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 autoFocus
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-12 text-sm font-bold outline-none transition-all focus:border-orange-500 focus:bg-white/10"
+                className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-12 text-sm font-bold outline-none transition-all focus:border-[#8CAFBE] focus:bg-white/10"
               />
               <button
                 type="button"
@@ -105,7 +105,7 @@ export default function LoginModal({ isDarkMode }: LoginModalProps) {
           type="submit"
           disabled={isSubmitting}
           whileTap={{ scale: 0.97 }}
-          className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 text-sm font-black text-black shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#8CAFBE] text-sm font-black text-black shadow-lg shadow-[#8CAFBE]/20 transition-all hover:bg-[#B4CDD2] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <LogIn size={18} />
           {isSubmitting ? 'Проверяем...' : 'Войти'}
