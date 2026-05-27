@@ -26,6 +26,30 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-27 20:09 +03:00 — Simplified lead modal
+
+Files changed:
+- `src/components/leads/LeadModal.tsx`
+- `scripts/leadModalSimplificationTest.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- simplified the lead modal into manager-facing sections: guest, stay, guest comment, and lead work;
+- moved raw/source fields into a collapsed `Технические данные` section;
+- replaced the main source data block with a compact source/received-at line;
+- hid the internal object id from the main form and renamed room input to `Пожелание по номеру`.
+
+Checks run:
+- `npx tsx scripts/leadModalSimplificationTest.ts`
+- `npx tsx scripts/leadsRuntimeSafetyTest.ts`
+- browser check for opening a Supabase lead modal, closed technical data, formatted `Сайт` source, and no console errors.
+
+Next:
+- Заявка → Создать гостя.
+
+Risks/TODOs:
+- `npm run lint` and `npm run build` were not run per task instruction; browser/Vite loaded the updated modal without console errors.
+
 ### 2026-05-27 19:56 +03:00 — Local SQLite working data cleanup
 
 Files changed:

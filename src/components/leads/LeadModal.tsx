@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, X } from 'lucide-react';
+import { ChevronDown, Loader2, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
 import LeadStatusBadge, { LEAD_STATUS_LABELS } from './LeadStatusBadge';
-import { formatLeadSource, getLeadOriginLabel, normalizeLeadStatus, summarizeJsonValue } from './leadDisplay';
+import { formatLeadSource, getLeadOriginLabel, normalizeLeadStatus } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -51,6 +51,32 @@ function textInputValue(value: unknown) {
   return typeof value === 'string' ? value : '';
 }
 
+function formatLeadReceivedAt(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return 'Не указано';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function formatTechnicalValue(value: unknown) {
+  if (value == null || value === '') return '';
+  if (typeof value === 'string') return value;
+
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
 function getInitialState(lead: Lead | null): LeadFormState {
   return {
     guestName: textInputValue(lead?.guestName),
@@ -71,10 +97,31 @@ function getInitialState(lead: Lead | null): LeadFormState {
 
 export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, onClose, onCreate, onUpdate }: LeadModalProps) {
   const [form, setForm] = useState<LeadFormState>(() => getInitialState(lead));
+  const [isTechOpen, setIsTechOpen] = useState(false);
 
   useEffect(() => {
-    if (isOpen) setForm(getInitialState(lead));
+    if (isOpen) {
+      setForm(getInitialState(lead));
+      setIsTechOpen(false);
+    }
   }, [isOpen, lead]);
+
+  const technicalRows = useMemo(() => {
+    if (!lead) return [];
+
+    return [
+      ['supabaseId', lead.supabaseId],
+      ['source raw', lead.source],
+      ['rawJson', lead.rawJson],
+      ['utmJson', lead.utmJson],
+      ['objectType', lead.objectType],
+      ['objectId', lead.objectId],
+      ['syncStatus', lead.syncStatus],
+      ['lastError', lead.lastError],
+    ]
+      .map(([label, value]) => [label, formatTechnicalValue(value)] as const)
+      .filter(([, value]) => value);
+  }, [lead]);
 
   if (!isOpen) return null;
 
@@ -120,9 +167,13 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
     isDarkMode ? 'border-white/10 bg-white/5 text-white placeholder:text-gray-600 focus:border-orange-500/60' : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400'
   );
 
+  const sectionClass = cn(
+    'rounded-xl border p-4',
+    isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-gray-50'
+  );
   const labelClass = 'text-[11px] font-bold uppercase tracking-wide text-gray-500';
-  const utmSummary = summarizeJsonValue(lead?.utmJson);
-  const rawSummary = summarizeJsonValue(lead?.rawJson);
+  const sectionTitleClass = 'text-sm font-bold';
+  const receivedAt = formatLeadReceivedAt(lead?.supabaseCreatedAt || lead?.createdAt);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
@@ -140,6 +191,9 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
             <div>
               <h2 className="text-xl font-bold">{lead ? 'Заявка' : 'Новая заявка'}</h2>
               <p className="mt-1 text-xs text-gray-500">{getLeadOriginLabel(lead)}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Источник: {formatLeadSource(form.source)} · Получена: {receivedAt}
+              </p>
             </div>
             <LeadStatusBadge status={lead?.status || form.status} />
           </div>
@@ -148,71 +202,103 @@ export default function LeadModal({ isOpen, isDarkMode, lead, isSaving = false, 
           </button>
         </div>
 
-        <div className="grid gap-5 overflow-y-auto p-6 md:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className={labelClass}>Имя гостя</span>
-            <input className={inputClass} value={form.guestName} onChange={event => setField('guestName', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Телефон</span>
-            <input className={inputClass} required value={form.phone} onChange={event => setField('phone', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Email</span>
-            <input className={inputClass} type="email" value={form.email} onChange={event => setField('email', event.target.value)} />
-          </label>
-          <div className="space-y-1.5">
-            <span className={labelClass}>Источник</span>
-            <div className={cn(inputClass, 'min-h-[38px]')}>{formatLeadSource(form.source)}</div>
-          </div>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Желаемая дата заезда</span>
-            <input className={inputClass} type="date" value={form.desiredStartDate} onChange={event => setField('desiredStartDate', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Желаемая дата выезда</span>
-            <input className={inputClass} type="date" value={form.desiredEndDate} onChange={event => setField('desiredEndDate', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Время</span>
-            <input className={inputClass} type="time" value={form.desiredTime} onChange={event => setField('desiredTime', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Количество гостей</span>
-            <input className={inputClass} min={1} type="number" value={form.guestsCount} onChange={event => setField('guestsCount', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Номер / тип номера</span>
-            <input className={inputClass} value={form.objectType} placeholder="Например: семейный номер" onChange={event => setField('objectType', event.target.value)} />
-          </label>
-          <label className="space-y-1.5">
-            <span className={labelClass}>Внутренний номер объекта</span>
-            <input className={inputClass} value={form.objectId} placeholder="Например: cc-1" onChange={event => setField('objectId', event.target.value)} />
-          </label>
-          <label className="space-y-1.5 md:col-span-2">
-            <span className={labelClass}>Статус</span>
-            <select className={inputClass} value={form.status} onChange={event => setField('status', event.target.value as LeadStatus)}>
-              {STATUS_OPTIONS.map(status => (
-                <option key={status} value={status}>{LEAD_STATUS_LABELS[status]}</option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1.5 md:col-span-2">
-            <span className={labelClass}>Комментарий гостя</span>
-            <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.message} onChange={event => setField('message', event.target.value)} />
-          </label>
-          {(utmSummary || rawSummary) && (
-            <div className="space-y-1.5 md:col-span-2">
-              <span className={labelClass}>Данные источника</span>
-              <div className={cn(inputClass, 'min-h-[38px]')}>
-                {[utmSummary && `UTM: ${utmSummary}`, rawSummary && `RAW: ${rawSummary}`].filter(Boolean).join(' · ')}
-              </div>
+        <div className="grid gap-4 overflow-y-auto p-6">
+          <section className={sectionClass}>
+            <h3 className={sectionTitleClass}>Гость</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <label className="space-y-1.5">
+                <span className={labelClass}>Имя гостя</span>
+                <input className={inputClass} value={form.guestName} onChange={event => setField('guestName', event.target.value)} />
+              </label>
+              <label className="space-y-1.5">
+                <span className={labelClass}>Телефон</span>
+                <input className={inputClass} required value={form.phone} onChange={event => setField('phone', event.target.value)} />
+              </label>
+              <label className="space-y-1.5">
+                <span className={labelClass}>Email</span>
+                <input className={inputClass} type="email" value={form.email} onChange={event => setField('email', event.target.value)} />
+              </label>
             </div>
-          )}
-          <label className="space-y-1.5 md:col-span-2">
-            <span className={labelClass}>Заметка менеджера</span>
-            <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.managerNote} onChange={event => setField('managerNote', event.target.value)} />
-          </label>
+          </section>
+
+          <section className={sectionClass}>
+            <h3 className={sectionTitleClass}>Проживание</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className={labelClass}>Желаемая дата заезда</span>
+                <input className={inputClass} type="date" value={form.desiredStartDate} onChange={event => setField('desiredStartDate', event.target.value)} />
+              </label>
+              <label className="space-y-1.5">
+                <span className={labelClass}>Желаемая дата выезда</span>
+                <input className={inputClass} type="date" value={form.desiredEndDate} onChange={event => setField('desiredEndDate', event.target.value)} />
+              </label>
+              <label className="space-y-1.5">
+                <span className={labelClass}>Время</span>
+                <input className={inputClass} type="time" value={form.desiredTime} onChange={event => setField('desiredTime', event.target.value)} />
+              </label>
+              <label className="space-y-1.5">
+                <span className={labelClass}>Количество гостей</span>
+                <input className={inputClass} min={1} type="number" value={form.guestsCount} onChange={event => setField('guestsCount', event.target.value)} />
+              </label>
+              <label className="space-y-1.5 md:col-span-2">
+                <span className={labelClass}>Пожелание по номеру</span>
+                <input className={inputClass} value={form.objectType} placeholder="Например: семейный номер" onChange={event => setField('objectType', event.target.value)} />
+              </label>
+            </div>
+          </section>
+
+          <section className={sectionClass}>
+            <h3 className={sectionTitleClass}>Комментарий гостя</h3>
+            <label className="mt-4 block space-y-1.5">
+              <span className={labelClass}>Комментарий</span>
+              <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.message} onChange={event => setField('message', event.target.value)} />
+            </label>
+          </section>
+
+          <section className={sectionClass}>
+            <h3 className={sectionTitleClass}>Работа с заявкой</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className={labelClass}>Статус</span>
+                <select className={inputClass} value={form.status} onChange={event => setField('status', event.target.value as LeadStatus)}>
+                  {STATUS_OPTIONS.map(status => (
+                    <option key={status} value={status}>{LEAD_STATUS_LABELS[status]}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1.5 md:col-span-2">
+                <span className={labelClass}>Заметка менеджера</span>
+                <textarea className={cn(inputClass, 'min-h-[90px] resize-none')} value={form.managerNote} onChange={event => setField('managerNote', event.target.value)} />
+              </label>
+            </div>
+          </section>
+
+          <section className={sectionClass}>
+            <button
+              type="button"
+              onClick={() => setIsTechOpen(prev => !prev)}
+              className="flex w-full items-center justify-between text-left text-sm font-bold"
+            >
+              <span>Технические данные</span>
+              <ChevronDown size={17} className={cn('transition-transform', isTechOpen && 'rotate-180')} />
+            </button>
+            {isTechOpen && (
+              <div className={cn('mt-4 rounded-xl border p-3 text-xs', isDarkMode ? 'border-white/10 bg-black/20 text-gray-300' : 'border-gray-200 bg-white text-gray-700')}>
+                {technicalRows.length === 0 ? (
+                  <div className="text-gray-500">Нет технических данных</div>
+                ) : (
+                  <dl className="grid gap-3">
+                    {technicalRows.map(([label, value]) => (
+                      <div key={label} className="grid gap-1 md:grid-cols-[140px_1fr]">
+                        <dt className="font-bold text-gray-500">{label}</dt>
+                        <dd className="min-w-0 whitespace-pre-wrap break-words">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            )}
+          </section>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-6 py-4">
