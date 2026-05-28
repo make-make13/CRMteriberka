@@ -26,6 +26,28 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 04:50 +03:00 — Unify prebooking modal graphite UI
+
+Files changed:
+- `src/components/contracts/PreBookingModal.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Applied dark graphite visual style to `PreBookingModal`.
+- Replaced old near-black backgrounds (#0f0f0f, #1a1a1a), white/10 borders, and bright yellow (#eab308, #ffc107) accents with the coordinated graphite palette (#1A1C1B inputs, #222421 modal bg, #3D423E borders, #8CAFBE focus, #FFE08A save button, #F3B2BF errors, #B4CDD2 secondary text).
+- Updated labels, select, date/time inputs, textarea, comment toggle, action buttons, delete/cancel links.
+- Business logic, handlers, validation, `contractApi.save()`, and prebooking-to-contract flow were NOT changed.
+
+Checks run:
+- `git status --short`
+
+Next:
+- Apply graphite theme to `ContractModal.tsx` in a separate step.
+
+Risks/TODOs:
+- `npm run lint` and `npm run build` were not run per task instruction.
+- `ContractModal.tsx` still uses the old color scheme.
+
 ### 2026-05-28 04:10 +03:00 — Unify contracts list graphite UI
 
 Files changed:

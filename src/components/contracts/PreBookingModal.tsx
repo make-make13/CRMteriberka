@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Plus } from 'lucide-react';
 import { format, addHours, addDays } from 'date-fns';
@@ -324,7 +324,7 @@ export default function PreBookingModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className={cn(
         "w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col",
-        isDarkMode ? "bg-[#1a1a1a] text-white" : "bg-white text-gray-900"
+        isDarkMode ? "bg-[#222421] text-[#F4F1EA]" : "bg-white text-gray-900"
       )}>
         <div className="flex items-center justify-between p-6 pb-4">
           <h2 className="text-xl font-bold">{initialData ? 'Предбронь' : 'Создание предброни'}</h2>
@@ -333,7 +333,7 @@ export default function PreBookingModal({
             whileTap={{ scale: 0.95 }}
             className={cn(
               "p-2 rounded-lg transition-colors",
-              isDarkMode ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-600"
+              isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2]" : "hover:bg-gray-100 text-gray-600"
             )}
           >
             <X size={20} />
@@ -342,7 +342,7 @@ export default function PreBookingModal({
 
         <div className="p-6 pt-0 space-y-4">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
+            <div className={cn("p-3 rounded-xl text-sm font-medium border", isDarkMode ? "bg-[#F3B2BF]/10 border-[#F3B2BF]/25 text-[#F3B2BF]" : "bg-red-500/10 border-red-500/20 text-red-500")}>
               {error}
             </div>
           )}
@@ -358,7 +358,7 @@ export default function PreBookingModal({
                 }}
                 className={cn(
                   "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                 )}
               >
                 <option value="">Выберите номер</option>
@@ -378,7 +378,7 @@ export default function PreBookingModal({
               onChange={e => setName(e.target.value)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
               )}
             />
           </div>
@@ -393,7 +393,7 @@ export default function PreBookingModal({
               maxLength={18}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
               )}
             />
           </div>
@@ -402,33 +402,33 @@ export default function PreBookingModal({
             {leadPrefill && (
               <>
                 <div>
-                  <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">Дата заезда</label>
+                  <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>Дата заезда</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={handleStartDateChange}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                      isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                     )}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">Дата выезда</label>
+                  <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>Дата выезда</label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                      isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                     )}
                   />
                 </div>
               </>
             )}
             <div>
-              <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">
+              <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
                 {isGBCottage ? 'Дата заезда' : 'Заезд'}
               </label>
               {isGBCottage ? (
@@ -438,7 +438,7 @@ export default function PreBookingModal({
                   onChange={handleStartDateChange}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                    isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                   )}
                 />
               ) : (
@@ -448,13 +448,13 @@ export default function PreBookingModal({
                   onChange={handleStartTimeChange}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                    isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                   )}
                 />
               )}
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">
+              <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
                 {isGBCottage ? 'Дата выезда' : 'Выезд'}
               </label>
               {isGBCottage ? (
@@ -464,7 +464,7 @@ export default function PreBookingModal({
                   onChange={e => setEndDate(e.target.value)}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                    isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                   )}
                 />
               ) : (
@@ -474,7 +474,7 @@ export default function PreBookingModal({
                   onChange={e => setEndTime(e.target.value)}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                    isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                   )}
                 />
               )}
@@ -491,7 +491,7 @@ export default function PreBookingModal({
                 onChange={e => setGuestsCount(e.target.value)}
                 className={cn(
                   "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                 )}
               />
             </div>
@@ -504,7 +504,7 @@ export default function PreBookingModal({
                 onChange={e => setEmail(e.target.value)}
                 className={cn(
                   "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                 )}
               />
             </div>
@@ -517,7 +517,7 @@ export default function PreBookingModal({
                 onChange={e => setBookingPrice(e.target.value)}
                 className={cn(
                   "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                 )}
               />
             </div>
@@ -527,21 +527,21 @@ export default function PreBookingModal({
             <motion.button 
               onClick={() => setShowComment(true)}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-gray-300 uppercase tracking-wider mt-2"
+              className={cn("flex items-center gap-2 text-xs font-bold uppercase tracking-wider mt-2", isDarkMode ? "text-[#B4CDD2]/60 hover:text-[#B4CDD2]" : "text-gray-400 hover:text-gray-300")}
             >
-              <Plus size={14} className="text-[#eab308]" />
+              <Plus size={14} className={isDarkMode ? "text-[#8CAFBE]" : "text-[#eab308]"} />
               Добавить комментарий
             </motion.button>
           ) : (
             <div>
-              <label className="block text-xs font-bold mb-1.5 uppercase text-gray-500">Комментарий</label>
+              <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>Комментарий</label>
               <textarea 
                 value={comment}
                 onChange={e => setComment(e.target.value)}
                 rows={3}
                 className={cn(
                   "w-full px-4 py-2.5 rounded-xl border outline-none transition-all resize-none",
-                  isDarkMode ? "bg-[#0f0f0f] border-white/10 focus:border-[#eab308]" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                 )}
               />
             </div>
@@ -551,7 +551,7 @@ export default function PreBookingModal({
             <motion.button 
               onClick={handleSave}
               whileTap={{ scale: 0.95 }}
-              className="flex-1 bg-[#ffc107] hover:bg-[#ffca28] text-black font-bold py-3 rounded-xl transition-colors"
+              className={cn("flex-1 font-bold py-3 rounded-xl transition-colors", isDarkMode ? "bg-[#FFE08A] hover:bg-[#FFE08A]/85 text-[#222421]" : "bg-[#ffc107] hover:bg-[#ffca28] text-black")}
             >
               Сохранить
             </motion.button>
@@ -559,8 +559,8 @@ export default function PreBookingModal({
               onClick={onOpenContract}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                "flex-1 font-bold py-3 rounded-xl transition-colors",
-                isDarkMode ? "bg-[#0f0f0f] hover:bg-[#1a1a1a] text-white border border-white/10" : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                "flex-1 font-bold py-3 rounded-xl transition-colors border",
+                isDarkMode ? "bg-[#292B28] hover:bg-[#292B28]/80 text-[#B4CDD2] hover:text-[#F4F1EA] border-[#3D423E] hover:border-[#B4CDD2]" : "bg-gray-100 hover:bg-gray-200 text-gray-900 border-transparent"
               )}
             >
               Договор
@@ -572,7 +572,7 @@ export default function PreBookingModal({
               <motion.button 
                 onClick={() => onDelete(initialData.id)}
                 whileTap={{ scale: 0.95 }}
-                className="text-sm text-red-500 hover:text-red-400 transition-colors py-2 px-4"
+                className={cn("text-sm transition-colors py-2 px-4", isDarkMode ? "text-[#F3B2BF] hover:text-[#F3B2BF]/80" : "text-red-500 hover:text-red-400")}
               >
                 Удалить предбронь
               </motion.button>
@@ -582,7 +582,7 @@ export default function PreBookingModal({
             <motion.button 
               onClick={onClose}
               whileTap={{ scale: 0.95 }}
-              className="text-sm text-gray-400 hover:text-gray-300 transition-colors py-2 px-4"
+              className={cn("text-sm transition-colors py-2 px-4", isDarkMode ? "text-[#B4CDD2]/60 hover:text-[#B4CDD2]" : "text-gray-400 hover:text-gray-300")}
             >
               Отмена
             </motion.button>
