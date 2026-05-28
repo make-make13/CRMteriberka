@@ -144,35 +144,35 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
         </motion.button>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Поиск по имени, телефону, email, паспорту..." 
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B8B8B]" size={16} />
+          <input
+            type="text"
+            placeholder="Поиск по имени, телефону, email, паспорту..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
-              "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all border",
+              "w-full pl-9 pr-4 h-10 rounded-xl text-sm outline-none transition-all border",
               isDarkMode ? "bg-[#161616] border-[#262626] text-[#F5F5F5] placeholder:text-[#8B8B8B]/60 focus:border-[#F97316]/60" : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
             )}
           />
         </div>
-        
-        <div className={cn("flex items-center gap-2 p-1 rounded-xl", isDarkMode ? "bg-[#0A0A0A] border border-[#262626]" : "bg-black/20")}>
+
+        <div className={cn("flex items-center gap-1 p-1 rounded-xl shrink-0", isDarkMode ? "bg-[#161616]" : "bg-black/20")}>
           {clientFilterItems.map((item) => (
             <motion.button
               key={item.id}
               onClick={() => setFilter(item.id)}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
                 filter === item.id
                   ? (isDarkMode ? "bg-[#F97316] text-white" : "bg-white text-black shadow-sm")
                   : (isDarkMode ? "text-[#8B8B8B] hover:bg-[#1A1A1A] hover:text-[#F5F5F5]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >
-              {item.icon && <item.icon size={14} className={item.id === 'blacklist' ? 'text-[#F3B2BF]' : ''} />}
+              {item.icon && <item.icon size={13} className={item.id === 'blacklist' && filter !== item.id ? 'text-[#F3B2BF]' : ''} />}
               {item.label}
             </motion.button>
           ))}
