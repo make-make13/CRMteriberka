@@ -26,6 +26,27 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 05:05 +03:00 — Fix BackupSettingsTab runtime crash
+
+Files changed:
+- `src/components/settings/BackupSettingsTab.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Found the cause of the white screen / runtime crash when navigating to the "Settings" > "Backup" tab: missing `status.rclone` object from the backend response was causing a `TypeError: Cannot read properties of undefined (reading 'available')`.
+- Fixed the crash by using optional chaining (`status.rclone?.available` and `status.rclone?.error`) to safely handle cases where the `rclone` status object is undefined.
+- Also added optional chaining to `lastResult.remotes` and `lastResult.errors` arrays to prevent potential crashes if the backend omits them.
+- Business logic was not changed.
+
+Checks run:
+- `git status --short`
+
+Next:
+- Continue graphite UI redesign tasks.
+
+Risks/TODOs:
+- `npm run lint` and `npm run build` were not run per task instruction.
+
 ### 2026-05-28 04:50 +03:00 — Unify prebooking modal graphite UI
 
 Files changed:

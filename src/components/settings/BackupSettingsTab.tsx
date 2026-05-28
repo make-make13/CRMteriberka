@@ -150,7 +150,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
 
   const cloudOk = Boolean(status.lastSuccessfulCloudBackupAt && status.todayCloudBackupDone);
   const localOk = Boolean(status.lastSuccessfulLocalBackupAt);
-  const cloudBackupConfigured = status.rclone.available;
+  const cloudBackupConfigured = Boolean(status.rclone?.available);
 
   return (
     <div className="space-y-8">
@@ -171,9 +171,9 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
         />
         <StatusCard
           title="rclone"
-          subtitle={status.rclone.available ? status.rclone.version || 'Доступен' : status.rclone.error || 'Не найден'}
-          ok={status.rclone.available}
-          icon={status.rclone.available ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+          subtitle={status.rclone?.available ? status.rclone.version || 'Доступен' : status.rclone?.error || 'Не найден'}
+          ok={Boolean(status.rclone?.available)}
+          icon={status.rclone?.available ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
           isDarkMode={isDarkMode}
         />
       </div>
@@ -332,7 +332,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
               Архив: {lastResult.archiveName || 'нет'} · {formatBytes(lastResult.archiveSize)}
               {lastResult.localArchiveDeleted ? ' · локально удалён после загрузки' : ''}
             </div>
-            {lastResult.remotes.length > 0 && (
+            {lastResult.remotes?.length > 0 && (
               <div className="text-xs">
                 {lastResult.remotes.map(remote => (
                   <div key={remote.key}>
@@ -341,7 +341,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
                 ))}
               </div>
             )}
-            {lastResult.errors.length > 0 && (
+            {lastResult.errors?.length > 0 && (
               <div className="text-xs text-[#B4CDD2]">
                 {lastResult.errors.join('; ')}
               </div>
