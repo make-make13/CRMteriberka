@@ -203,7 +203,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             title="Проверить новые заявки с сайта"
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
-              isDarkMode ? 'bg-white/5 text-gray-200 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             )}
           >
             {isSyncing ? <Loader2 size={17} className="animate-spin" /> : <RefreshCw size={17} />}
@@ -213,7 +213,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             type="button"
             onClick={openNewLead}
             whileTap={{ scale: 0.96 }}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#8CAFBE] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[#B4CDD2]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#8CAFBE] px-4 py-2 text-sm font-bold text-[#222421] transition-colors hover:bg-[#B4CDD2]"
           >
             <Plus size={18} />
             Новая заявка
@@ -221,18 +221,18 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         </div>
       </div>
 
-      <div className={cn('rounded-2xl border p-4', isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-white')}>
+      <div className={cn('rounded-2xl border p-4', isDarkMode ? 'border-[#3D423E] bg-[#222421]' : 'border-gray-200 bg-white')}>
         <div className="flex flex-wrap items-center gap-3">
           <div className={cn(
             'flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border px-3 py-2',
-            isDarkMode ? 'border-white/10 bg-black/20' : 'border-gray-200 bg-gray-50'
+            isDarkMode ? 'border-[#3D423E] bg-[#1A1C1B]' : 'border-gray-200 bg-gray-50'
           )}>
             <Search size={18} className="text-gray-500" />
             <input
               value={searchQuery}
               onChange={event => setSearchQuery(event.target.value)}
               placeholder="Поиск по имени, телефону, email"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-gray-500"
+              className="w-full bg-transparent text-sm outline-none text-[#F4F1EA] placeholder:text-[#B4CDD2]/45"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -244,8 +244,8 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
                 className={cn(
                   'rounded-xl px-3 py-2 text-xs font-bold transition-colors',
                   statusFilter === item.id
-                    ? 'bg-[#8CAFBE] text-black'
-                    : (isDarkMode ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                    ? 'bg-[#8CAFBE] text-[#222421]'
+                    : (isDarkMode ? 'bg-[#222421] text-[#B4CDD2] hover:bg-[#292B28] hover:text-[#F4F1EA] border border-[#3D423E]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
                 )}
               >
                 {item.label}
@@ -255,9 +255,9 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         </div>
       </div>
 
-      <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-gray-200 bg-white')}>
+      <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-[#3D423E] bg-[#292B28]' : 'border-gray-200 bg-white')}>
         {leadOpenError && (
-          <div className={cn('border-b px-4 py-3 text-sm font-medium', isDarkMode ? 'border-white/10 bg-red-500/10 text-red-200' : 'border-red-100 bg-red-50 text-red-700')}>
+          <div className={cn('border-b px-4 py-3 text-sm font-medium', isDarkMode ? 'border-[#3D423E] bg-red-500/10 text-red-200' : 'border-red-100 bg-red-50 text-red-700')}>
             {leadOpenError}
           </div>
         )}
@@ -282,42 +282,42 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] border-collapse text-sm">
               <thead>
-                <tr className={cn('text-left text-xs font-bold uppercase tracking-wider', isDarkMode ? 'bg-white/[0.02] text-gray-500' : 'bg-gray-50 text-gray-400')}>
-                  <th className="border-b border-white/5 p-4">Дата</th>
-                  <th className="border-b border-white/5 p-4">Гость</th>
-                  <th className="border-b border-white/5 p-4">Контакты</th>
-                  <th className="border-b border-white/5 p-4">Даты</th>
-                  <th className="border-b border-white/5 p-4">Гостей</th>
-                  <th className="border-b border-white/5 p-4">Источник</th>
-                  <th className="border-b border-white/5 p-4">Статус</th>
-                  <th className="border-b border-white/5 p-4 text-right">Действия</th>
+                <tr className={cn('text-left text-xs font-bold uppercase tracking-wider', isDarkMode ? 'bg-[#222421] text-[#B4CDD2]' : 'bg-gray-50 text-gray-400')}>
+                  <th className="border-b border-[#3D423E] p-4">Дата</th>
+                  <th className="border-b border-[#3D423E] p-4">Гость</th>
+                  <th className="border-b border-[#3D423E] p-4">Контакты</th>
+                  <th className="border-b border-[#3D423E] p-4">Даты</th>
+                  <th className="border-b border-[#3D423E] p-4">Гостей</th>
+                  <th className="border-b border-[#3D423E] p-4">Источник</th>
+                  <th className="border-b border-[#3D423E] p-4">Статус</th>
+                  <th className="border-b border-[#3D423E] p-4 text-right">Действия</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[#3D423E]">
                 {filteredLeads.map(lead => (
-                  <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-white/[0.035]' : 'hover:bg-gray-50')}>
+                  <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-[#222421]/60 text-[#F4F1EA]' : 'hover:bg-gray-50')}>
                     <td className="p-4 text-gray-500">
                       <div className="flex items-center gap-2">
-                        <CalendarDays size={15} />
-                        <span>{formatDateTime(lead.createdAt)}</span>
+                        <CalendarDays size={15} className={isDarkMode ? 'text-[#B4CDD2]/70' : 'text-gray-500'} />
+                        <span className={isDarkMode ? 'text-[#B4CDD2]/70' : ''}>{formatDateTime(lead.createdAt)}</span>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <UserRound size={16} className="text-gray-500" />
+                        <UserRound size={16} className={isDarkMode ? 'text-[#B4CDD2]/70' : 'text-gray-500'} />
                         <div>
                           <div className="font-bold">{cleanText(lead.guestName, 'Без имени')}</div>
-                          <div className="text-xs text-gray-500">{cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}</div>
+                          <div className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}</div>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="font-medium">{cleanText(lead.phone, 'Телефон не указан')}</div>
-                      <div className="text-xs text-gray-500">{cleanText(lead.email, 'Email не указан')}</div>
+                      <div className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{cleanText(lead.email, 'Email не указан')}</div>
                     </td>
                     <td className="p-4">
                       <div>{formatDateRange(lead)}</div>
-                      <div className="text-xs text-gray-500">{cleanText(lead.desiredTime, 'Время не указано')}</div>
+                      <div className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{cleanText(lead.desiredTime, 'Время не указано')}</div>
                     </td>
                     <td className="p-4">{lead.guestsCount ?? '-'}</td>
                     <td className="p-4">{formatLeadSource(lead.source)}</td>
@@ -326,7 +326,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
                       <button
                         type="button"
                         onClick={() => openLead(lead)}
-                        className={cn('rounded-xl px-3 py-2 text-xs font-bold transition-colors', isDarkMode ? 'bg-white/5 text-gray-200 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+                        className={cn('rounded-xl px-3 py-2 text-xs font-bold transition-colors', isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
                       >
                         Открыть
                       </button>

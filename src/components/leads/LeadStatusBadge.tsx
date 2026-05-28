@@ -18,13 +18,13 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 const statusClass: Record<LeadStatus, string> = {
-  new: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  in_progress: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  client_created: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  prebooking_created: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-  contract_created: 'bg-green-500/10 text-green-400 border-green-500/20',
-  rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
-  duplicate: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  new: 'bg-sky-400/10 text-sky-300 border-sky-400/20',
+  in_progress: 'bg-amber-400/10 text-amber-300 border-amber-400/20',
+  client_created: 'bg-teal-400/10 text-teal-300 border-teal-400/20',
+  prebooking_created: 'bg-[#FFE08A]/10 text-[#FFE08A] border-[#FFE08A]/20',
+  contract_created: 'bg-[#8CAFBE]/15 text-[#8CAFBE] border-[#8CAFBE]/35',
+  rejected: 'bg-[#F3B2BF]/15 text-[#F3B2BF] border-[#F3B2BF]/30',
+  duplicate: 'bg-[#6E6964]/15 text-[#B4CDD2]/60 border-[#3D423E]/50',
 };
 
 const statusIcon: Record<LeadStatus, typeof CircleDot> = {

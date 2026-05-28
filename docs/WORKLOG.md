@@ -26,6 +26,26 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 04:00 +03:00 — Unify leads and guests graphite UI
+
+Files changed:
+- `src/components/leads/Leads.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `src/components/leads/LeadStatusBadge.tsx`
+- `src/components/clients/Clients.tsx`
+- `src/components/clients/ClientModal.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Applied dark graphite visual style to the "Leads" (Заявки) and "Guests" (Гости) sections, including lists, cards, form inputs, status badges, and action buttons.
+- Replaced orange accents and plain black colors with the boutique hotel graphite-gray scheme (#1A1C1B, #222421, #292B28, #3D423E, #8CAFBE, #B4CDD2).
+- `Contracts.tsx` has been intentionally rolled back and will be updated in a separate step to maintain stability.
+- Business logic was not changed.
+
+Checks run:
+- Manual visual check in the browser (leads table, lead modal, guest table, guest modal).
+- `git status --short`
+
 ### 2026-05-28 03:16 +03:00 — Graphite theme full workflow validation
 
 Files changed:

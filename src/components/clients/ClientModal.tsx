@@ -202,11 +202,11 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className={cn(
         "w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border animate-in fade-in zoom-in duration-200",
-        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200"
+        isDarkMode ? "bg-[#222421] border-[#3D423E]" : "bg-white border-gray-200"
       )}>
         {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
-          <h2 className="text-xl font-bold">
+        <div className={cn("p-6 border-b flex items-center justify-between", isDarkMode ? "border-[#3D423E]" : "border-gray-100")}>
+          <h2 className={cn("text-xl font-bold", isDarkMode ? "text-[#F4F1EA]" : "text-gray-900")}>
             {mode === 'create' ? 'Новый гость' : mode === 'edit' ? 'Редактировать гостя' : 'Карточка гостя'}
           </h2>
           <div className="flex items-center gap-2">
@@ -215,8 +215,8 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                 onClick={() => setMode('edit')}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                  isDarkMode ? "bg-white/10 hover:bg-white/20 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
+                  isDarkMode ? "bg-[#222421] border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-900"
                 )}
               >
                 Редактировать
@@ -225,7 +225,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
             <motion.button 
               onClick={onClose} 
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg hover:bg-white/5 text-gray-500"
+              className={cn("p-2 rounded-lg transition-colors", isDarkMode ? "hover:bg-[#3D423E] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-500")}
             >
               <X size={20} />
             </motion.button>
@@ -235,7 +235,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
         {/* Type Toggle */}
         {!isViewMode && (
           <div className="px-6 pt-6">
-            <div className="flex p-1 bg-black/20 rounded-xl">
+            <div className={cn("flex p-1 rounded-xl", isDarkMode ? "bg-[#1A1C1B] border border-[#3D423E]" : "bg-black/20")}>
               <motion.button
                 type="button"
                 onClick={() => setClientType('physical')}
@@ -243,8 +243,8 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all",
                   clientType === 'physical' 
-                    ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
-                    : "text-gray-500 hover:text-gray-300"
+                    ? (isDarkMode ? "bg-[#8CAFBE] text-[#222421]" : "bg-white text-black shadow-sm")
+                    : (isDarkMode ? "text-[#B4CDD2] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-gray-700")
                 )}
               >
                 <User size={16} />
@@ -257,8 +257,8 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all",
                   clientType === 'legal' 
-                    ? (isDarkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm")
-                    : "text-gray-500 hover:text-gray-300"
+                    ? (isDarkMode ? "bg-[#8CAFBE] text-[#222421]" : "bg-white text-black shadow-sm")
+                    : (isDarkMode ? "text-[#B4CDD2] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-gray-700")
                 )}
               >
                 <Building2 size={16} />
@@ -280,7 +280,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default",
                       errors.lastName && "border-red-500"
                     )}
@@ -294,7 +294,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default",
                       errors.firstName && "border-red-500"
                     )}
@@ -308,7 +308,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -330,7 +330,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default",
                         errors.birthDate && "border-red-500"
                       )}
@@ -350,7 +350,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default",
                         errors.phone && "border-red-500"
                       )}
@@ -367,7 +367,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default"
                       )}
                     />
@@ -376,7 +376,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
               </div>
 
               {/* Row 3 & 4: Passport */}
-              <div className="p-4 rounded-2xl bg-black/20 border border-white/5 space-y-4">
+              <div className={cn("p-4 rounded-2xl border space-y-4", isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-black/20 border-white/5")}>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Паспортные данные</div>
                 
                 <div className="grid grid-cols-3 gap-4">
@@ -388,7 +388,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default"
                       )}
                     />
@@ -404,7 +404,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default"
                       )}
                     />
@@ -420,7 +420,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default",
                         errors.passportIssueDate && "border-red-500"
                       )}
@@ -436,7 +436,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -454,7 +454,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     rows={2}
                     className={cn(
                       "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all resize-none",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -470,7 +470,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   disabled={isViewMode}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                     isViewMode && "opacity-70 cursor-default",
                     errors.organizationName && "border-red-500"
                   )}
@@ -484,7 +484,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   disabled={isViewMode}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                     isViewMode && "opacity-70 cursor-default",
                     errors.inn && "border-red-500"
                   )}
@@ -498,7 +498,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   disabled={isViewMode}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                     isViewMode && "opacity-70 cursor-default"
                   )}
                 />
@@ -510,7 +510,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   disabled={isViewMode}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                     isViewMode && "opacity-70 cursor-default"
                   )}
                 />
@@ -522,7 +522,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   disabled={isViewMode}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                     isViewMode && "opacity-70 cursor-default"
                   )}
                 />
@@ -534,13 +534,13 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   disabled={isViewMode}
                   className={cn(
                     "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                     isViewMode && "opacity-70 cursor-default"
                   )}
                 />
               </div>
 
-              <div className="col-span-2 grid grid-cols-2 gap-4 p-4 rounded-2xl bg-black/20 border border-white/5">
+              <div className={cn("col-span-2 grid grid-cols-2 gap-4 p-4 rounded-2xl border", isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-black/20 border-white/5")}>
                 <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Банковские реквизиты</div>
                 <div className="col-span-2 space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Банк</label>
@@ -549,7 +549,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -561,7 +561,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -573,7 +573,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -585,7 +585,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                     disabled={isViewMode}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       isViewMode && "opacity-70 cursor-default"
                     )}
                   />
@@ -606,7 +606,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default",
                         errors.phone && "border-red-500"
                       )}
@@ -623,7 +623,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                       disabled={isViewMode}
                       className={cn(
                         "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                         isViewMode && "opacity-70 cursor-default"
                       )}
                     />
@@ -633,99 +633,102 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
             </div>
           )}
 
-          {/* Common Fields */}
-          <div className="pt-4 border-t border-white/5 space-y-4">
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
-                className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-orange-500 transition-colors"
-              >
-                <span className="w-4 h-4 flex items-center justify-center border border-current rounded-sm">
-                  {showAdditionalInfo ? '-' : '+'}
-                </span>
-                Дополнительная информация
-              </button>
-              
-              {showAdditionalInfo && (
-                <textarea 
-                  {...register('additionalInfo')}
-                  disabled={isViewMode}
-                  rows={3}
-                  className={cn(
-                    "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all resize-none mt-2",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
-                    isViewMode && "opacity-70 cursor-default"
-                  )}
-                />
-              )}
-            </div>
-
-            <div>
-              <button
-                type="button"
-                onClick={() => !isViewMode && setIsBlacklisted(!isBlacklisted)}
-                disabled={isViewMode}
-                className={cn(
-                  "flex items-center gap-3 p-4 rounded-2xl border transition-all w-full",
-                  isBlacklisted 
-                    ? "bg-red-500/10 border-red-500/20 text-red-500" 
-                    : (isDarkMode ? "bg-white/5 border-white/5 text-gray-500" : "bg-gray-50 border-gray-100 text-gray-500"),
-                  isViewMode && "cursor-default opacity-80"
-                )}
-              >
-                {isBlacklisted ? <ShieldAlert size={20} /> : <ShieldCheck size={20} />}
-                <div className="text-left">
-                  <div className="text-xs font-bold uppercase tracking-wider">Черный список</div>
-                  <div className="text-[10px] opacity-70 font-medium">Гость {isBlacklisted ? 'находится' : 'не находится'} в черном списке</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </form>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-white/5 flex items-center justify-end gap-3">
-          <motion.button 
+      {/* Common Fields */}
+      <div className={cn("pt-4 border-t space-y-4", isDarkMode ? "border-[#3D423E]" : "border-white/5")}>
+        <div className="space-y-2">
+          <button
             type="button"
-            onClick={onClose}
-            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
             className={cn(
-              "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-              isDarkMode ? "hover:bg-white/5 text-gray-400" : "hover:bg-gray-100 text-gray-600"
+              "flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors",
+              isDarkMode ? "text-[#B4CDD2]/75 hover:text-[#8CAFBE]" : "text-gray-500 hover:text-orange-500"
             )}
           >
-            Отмена
-          </motion.button>
-          {isViewMode ? (
-            <motion.button 
-              type="button"
-              onClick={() => {
-                // TODO: Handle create contract from client
-                onClose();
-              }}
-              whileTap={{ scale: 0.95 }}
+            <span className="w-4 h-4 flex items-center justify-center border border-current rounded-sm">
+              {showAdditionalInfo ? '-' : '+'}
+            </span>
+            Дополнительная информация
+          </button>
+          
+          {showAdditionalInfo && (
+            <textarea 
+              {...register('additionalInfo')}
+              disabled={isViewMode}
+              rows={3}
               className={cn(
-                "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-                isDarkMode ? "bg-[#f59e0b] text-black hover:bg-[#d97706]" : "bg-orange-500 text-white hover:bg-orange-600"
+                "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all resize-none mt-2",
+                isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                isViewMode && "opacity-70 cursor-default"
               )}
-            >
-              Создать договор
-            </motion.button>
-          ) : (
-            <motion.button 
-              type="submit"
-              form={clientFormId}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-                isDarkMode ? "bg-[#f59e0b] text-black hover:bg-[#d97706]" : "bg-orange-500 text-white hover:bg-orange-600"
-              )}
-            >
-              {initialData ? 'Сохранить' : 'Создать'}
-            </motion.button>
+            />
           )}
         </div>
+
+        <div>
+          <button
+            type="button"
+            onClick={() => !isViewMode && setIsBlacklisted(!isBlacklisted)}
+            disabled={isViewMode}
+            className={cn(
+              "flex items-center gap-3 p-4 rounded-2xl border transition-all w-full",
+              isBlacklisted 
+                ? (isDarkMode ? "bg-[#F3B2BF]/15 border-[#F3B2BF]/30 text-[#F3B2BF]" : "bg-red-500/10 border-red-500/20 text-red-500") 
+                : (isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#B4CDD2]/70 hover:bg-[#292B28]" : "bg-gray-50 border-gray-100 text-gray-500"),
+              isViewMode && "cursor-default opacity-80"
+            )}
+          >
+            {isBlacklisted ? <ShieldAlert size={20} /> : <ShieldCheck size={20} />}
+            <div className="text-left">
+              <div className="text-xs font-bold uppercase tracking-wider">Черный список</div>
+              <div className="text-[10px] opacity-70 font-medium">Гость {isBlacklisted ? 'находится' : 'не находится'} в черном списке</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    {/* Footer */}
+    <div className={cn("p-6 border-t flex items-center justify-end gap-3", isDarkMode ? "border-[#3D423E]" : "border-white/5")}>
+      <motion.button 
+        type="button"
+        onClick={onClose}
+        whileTap={{ scale: 0.95 }}
+        className={cn(
+          "px-6 py-2.5 rounded-xl text-sm font-bold transition-all border",
+          isDarkMode ? "bg-[#222421] border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-white border-gray-200 hover:bg-gray-100 text-gray-600"
+        )}
+      >
+        Отмена
+      </motion.button>
+      {isViewMode ? (
+        <motion.button 
+          type="button"
+          onClick={() => {
+            // TODO: Handle create contract from client
+            onClose();
+          }}
+          whileTap={{ scale: 0.95 }}
+          className={cn(
+            "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
+            isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+          )}
+        >
+          Создать договор
+        </motion.button>
+      ) : (
+        <motion.button 
+          type="submit"
+          form={clientFormId}
+          whileTap={{ scale: 0.95 }}
+          className={cn(
+            "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
+            isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+          )}
+        >
+          {initialData ? 'Сохранить' : 'Создать'}
+        </motion.button>
+      )}
+    </div>
       </div>
     </div>
   );
