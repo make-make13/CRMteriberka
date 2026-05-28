@@ -5,7 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, Mail, Waves } from 'lucide-react';
-import { addMonths, format, subMonths } from 'date-fns';
+import { addDays, format, startOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
@@ -14,11 +14,7 @@ import { CC_OBJECTS } from '../../constants';
 import { Booking, Contract, BaseType, Client, Settings, ObjectDefinition } from '../../types';
 import * as XLSX from 'xlsx';
 import { useToast } from '../../context/ToastContext';
-import {
-  getHotelCalendarPeriodDays,
-  getVisibleBookingSpan,
-  type HotelCalendarPeriod,
-} from '../../utils/hotelCalendarGrid';
+import { getVisibleBookingSpan } from '../../utils/hotelCalendarGrid';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -35,23 +31,16 @@ interface ChessboardProps {
 
 type IndexedBooking = Booking & { contract: Contract };
 
-const PERIODS: { id: HotelCalendarPeriod; label: string }[] = [
-  { id: '1-10', label: '1-10' },
-  { id: '11-20', label: '11-20' },
-  { id: '21-end', label: '21-конец' },
-];
-
 export default function Chessboard({ isDarkMode, contracts, clients, settings, onNewBooking, onEditContract }: ChessboardProps) {
   const { toast } = useToast();
   const activeBase: BaseType = 'chunga-changa';
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date());
-  const [selectedPeriod, setSelectedPeriod] = useState<HotelCalendarPeriod>('1-10');
+  const [selectedWeekStart, setSelectedWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const visibleDays = useMemo(
-    () => getHotelCalendarPeriodDays(selectedMonth, selectedPeriod),
-    [selectedMonth, selectedPeriod],
+    () => Array.from({ length: 7 }, (_, index) => addDays(selectedWeekStart, index)),
+    [selectedWeekStart],
   );
 
   const activeContracts = useMemo(() => contracts.filter(c => c.status !== 'cancelled'), [contracts]);
@@ -173,10 +162,9 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   };
 
   const buildReportWorkbook = () => {
-    const monthLabel = format(selectedMonth, 'LLLL yyyy', { locale: ru });
     const periodLabel = visibleDays.length
       ? `${format(visibleDays[0], 'd MMMM', { locale: ru })} - ${format(visibleDays[visibleDays.length - 1], 'd MMMM yyyy', { locale: ru })}`
-      : monthLabel;
+      : '';
 
     const wb = XLSX.utils.book_new();
     const rows = [
@@ -221,7 +209,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
           subject: `Шахматка номеров: ${periodLabel}`,
           htmlBody: `<p>Здравствуйте! Во вложении шахматка номеров за период ${periodLabel}.</p>`,
           attachmentBase64: excelBuffer,
-          attachmentName: `Шахматка_${format(selectedMonth, 'yyyy-MM')}_${selectedPeriod}.xlsx`,
+          attachmentName: `Шахматка_${format(selectedWeekStart, 'yyyy-MM-dd')}.xlsx`,
         }),
       });
 
@@ -240,7 +228,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
   const handleExportExcel = () => {
     const { wb } = buildReportWorkbook();
-    XLSX.writeFile(wb, `Шахматка_${format(selectedMonth, 'yyyy-MM')}_${selectedPeriod}.xlsx`);
+    XLSX.writeFile(wb, `Шахматка_${format(selectedWeekStart, 'yyyy-MM-dd')}.xlsx`);
   };
 
   const handleFreeCellClick = (objectId: string, date: Date) => {
@@ -261,7 +249,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <motion.button
-                onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}
+                onClick={() => setSelectedWeekStart(addDays(selectedWeekStart, -7))}
                 whileTap={{ scale: 0.9 }}
                 className={cn(
                   "p-2 rounded-lg transition-all",
@@ -270,11 +258,11 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               >
                 <ChevronLeft size={20} />
               </motion.button>
-              <h2 className="text-xl font-bold min-w-[180px] text-center capitalize">
-                {format(selectedMonth, 'LLLL yyyy', { locale: ru })}
+              <h2 className="text-xl font-bold min-w-[220px] text-center">
+                {`${format(selectedWeekStart, 'd MMM', { locale: ru })} — ${format(addDays(selectedWeekStart, 6), 'd MMM yyyy', { locale: ru })}`}
               </h2>
               <motion.button
-                onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}
+                onClick={() => setSelectedWeekStart(addDays(selectedWeekStart, 7))}
                 whileTap={{ scale: 0.9 }}
                 className={cn(
                   "p-2 rounded-lg transition-all",
@@ -283,26 +271,6 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               >
                 <ChevronRight size={20} />
               </motion.button>
-            </div>
-
-            <div className={cn(
-              "flex items-center rounded-xl p-1",
-              isDarkMode ? "bg-black/40" : "bg-gray-100",
-            )}>
-              {PERIODS.map(period => (
-                <button
-                  key={period.id}
-                  onClick={() => setSelectedPeriod(period.id)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                    selectedPeriod === period.id
-                      ? "bg-[#F97316] text-white"
-                      : isDarkMode ? "text-[#8B8B8B] hover:text-[#F5F5F5]" : "text-gray-600 hover:text-gray-900",
-                  )}
-                >
-                  {period.label}
-                </button>
-              ))}
             </div>
 
             <select
@@ -420,7 +388,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                     isDarkMode ? "border-[#262626] bg-[#0A0A0A]" : "border-gray-100 bg-gray-50/20",
                   )}>
                     <div className="flex items-center gap-1.5">
-                      <div className="text-xs font-black leading-none text-[#F5F5F5]">{getRoomName(object)}</div>
+                      <div className="text-sm font-black leading-none text-[#F5F5F5]">{getRoomName(object)}</div>
                       <div className="text-sm font-bold leading-none text-[#F5F5F5] uppercase">{getRoomCategory(object)}</div>
                       {object.seaView && (
                         <Waves size={18} strokeWidth={2.5} className="text-[#2D9CDB] shrink-0" title="Вид на море" />
@@ -435,7 +403,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
                   <div className="relative">
                     <div
-                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#1A1C1B]" : "bg-gray-50/30")}
+                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#0A0A0A]" : "bg-gray-50/30")}
                       style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(48px, 1fr))` }}
                     >
                       {visibleDays.map(day => {

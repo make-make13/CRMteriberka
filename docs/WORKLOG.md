@@ -103,6 +103,32 @@ Checks run:
 Risks/TODOs:
 - None.
 
+#### Session 6: Week view + bigger numbers + uniform background (branch)
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Completed:
+- Switched grid from decade periods (1-10 / 11-20 / 21-конец) to a 7-day WEEK view, Monday → Sunday
+  - State: `selectedMonth`+`selectedPeriod` → `selectedWeekStart` (startOfWeek weekStartsOn:1)
+  - `visibleDays` = 7 days from the week's Monday
+  - Removed the decade period buttons; prev/next arrows now navigate by ±1 week
+  - Header now shows the week range, e.g. "25 мая — 31 мая 2026"
+  - Excel/email report labels and filenames now use the week start date
+  - Removed now-unused imports (addMonths, subMonths, getHotelCalendarPeriodDays, HotelCalendarPeriod, PERIODS)
+  - Booking span logic (getVisibleBookingSpan) untouched — works with any day array
+- Room number font size bumped: text-xs → text-sm (a bit bigger)
+- Background unified to near-black #0A0A0A across header/left column/booking grid (was #1A1C1B in the grid) — fully filled, matching the reference design
+
+Checks run:
+- Playwright: header shows week range, 7 columns Пн→Вс (25 пн … 31 вс), decade buttons gone, uniform dark bg, bigger numbers
+- Live bookings now visible (28 четверг) rendered with orange "Забронирован" badge — confirms status colors
+- Browser console: no errors (no compile errors after import/state changes)
+- No npm run lint / build (verified via running dev server instead)
+
+Risks/TODOs:
+- getRoomMeta helper is now unused (pre-existing); harmless. Can remove in a later cleanup.
+
 Next:
 - Continue with visual interface unification.
 
