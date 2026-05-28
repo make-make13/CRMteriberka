@@ -163,7 +163,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
           />
         </div>
 
-        <div className={cn("flex items-center gap-0.5 p-0.5 rounded-lg shrink-0", isDarkMode ? "bg-[#111111]" : "bg-black/20")}>
+        <div className={cn("flex items-center gap-0.5 shrink-0", isDarkMode ? "" : "bg-black/20")}>
           {clientFilterItems.map((item) => (
             <motion.button
               key={item.id}
@@ -172,8 +172,8 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
               className={cn(
                 "flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                 filter === item.id
-                  ? (isDarkMode ? "bg-[#F59E0B] text-[#050505]" : "bg-white text-black shadow-sm")
-                  : (isDarkMode ? "text-[#8F9894] hover:bg-[#161616] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
+                  ? (isDarkMode ? "bg-[#161616] text-[#F4F1EA]" : "bg-white text-black shadow-sm")
+                  : (isDarkMode ? "text-[#8F9894] hover:bg-[#111111] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >
               {item.icon && <item.icon size={12} className={item.id === 'blacklist' && filter !== item.id ? 'text-[#F3B2BF]' : ''} />}

@@ -722,6 +722,37 @@ Status:
 
 Next:
 - UI safety cleanup for Leads.
+### 2026-05-29 — Compact dark CRM palette: Шахматка + Гости (branch)
+
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+- `src/components/clients/Clients.tsx`
+
+**Шахматка — color hierarchy + controls zone:**
+- Page bg: `#0A0A0A` → `#050505` (near-black, matches App.tsx)
+- Table surface: `#0A0A0A` → `#111111`; table header: `#111111` → `#161616`
+- All borders: `#262626` → `#232323`
+- Primary text: `#F5F5F5` → `#F4F1EA`; secondary text: `#8B8B8B` → `#8F9894`
+- Price color: white `#F4F1EA` → orange `#F97316` (to match room category accent)
+- Sea view icon: vivid blue `#2D9CDB` → muted blue-gray `#8CAFBE`
+- Cell hover: `#262626/50` → `#232323`
+- Removed outer card wrapper (`rounded-2xl border p-4 bg-[#0A0A0A]`) from controls zone — controls now float directly on page bg
+- Legend: removed bordered panel, simplified to compact `flex gap-4 text-xs`; dot size `w-2.5 h-2.5`; only Забронирован (orange) + Предбронь (blue)
+- Export/Email buttons: `bg-[#161616]` → `bg-[#111111]`; nav arrows hover: → `bg-[#161616]`
+
+**Гости — filter palette:**
+- Active filter: orange `bg-[#F59E0B] text-[#050505]` → neutral `bg-[#161616] text-[#F4F1EA]`
+- Inactive filter: transparent bg, `text-[#8F9894]`, hover `bg-[#111111]`
+- Filter container: `bg-[#111111]` → transparent (no bg in dark mode)
+- CTA «Добавить гостя»: stays orange `bg-[#F59E0B] hover:bg-[#F97316]` — orange reserved for primary actions only
+- Design principle applied: orange = CTA only; segmented filter highlights use neutral `#161616`
+
+Checks run:
+- Claude_in_Chrome screenshot: Шахматка — no card wrapper, #050505 bg, #111111 table, price orange, legend compact, no console errors
+- Claude_in_Chrome screenshot: Гости — search + filters inline, active «Все» neutral (not orange), CTA button stays orange
+- No npm run lint / build (UI-only, per project policy)
+
 ### 2026-05-28 05:51 +03:00 — Backup Settings Runtime Crash Fixes
 
 Files changed:
