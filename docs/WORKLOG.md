@@ -1,7 +1,8 @@
 # WORKLOG
 
-### 2026-05-28 — Chessboard UI improvements
+### 2026-05-28 — Chessboard UI refinements
 
+#### Session 1: Layout and spacing improvements
 Files changed:
 - `src/components/chessboard/Chessboard.tsx`
 
@@ -19,6 +20,25 @@ Checks run:
 - Playwright verification: chessboard loads, left column wider, text readable, icons display correctly
 - Category filtering tested and working
 - Browser console: no errors
+
+#### Session 2: Room category typography polish
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Completed:
+- Room category text styling:
+  - Font size: 14px (text-sm)
+  - Font weight: 700 (font-bold)
+  - Color: #F4F1EA (light, same as room number)
+  - Text transform: UPPERCASE
+  - Visual prominence: equal to room number
+- Examples: ДВУХМЕСТНЫЙ СТАНДАРТ, ОДНОМЕСТНЫЙ СТАНДАРТ, ДЖУНИОР СЬЮТ, АПАРТАМЕНТЫ
+- Maintained sea view icon visibility only for seaView properties
+- Capacity and price row unchanged
+
+Checks run:
+- Visual inspection: category text now matches room number prominence
+- No business logic changes
 
 Next:
 - Continue with visual interface unification.

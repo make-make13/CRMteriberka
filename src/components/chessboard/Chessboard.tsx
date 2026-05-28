@@ -434,7 +434,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                   )}>
                     <div className="flex items-center gap-1.5">
                       <div className="text-xs font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
-                      <div className={cn("text-xs font-black leading-none", isDarkMode ? "text-[#B4CDD2]" : "text-gray-500")}>{getRoomCategory(object)}</div>
+                      <div className="text-sm font-bold leading-none text-[#F4F1EA] uppercase">{getRoomCategory(object)}</div>
                       {object.seaView && (
                         <Waves size={12} className="text-[#8CAFBE] shrink-0" title="Вид на море" />
                       )}
