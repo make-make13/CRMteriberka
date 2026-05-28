@@ -26,6 +26,23 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 04:10 +03:00 — Unify contracts list graphite UI
+
+Files changed:
+- `src/components/contracts/Contracts.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Applied dark graphite visual style to the "Contracts" (Договоры) list view.
+- Coordinated list styles, borders, input search, period calendars, pagination, and status badges with the new graphite palette (#1A1C1B, #222421, #292B28, #3D423E, #8CAFBE, #B4CDD2).
+- Restyled the "На печать" and "На отправку" buttons using unified non-neon colors and softer active borders in dark mode.
+- Ensured contract numbers with the "БМ" prefix remain visually accented.
+- Business logic was not changed.
+
+Checks run:
+- Manual visual check of the contracts page in the browser (filters, table rows, statuses, action buttons, pagination).
+- `git status --short`
+
 ### 2026-05-28 04:00 +03:00 — Unify leads and guests graphite UI
 
 Files changed:
