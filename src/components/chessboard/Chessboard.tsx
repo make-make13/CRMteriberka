@@ -265,7 +265,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
     <div className="flex flex-col gap-6">
       <div className={cn(
         "flex flex-col gap-4 rounded-2xl border p-4",
-        isDarkMode ? "bg-[#222421] border-[#3D423E]" : "bg-white border-gray-200 shadow-sm",
+        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200 shadow-sm",
       )}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -297,7 +297,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
             <div className={cn(
               "flex items-center rounded-xl p-1",
-              isDarkMode ? "bg-[#292B28]" : "bg-gray-100",
+              isDarkMode ? "bg-black/40" : "bg-gray-100",
             )}>
               {PERIODS.map(period => (
                 <button
@@ -379,7 +379,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
         <div className={cn(
           "flex flex-wrap items-center gap-4 text-xs p-3 rounded-xl border",
-          isDarkMode ? "text-[#F4F1EA] bg-[#292B28] border-[#3D423E]" : "text-gray-500 bg-gray-50 border-gray-100 shadow-sm"
+          isDarkMode ? "text-[#F4F1EA] bg-white/[0.04] border-white/10" : "text-gray-500 bg-gray-50 border-gray-100 shadow-sm"
         )}>
           <div className="flex items-center gap-2"><span className={cn("w-3 h-3 rounded-full border", isDarkMode ? "bg-[#2F3330] border-[#3D423E]" : "bg-white border-gray-300")} />Свободен</div>
           <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#F3B2BF]" />Занят</div>
@@ -391,14 +391,14 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
       <div className={cn(
         "rounded-2xl border overflow-hidden",
-        isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-white border-gray-200 shadow-sm",
+        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200 shadow-sm",
       )}>
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
             <div className={cn("grid grid-cols-[260px_1fr] border-b", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
               <div className={cn(
                 "p-3 text-[10px] uppercase tracking-wider font-semibold border-r",
-                isDarkMode ? "text-[#B4CDD2] border-[#3D423E] bg-[#292B28]" : "text-gray-400 border-gray-100 bg-gray-50/50",
+                isDarkMode ? "text-[#B4CDD2] border-[#3D423E] bg-[#111111]" : "text-gray-400 border-gray-100 bg-gray-50/50",
               )}>
                 Номера
               </div>
@@ -411,7 +411,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                     key={day.toISOString()}
                     className={cn(
                       "p-2 text-center border-r last:border-r-0",
-                      isDarkMode ? "border-[#3D423E] bg-[#292B28]" : "border-gray-100",
+                      isDarkMode ? "border-[#3D423E] bg-[#111111]" : "border-gray-100",
                     )}
                   >
                     <div className={cn("text-sm font-black", isDarkMode ? "text-[#F4F1EA]" : "text-gray-900")}>{format(day, 'd', { locale: ru })}</div>
@@ -428,7 +428,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                 <div key={object.id} className={cn("grid grid-cols-[260px_1fr] min-h-[72px] border-b last:border-b-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
                   <div className={cn(
                     "px-3 py-2.5 border-r flex flex-col justify-center gap-0.5",
-                    isDarkMode ? "border-[#3D423E] bg-[#292B28]" : "border-gray-100 bg-gray-50/20",
+                    isDarkMode ? "border-[#3D423E] bg-[#111111]" : "border-gray-100 bg-gray-50/20",
                   )}>
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
@@ -449,7 +449,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
                   <div className="relative">
                     <div
-                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#2F3330]" : "bg-white")}
+                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#0d0d0d]" : "bg-white")}
                       style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(50px, 1fr))` }}
                     >
                       {visibleDays.map(day => {

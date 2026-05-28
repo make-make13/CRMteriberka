@@ -198,7 +198,7 @@ export default function LeadModal({
 
   const sectionClass = cn(
     'rounded-xl border p-3',
-    isDarkMode ? 'border-[#3D423E] bg-[#292B28]' : 'border-gray-200 bg-gray-50'
+    isDarkMode ? 'border-white/10 bg-white/[0.05]' : 'border-gray-200 bg-gray-50'
   );
   const labelClass = cn('text-[11px] font-bold uppercase tracking-wide', isDarkMode ? 'text-[#B4CDD2]/80' : 'text-gray-500');
   const sectionTitleClass = cn('text-sm font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900');
@@ -212,7 +212,7 @@ export default function LeadModal({
         onSubmit={handleSubmit}
         className={cn(
           'flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border shadow-2xl',
-          isDarkMode ? 'border-[#3D423E] bg-[#222421]' : 'border-gray-200 bg-white'
+          isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white'
         )}
       >
         <div className={cn('flex items-start justify-between gap-4 border-b px-5 py-4', isDarkMode ? 'border-[#3D423E]' : 'border-gray-100')}>
@@ -295,7 +295,7 @@ export default function LeadModal({
                 </select>
               </label>
               <div className="flex items-end gap-2">
-                <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('in_progress')} className={cn('rounded-lg px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-white text-gray-700 hover:bg-gray-100')}>
+                <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('in_progress')} className={cn('rounded-lg px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-white text-gray-700 hover:bg-gray-100')}>
                   В работу
                 </button>
                 <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('rejected')} className={cn("rounded-lg px-3 py-1.5 text-sm font-bold transition-colors border", isDarkMode ? "bg-[#F3B2BF]/15 border-[#F3B2BF]/30 text-[#F3B2BF] hover:bg-[#F3B2BF]/25" : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20")}>
@@ -378,7 +378,7 @@ export default function LeadModal({
 
         <div className={cn("flex justify-end border-t px-5 py-3", isDarkMode ? "border-[#3D423E]" : "border-gray-100")}>
           <div className="flex items-center gap-2">
-            <button type="button" disabled={isSaving} onClick={onClose} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
+            <button type="button" disabled={isSaving} onClick={onClose} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
               Отмена
             </button>
             <button type="submit" disabled={isSaving} className="inline-flex items-center gap-2 rounded-xl bg-[#D98E2B] px-5 py-2 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70">

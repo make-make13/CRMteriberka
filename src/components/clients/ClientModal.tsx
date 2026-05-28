@@ -202,7 +202,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className={cn(
         "w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border animate-in fade-in zoom-in duration-200",
-        isDarkMode ? "bg-[#222421] border-[#3D423E]" : "bg-white border-gray-200"
+        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200"
       )}>
         {/* Header */}
         <div className={cn("p-6 border-b flex items-center justify-between", isDarkMode ? "border-[#3D423E]" : "border-gray-100")}>
@@ -216,7 +216,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                 whileTap={{ scale: 0.95 }}
                 className={cn(
                   "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
-                  isDarkMode ? "bg-[#222421] border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-900"
+                  isDarkMode ? "bg-white/[0.05] border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-900"
                 )}
               >
                 Редактировать
@@ -376,7 +376,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
               </div>
 
               {/* Row 3 & 4: Passport */}
-              <div className={cn("p-4 rounded-2xl border space-y-4", isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-black/20 border-white/5")}>
+              <div className={cn("p-4 rounded-2xl border space-y-4", isDarkMode ? "bg-white/[0.05] border-white/10" : "bg-black/20 border-white/5")}>
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Паспортные данные</div>
                 
                 <div className="grid grid-cols-3 gap-4">
@@ -540,7 +540,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                 />
               </div>
 
-              <div className={cn("col-span-2 grid grid-cols-2 gap-4 p-4 rounded-2xl border", isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-black/20 border-white/5")}>
+              <div className={cn("col-span-2 grid grid-cols-2 gap-4 p-4 rounded-2xl border", isDarkMode ? "bg-white/[0.05] border-white/10" : "bg-black/20 border-white/5")}>
                 <div className="col-span-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Банковские реквизиты</div>
                 <div className="col-span-2 space-y-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Банк</label>
@@ -695,7 +695,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
         whileTap={{ scale: 0.95 }}
         className={cn(
           "px-6 py-2.5 rounded-xl text-sm font-bold transition-all border",
-          isDarkMode ? "bg-[#222421] border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-white border-gray-200 hover:bg-gray-100 text-gray-600"
+          isDarkMode ? "bg-white/[0.05] border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-white border-gray-200 hover:bg-gray-100 text-gray-600"
         )}
       >
         Отмена

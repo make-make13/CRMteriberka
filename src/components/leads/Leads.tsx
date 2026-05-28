@@ -203,7 +203,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             title="Проверить новые заявки с сайта"
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
-              isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             )}
           >
             {isSyncing ? <Loader2 size={17} className="animate-spin" /> : <RefreshCw size={17} />}
@@ -221,11 +221,11 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         </div>
       </div>
 
-      <div className={cn('rounded-2xl border p-4', isDarkMode ? 'border-[#3D423E] bg-[#222421]' : 'border-gray-200 bg-white')}>
+      <div className={cn('rounded-2xl border p-4', isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white')}>
         <div className="flex flex-wrap items-center gap-3">
           <div className={cn(
             'flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border px-3 py-2',
-            isDarkMode ? 'border-[#3D423E] bg-[#1A1C1B] focus-within:border-[#D98E2B]/60' : 'border-gray-200 bg-gray-50'
+            isDarkMode ? 'border-white/10 bg-black/30 focus-within:border-[#D98E2B]/60' : 'border-gray-200 bg-gray-50'
           )}>
             <Search size={18} className="text-gray-500" />
             <input
@@ -245,7 +245,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
                   'rounded-xl px-3 py-2 text-xs font-bold transition-colors',
                   statusFilter === item.id
                     ? 'bg-[#D98E2B] text-[#1A1C1B]'
-                    : (isDarkMode ? 'bg-[#222421] text-[#B4CDD2] hover:bg-[#292B28] hover:text-[#F4F1EA] border border-[#3D423E]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                    : (isDarkMode ? 'bg-white/[0.05] text-[#B4CDD2] hover:bg-white/[0.08] hover:text-[#F4F1EA] border border-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
                 )}
               >
                 {item.label}
@@ -255,7 +255,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         </div>
       </div>
 
-      <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-[#3D423E] bg-[#292B28]' : 'border-gray-200 bg-white')}>
+      <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white')}>
         {leadOpenError && (
           <div className={cn('border-b px-4 py-3 text-sm font-medium', isDarkMode ? 'border-[#3D423E] bg-red-500/10 text-red-200' : 'border-red-100 bg-red-50 text-red-700')}>
             {leadOpenError}
@@ -282,7 +282,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] border-collapse text-sm">
               <thead>
-                <tr className={cn('text-left text-xs font-bold uppercase tracking-wider', isDarkMode ? 'bg-[#222421] text-[#B4CDD2]' : 'bg-gray-50 text-gray-400')}>
+                <tr className={cn('text-left text-xs font-bold uppercase tracking-wider', isDarkMode ? 'bg-white/[0.05] text-[#B4CDD2]' : 'bg-gray-50 text-gray-400')}>
                   <th className="border-b border-[#3D423E] p-4">Дата</th>
                   <th className="border-b border-[#3D423E] p-4">Гость</th>
                   <th className="border-b border-[#3D423E] p-4">Контакты</th>
@@ -295,7 +295,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
               </thead>
               <tbody className="divide-y divide-[#3D423E]">
                 {filteredLeads.map(lead => (
-                  <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-[#222421]/60 text-[#F4F1EA]' : 'hover:bg-gray-50')}>
+                  <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-white/[0.04] text-[#F4F1EA]' : 'hover:bg-gray-50')}>
                     <td className="p-4 text-gray-500">
                       <div className="flex items-center gap-2">
                         <CalendarDays size={15} className={isDarkMode ? 'text-[#B4CDD2]/70' : 'text-gray-500'} />
@@ -326,7 +326,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
                       <button
                         type="button"
                         onClick={() => openLead(lead)}
-                        className={cn('rounded-xl px-3 py-2 text-xs font-bold transition-colors', isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+                        className={cn('rounded-xl px-3 py-2 text-xs font-bold transition-colors', isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
                       >
                         Открыть
                       </button>

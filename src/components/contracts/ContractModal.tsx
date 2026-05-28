@@ -794,14 +794,14 @@ export default function ContractModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className={cn(
         "w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]",
-        isDarkMode ? "bg-[#222421] border-[#3D423E]" : "bg-white border-gray-200"
+        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200"
       )}>
         {/* Header */}
         <div className={cn("p-6 border-b flex items-center justify-between shrink-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
           <div className="flex items-center gap-6">
             <h2 className="text-xl font-bold">{initialData ? `Договор №${contractNumber}` : 'Новый договор'}</h2>
             
-            <div className={cn("flex items-center gap-2 px-4 py-1.5 rounded-lg border", isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-gray-50 border-gray-200")}>
+            <div className={cn("flex items-center gap-2 px-4 py-1.5 rounded-lg border", isDarkMode ? "bg-white/[0.05] border-white/10" : "bg-gray-50 border-gray-200")}>
               <div className={cn("w-2 h-2 rounded-full", isDarkMode ? "bg-[#8CAFBE]" : "bg-orange-500")} />
               <span className="text-sm font-medium">Большая Медведица</span>
             </div>
