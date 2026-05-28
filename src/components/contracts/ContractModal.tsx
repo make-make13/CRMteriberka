@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Search, Calendar, Clock, Check, ChevronDown, Plus, Trash2, Edit2, FileText, History, BadgePercent } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -794,15 +794,15 @@ export default function ContractModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className={cn(
         "w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]",
-        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200"
+        isDarkMode ? "bg-[#222421] border-[#3D423E]" : "bg-white border-gray-200"
       )}>
         {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between shrink-0">
+        <div className={cn("p-6 border-b flex items-center justify-between shrink-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
           <div className="flex items-center gap-6">
             <h2 className="text-xl font-bold">{initialData ? `Договор №${contractNumber}` : 'Новый договор'}</h2>
             
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-white/5 border border-white/5">
-              <div className="w-2 h-2 rounded-full bg-orange-500" />
+            <div className={cn("flex items-center gap-2 px-4 py-1.5 rounded-lg border", isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-gray-50 border-gray-200")}>
+              <div className={cn("w-2 h-2 rounded-full", isDarkMode ? "bg-[#8CAFBE]" : "bg-orange-500")} />
               <span className="text-sm font-medium">Большая Медведица</span>
             </div>
           </div>
@@ -813,7 +813,7 @@ export default function ContractModal({
                 title="Редактировать"
                 className={cn(
                   "flex items-center justify-center p-2 rounded-lg transition-all border",
-                  isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10 text-orange-500" : "bg-white border-gray-200 hover:bg-gray-50 text-orange-500"
+                  isDarkMode ? "bg-[#292B28] border-[#3D423E] hover:border-[#B4CDD2] text-[#8CAFBE]" : "bg-white border-gray-200 hover:bg-gray-50 text-orange-500"
                 )}
               >
                 <Edit2 size={16} />
@@ -856,7 +856,7 @@ export default function ContractModal({
                status === 'cancelled' ? 'Аннулирован' :
                'Не оплачен'}
             </span>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5 text-gray-500">
+            <button onClick={onClose} className={cn("p-2 rounded-lg transition-colors", isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2]" : "hover:bg-gray-100 text-gray-500")}>
               <X size={20} />
             </button>
           </div>
@@ -1399,7 +1399,7 @@ export default function ContractModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-white/5 flex items-center justify-between shrink-0">
+        <div className={cn("p-6 border-t flex items-center justify-between shrink-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
           <div className="flex items-center gap-3">
             <div className="relative">
               <button 
@@ -1408,7 +1408,7 @@ export default function ContractModal({
                 disabled={isGenerating}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border disabled:opacity-50",
-                  isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                  isDarkMode ? "bg-[#292B28] border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2]" : "bg-white border-gray-200 hover:bg-gray-50"
                 )}
               >
                 <FileText size={18} />
@@ -1419,14 +1419,14 @@ export default function ContractModal({
               {showGenerateDropdown && (
                 <div className={cn(
                   "absolute bottom-full left-0 mb-2 w-56 rounded-xl border shadow-xl z-[110] overflow-hidden",
-                  isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-gray-200"
+                  isDarkMode ? "bg-[#292B28] border-[#3D423E]" : "bg-white border-gray-200"
                 )}>
                   <button
                     type="button"
                     onClick={() => handleGenerateDoc('print')}
                     className={cn(
                       "w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors",
-                      isDarkMode ? "hover:bg-white/5 border-b border-white/5" : "hover:bg-gray-50 border-b border-gray-100"
+                      isDarkMode ? "hover:bg-[#222421] border-b border-[#3D423E]" : "hover:bg-gray-50 border-b border-gray-100"
                     )}
                   >
                     <FileText size={16} className="text-blue-500" />
@@ -1437,7 +1437,7 @@ export default function ContractModal({
                     onClick={() => handleGenerateDoc('send')}
                     className={cn(
                       "w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors",
-                      isDarkMode ? "hover:bg-white/5" : "hover:bg-gray-50"
+                      isDarkMode ? "hover:bg-[#222421]" : "hover:bg-gray-50"
                     )}
                   >
                     <FileText size={16} className="text-orange-500" />
@@ -1457,7 +1457,7 @@ export default function ContractModal({
                   whileTap={{ scale: 0.95 }}
                   className={cn(
                     "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-                    isDarkMode ? "bg-[#f59e0b] text-black hover:bg-[#d97706]" : "bg-orange-500 text-white hover:bg-orange-600"
+                    isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
                   )}
                 >
                   Сохранить
@@ -1470,7 +1470,7 @@ export default function ContractModal({
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-                isDarkMode ? "hover:bg-white/5 text-gray-400" : "hover:bg-gray-100 text-gray-600"
+                isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2]/60 hover:text-[#B4CDD2]" : "hover:bg-gray-100 text-gray-600"
               )}
             >
               {mode === 'view' ? 'Закрыть' : 'Отмена'}
