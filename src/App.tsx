@@ -563,7 +563,7 @@ function AppShell() {
     return (
       <div className={cn(
         "min-h-screen flex items-center justify-center transition-colors duration-300 font-sans",
-        isDarkMode ? "bg-[#1A1C1B] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-[#050505] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
       )}>
         <Loader2 className="animate-spin text-[#8CAFBE]" size={32} />
       </div>
@@ -577,12 +577,12 @@ function AppShell() {
   return (
       <div className={cn(
         "min-h-screen transition-colors duration-300 font-sans",
-        isDarkMode ? "bg-[#1A1C1B] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-[#050505] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
       )}>
         {/* Header */}
         <header className={cn(
           "sticky top-0 z-50 border-b backdrop-blur-md",
-          isDarkMode ? "bg-[#1A1C1B]/88 border-[#6E6964]/25" : "bg-white/80 border-gray-200"
+          isDarkMode ? "bg-[#050505]/95 border-[#232323]" : "bg-white/80 border-gray-200"
         )}>
           <div className={cn(
             "mx-auto px-6 h-20 flex items-center justify-between transition-all duration-300",
@@ -617,7 +617,7 @@ function AppShell() {
                       "group relative flex items-center gap-2 overflow-hidden px-4 py-2 rounded-xl text-sm font-bold transition-colors duration-200",
                       currentView === item.id 
                         ? "text-[#F4F1EA]"
-                        : (isDarkMode ? "text-[#B4CDD2]/65 hover:bg-[#8CAFBE]/10 hover:text-[#F4F1EA]" : "text-gray-500 hover:bg-orange-50 hover:text-gray-900")
+                        : (isDarkMode ? "text-[#8F9894] hover:bg-[#161616] hover:text-[#F4F1EA]" : "text-gray-500 hover:bg-orange-50 hover:text-gray-900")
                     )}
                   >
                     {currentView === item.id && (
@@ -625,7 +625,7 @@ function AppShell() {
                         layoutId="main-nav-active-bg"
                         className={cn(
                           "absolute inset-0 rounded-xl",
-                          isDarkMode ? "bg-[#6E6964]/28 ring-1 ring-[#B4CDD2]/20" : "bg-orange-500/80 shadow-sm shadow-orange-500/10"
+                          isDarkMode ? "bg-[#232323] ring-1 ring-white/10" : "bg-orange-500/80 shadow-sm shadow-orange-500/10"
                         )}
                         transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                       />
@@ -646,12 +646,12 @@ function AppShell() {
                   whileTap={{ scale: 0.9 }}
                   className={cn(
                     "p-2.5 rounded-xl border transition-all relative",
-                    isDarkMode ? "bg-[#6E6964]/12 border-[#B4CDD2]/15 hover:bg-[#8CAFBE]/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                    isDarkMode ? "bg-[#111111] border-[#232323] hover:bg-[#161616]" : "bg-white border-gray-200 hover:bg-gray-50"
                   )}
                 >
                   <Bell size={20} className="text-gray-500" />
                   {activeAlertsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#8CAFBE] text-black text-[10px] font-bold flex items-center justify-center border-2 border-[#1A1C1B]">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F59E0B] text-[#050505] text-[10px] font-bold flex items-center justify-center border-2 border-[#050505]">
                       {activeAlertsCount}
                     </span>
                   )}
@@ -676,7 +676,7 @@ function AppShell() {
                 title="Тёмная фирменная тема включена"
                 className={cn(
                   "p-2.5 rounded-xl border transition-all",
-                  isDarkMode ? "bg-[#6E6964]/12 border-[#B4CDD2]/15 hover:bg-[#8CAFBE]/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                  isDarkMode ? "bg-[#111111] border-[#232323] hover:bg-[#161616]" : "bg-white border-gray-200 hover:bg-gray-50"
                 )}
               >
                 {isDarkMode ? <Sun size={20} className="text-[#B4CDD2]" /> : <Moon size={20} className="text-gray-500" />}
@@ -699,7 +699,7 @@ function AppShell() {
                   title={auth.canManageBackups ? 'Выйти с проверкой резервной копии' : 'Выйти'}
                   className={cn(
                     "p-2.5 rounded-xl border transition-all disabled:opacity-60",
-                    isDarkMode ? "bg-[#6E6964]/12 border-[#B4CDD2]/15 hover:bg-[#8CAFBE]/10" : "bg-white border-gray-200 hover:bg-gray-50"
+                    isDarkMode ? "bg-[#111111] border-[#232323] hover:bg-[#161616]" : "bg-white border-gray-200 hover:bg-gray-50"
                   )}
                 >
                   <LogOut size={18} className={cn(isLogoutFlowRunning ? "text-[#8CAFBE]" : "text-gray-500")} />
