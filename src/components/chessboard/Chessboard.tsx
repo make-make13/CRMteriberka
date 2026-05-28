@@ -415,7 +415,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                     )}
                   >
                     <div className={cn("text-sm font-black", isDarkMode ? "text-[#F4F1EA]" : "text-gray-900")}>{format(day, 'd', { locale: ru })}</div>
-                    <div className={cn("text-[11px] font-medium", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-400")}>
+                    <div className="text-[11px] font-medium text-[#F4F1EA]">
                       {format(day, 'EEEE', { locale: ru })}
                     </div>
                   </div>

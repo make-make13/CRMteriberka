@@ -40,6 +40,19 @@ Checks run:
 - Visual inspection: category text now matches room number prominence
 - No business logic changes
 
+#### Session 3: Date header day names color
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Completed:
+- Day names color in date header: #F4F1EA (light, matching date number)
+- Format remains: day number on top, full Russian day name below
+- Example: 1 / пятница, 2 / суббота, 3 / воскресенье, etc.
+- Consistent visual weight across chessboard headers
+
+Checks run:
+- No business logic changes
+
 Next:
 - Continue with visual interface unification.
 
