@@ -26,6 +26,24 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 03:16 +03:00 — Graphite theme full workflow validation
+
+Files changed:
+- `docs/WORKLOG.md`
+
+Completed:
+- Verified the complete CRM business workflow under the new graphite visual theme.
+- Validated "Leads" section readability and Supabase lead syncing.
+- Successfully verified lead-to-guest conversion and guest list updates.
+- Verified lead-to-prebooking creation, room selection, and "Предбронь" calendar status rendering (yellow badge).
+- Verified prebooking-to-contract conversion with the "БМ" contract number prefix and visual status update on the chessboard.
+- Confirmed there are no console errors, active room counts are intact (20 rooms), and no redundant layout blocks are present.
+
+Checks run:
+- `npx tsx scripts/leadCreateClientTest.ts`
+- `npx tsx scripts/leadCreatePrebookingTest.ts`
+- `npx tsx scripts/prebookingToContractTest.ts`
+
 ### 2026-05-28 03:01 +03:00 — Chessboard graphite visual theme and statuses refinement
 
 Files changed:
