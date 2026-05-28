@@ -753,6 +753,38 @@ Checks run:
 - Claude_in_Chrome screenshot: Гости — search + filters inline, active «Все» neutral (not orange), CTA button stays orange
 - No npm run lint / build (UI-only, per project policy)
 
+### 2026-05-29 — Align badges/buttons to reference app (branch)
+
+Branch: `feature/chessboard-restyle`
+Reference read-only from copy: `D:\CRM Teriberka\CRM-main\Новая папка\CRM-main`
+Files changed:
+- `src/components/clients/Clients.tsx`
+- `src/components/contracts/Contracts.tsx`
+
+**Гости (Clients):**
+- Status badge «Активен»/«Чёрный список»: removed heavy border + emerald, now matches
+  reference — `rounded-md bg-green-500/10 text-green-500 text-[10px] font-bold uppercase`
+  (red equivalent for blacklist)
+- Delete (trash) button: fixed "disappearing" — was `h-7 w-7 opacity-40 group-hover:opacity-100`
+  with border (visible only on row hover). Now reference style: `h-9 w-9 rounded-xl
+  text-red-500 bg-red-500/10 hover:bg-red-500/20`, always visible, Trash2 size 16
+
+**Договоры (Contracts):**
+- Status pill: removed border, switched from teal/FFE08A/F3B2BF to reference palette —
+  paid `green-500/10`, cancelled `red-500/10`, signed_not_paid `orange-500/10`,
+  else `blue-500/10`; `px-2.5 py-1 font-semibold` (icon inherits via text-current)
+- «На печать» button: removed border, brighter text — `bg-[#161616] text-[#F4F1EA]
+  hover:bg-[#232323]`
+- «На отправку» button: removed border — `bg-orange-500/10 text-orange-400
+  hover:bg-orange-500/20`
+
+Checks run:
+- Claude_in_Chrome zoom: Гости — green «АКТИВЕН» badge, red trash always visible
+- Claude_in_Chrome zoom: Договоры — clean status pills (orange/blue), borderless
+  action buttons matching reference photo
+- No npm run lint / build (UI-only, per project policy)
+- Reference sources only READ, never modified
+
 ### 2026-05-28 05:51 +03:00 — Backup Settings Runtime Crash Fixes
 
 Files changed:

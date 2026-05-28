@@ -252,12 +252,12 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                   {/* Статус */}
                   <td className="px-4 py-2.5 text-right">
                     {client.isBlacklisted ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/15 text-red-400 border border-red-500/25 text-[10px] font-bold uppercase tracking-wide">
-                        <Ban size={10} />
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/10 text-red-500 text-[10px] font-bold uppercase">
+                        <Ban size={12} />
                         Чёрный список
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wide">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-[10px] font-bold uppercase">
                         Активен
                       </span>
                     )}
@@ -272,12 +272,12 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                           setClientPendingDelete(client);
                         }}
                         className={cn(
-                          "inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-400 transition-all opacity-40 group-hover:opacity-100",
-                          isDarkMode ? "bg-red-500/10 hover:bg-red-500/20 border border-red-500/20" : "bg-red-50 hover:bg-red-100"
+                          "inline-flex h-9 w-9 items-center justify-center rounded-xl text-red-500 transition-all",
+                          isDarkMode ? "bg-red-500/10 hover:bg-red-500/20" : "bg-red-50 hover:bg-red-100"
                         )}
                         title="Удалить гостя"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   )}

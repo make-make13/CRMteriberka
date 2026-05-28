@@ -471,14 +471,14 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                     </td>
                     <td className="px-5 py-4">
                       <span className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold border",
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
                         contract.status === 'paid'
-                          ? (isDarkMode ? "bg-teal-400/20 border-teal-400/30 text-teal-300" : "bg-green-50 text-green-700 border-green-200")
+                          ? "bg-green-500/10 text-green-500"
                           : contract.status === 'cancelled'
-                            ? (isDarkMode ? "bg-[#F3B2BF]/20 border-[#F3B2BF]/35 text-[#F3B2BF]" : "bg-red-50 text-red-700 border-red-200")
+                            ? "bg-red-500/10 text-red-500"
                             : contract.status === 'signed_not_paid'
-                              ? (isDarkMode ? "bg-[#161616] border-[#262626] text-[#8B8B8B]" : "bg-gray-50 text-gray-700 border-gray-200")
-                              : (isDarkMode ? "bg-[#FFE08A]/20 border-[#FFE08A]/35 text-[#FFE08A]" : "bg-amber-50 text-amber-700 border-amber-200")
+                              ? "bg-orange-500/10 text-orange-500"
+                              : "bg-blue-500/10 text-blue-500"
                       )}>
                         {getStatusIcon(contract.status)}
                         {getStatusLabel(contract.status)}
@@ -495,8 +495,8 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           onClick={() => handleQuickGenerate(contract, 'print')}
                           disabled={quickGeneratingId === `${contract.id}:print`}
                           className={cn(
-                            "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 border",
-                            isDarkMode ? "bg-[#111111] border-[#232323] hover:bg-[#161616] hover:border-[#3a3a3a] text-[#8F9894] hover:text-[#F4F1EA]" : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent"
+                            "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60",
+                            isDarkMode ? "bg-[#161616] text-[#F4F1EA] hover:bg-[#232323]" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           )}
                         >
                           {quickGeneratingId === `${contract.id}:print` ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
@@ -507,8 +507,8 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           onClick={() => handleQuickGenerate(contract, 'send')}
                           disabled={quickGeneratingId === `${contract.id}:send`}
                           className={cn(
-                            "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 border",
-                            isDarkMode ? "bg-[#F97316]/10 border-[#F97316]/25 text-[#F97316] hover:bg-[#F97316]/20" : "bg-orange-50 text-orange-700 hover:bg-orange-100 border-transparent"
+                            "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60",
+                            isDarkMode ? "bg-orange-500/10 text-orange-400 hover:bg-orange-500/20" : "bg-orange-50 text-orange-700 hover:bg-orange-100"
                           )}
                         >
                           {quickGeneratingId === `${contract.id}:send` ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
