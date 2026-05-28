@@ -120,6 +120,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
       setClientPendingDelete(null);
     } catch (error) {
       console.error('Error deleting client:', error);
+      setClientPendingDelete(null);
       toast(getErrorMessage(error, 'Ошибка при удалении гостя'), 'error');
     } finally {
       setIsDeletingClient(false);

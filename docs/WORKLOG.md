@@ -26,6 +26,21 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 — Fix guest deletion warning visibility
+
+Files changed:
+- `src/components/clients/Clients.tsx`
+
+Problem: after admin tried to delete a guest with linked contracts, the 409 error
+toast was obscured by the ConfirmDialog remaining open (setClientPendingDelete(null)
+was only called on success, not on error).
+
+Fix: added `setClientPendingDelete(null)` in the catch block so the dialog closes
+before the toast renders, making the error message visible.
+
+Server-side guard (server.ts) and API error propagation (localApi.ts) were
+already correct — this was purely a UI state sequencing issue.
+
 ### 2026-05-28 — Harden guest deletion and email settings (audit fix)
 
 Files changed:
