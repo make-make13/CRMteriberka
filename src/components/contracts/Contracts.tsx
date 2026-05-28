@@ -309,7 +309,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
             whileTap={{ scale: 0.95 }}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-              isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
+              isDarkMode ? "bg-[#F97316] text-white hover:bg-[#FB923C]" : "bg-orange-500 text-white hover:bg-orange-600"
             )}
           >
             <Plus size={18} />
@@ -328,7 +328,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
               "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all border",
-              isDarkMode ? "bg-black/30 border-white/10 text-[#F4F1EA] placeholder:text-[#B4CDD2]/45 focus:border-[#D98E2B]/60" : "bg-white border-gray-200 shadow-sm"
+              isDarkMode ? "bg-[#161616] border-[#262626] text-[#F5F5F5] placeholder:text-[#8B8B8B]/60 focus:border-[#F97316]/60" : "bg-white border-gray-200 shadow-sm"
             )}
           />
         </div>
@@ -350,8 +350,8 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                 className={cn(
                   "px-4 py-2 rounded-xl text-sm font-medium transition-all",
                   statusFilter === item.id
-                    ? (isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B]" : "bg-orange-500 text-white shadow-sm")
-                    : (isDarkMode ? "bg-white/[0.05] border border-white/10 text-[#B4CDD2] hover:bg-white/[0.08] hover:text-[#F4F1EA]" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+                    ? (isDarkMode ? "bg-[#F97316] text-white" : "bg-orange-500 text-white shadow-sm")
+                    : (isDarkMode ? "bg-[#161616] border border-[#262626] text-[#8B8B8B] hover:bg-[#1A1A1A] hover:text-[#F5F5F5]" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
                 )}
               >
                 {item.label}
@@ -359,29 +359,29 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
             ))}
           </div>
 
-          <div className={cn("flex items-center gap-3 text-sm", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
+          <div className={cn("flex items-center gap-3 text-sm", isDarkMode ? "text-[#8B8B8B]" : "text-gray-500")}>
             <span>Период заселения:</span>
             <div className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all",
-              isDarkMode ? "bg-black/30 border-white/10 focus-within:border-[#D98E2B]/60" : "bg-white border-gray-200"
+              isDarkMode ? "bg-[#161616] border-[#262626] focus-within:border-[#F97316]/60" : "bg-white border-gray-200"
             )}>
-              <Calendar size={14} className={isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500"} />
-              <span className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>с</span>
+              <Calendar size={14} className={isDarkMode ? "text-[#8B8B8B]" : "text-gray-500"} />
+              <span className={cn("text-xs", isDarkMode ? "text-[#8B8B8B]" : "text-gray-500")}>с</span>
               <input 
                 type="text" 
                 placeholder="ДД.ММ.ГГГГ"
                 value={dateFrom}
                 onChange={(e) => handleDateChange(e.target.value, setDateFrom, dateToRef)}
                 maxLength={10}
-                className={cn("bg-transparent border-none outline-none text-sm w-24", isDarkMode ? "text-[#F4F1EA] placeholder:text-[#B4CDD2]/35" : "text-gray-300 placeholder:text-gray-600")}
+                className={cn("bg-transparent border-none outline-none text-sm w-24", isDarkMode ? "text-[#F5F5F5] placeholder:text-[#8B8B8B]/50" : "text-gray-300 placeholder:text-gray-600")}
               />
             </div>
             <div className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all",
-              isDarkMode ? "bg-black/30 border-white/10 focus-within:border-[#D98E2B]/60" : "bg-white border-gray-200"
+              isDarkMode ? "bg-[#161616] border-[#262626] focus-within:border-[#F97316]/60" : "bg-white border-gray-200"
             )}>
-              <Calendar size={14} className={isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500"} />
-              <span className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>по</span>
+              <Calendar size={14} className={isDarkMode ? "text-[#8B8B8B]" : "text-gray-500"} />
+              <span className={cn("text-xs", isDarkMode ? "text-[#8B8B8B]" : "text-gray-500")}>по</span>
               <input 
                 type="text" 
                 ref={dateToRef}
@@ -389,13 +389,13 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                 value={dateTo}
                 onChange={(e) => handleDateChange(e.target.value, setDateTo)}
                 maxLength={10}
-                className={cn("bg-transparent border-none outline-none text-sm w-24", isDarkMode ? "text-[#F4F1EA] placeholder:text-[#B4CDD2]/35" : "text-gray-300 placeholder:text-gray-600")}
+                className={cn("bg-transparent border-none outline-none text-sm w-24", isDarkMode ? "text-[#F5F5F5] placeholder:text-[#8B8B8B]/50" : "text-gray-300 placeholder:text-gray-600")}
               />
             </div>
             {(dateFrom || dateTo) && (
               <button 
                 onClick={() => { setDateFrom(''); setDateTo(''); }}
-                className={cn("p-1.5 rounded-lg transition-colors", isDarkMode ? "hover:bg-[#222421] text-[#B4CDD2]" : "hover:bg-gray-50 text-gray-400")}
+                className={cn("p-1.5 rounded-lg transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B]" : "hover:bg-gray-50 text-gray-400")}
                 title="Очистить фильтр"
               >
                 <XCircle size={16} />
@@ -407,7 +407,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
 
       <div className={cn(
         "rounded-2xl border overflow-hidden",
-        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200 shadow-sm"
+        isDarkMode ? "bg-[#0A0A0A] border-[#262626]" : "bg-white border-gray-200 shadow-sm"
       )}>
         {filteredContracts.length > 0 ? (
           <table className="w-full border-collapse">
@@ -421,16 +421,16 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
             <thead>
               <tr className={cn(
                 "text-left text-[10px] uppercase tracking-wider font-bold",
-                isDarkMode ? "text-[#B4CDD2]/70 bg-white/[0.05]" : "text-gray-400 bg-gray-50"
+                isDarkMode ? "text-[#8B8B8B] bg-[#161616]" : "text-gray-400 bg-gray-50"
               )}>
-                <th className="px-5 py-3 border-b border-white/[0.08]">№ Договора</th>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Гость</th>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Финансы</th>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Статус</th>
-                <th className="px-5 py-3 border-b border-white/[0.08] text-left">Действия</th>
+                <th className="px-5 py-3 border-b border-[#262626]">№ Договора</th>
+                <th className="px-5 py-3 border-b border-[#262626]">Гость</th>
+                <th className="px-5 py-3 border-b border-[#262626]">Финансы</th>
+                <th className="px-5 py-3 border-b border-[#262626]">Статус</th>
+                <th className="px-5 py-3 border-b border-[#262626] text-left">Действия</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.06]">
+            <tbody className="divide-y divide-[#262626]">
               {visibleContracts.map(contract => {
                 const client = clientsById.get(contract.clientId);
                 return (
@@ -438,24 +438,24 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                     onDoubleClick={() => handleEditContract(contract, 'view')}
                     className={cn(
                       "group transition-colors cursor-pointer select-none",
-                      isDarkMode ? "hover:bg-white/[0.04] text-[#F4F1EA]" : "hover:bg-gray-50",
+                      isDarkMode ? "hover:bg-[#1A1A1A] text-[#F5F5F5]" : "hover:bg-gray-50",
                     )}
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDarkMode ? "bg-white/[0.07] text-[#B4CDD2]/80" : "bg-gray-100 text-gray-500")}>
+                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", isDarkMode ? "bg-[#161616] text-[#8B8B8B]" : "bg-gray-100 text-gray-500")}>
                           <FileText size={18} />
                         </div>
-                        <div className={cn('font-bold text-sm', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-700')}>{formatVisibleContractNumber(contract.number, contract.baseType)}</div>
+                        <div className={cn('font-bold text-sm', isDarkMode ? 'text-[#8B8B8B]' : 'text-gray-700')}>{formatVisibleContractNumber(contract.number, contract.baseType)}</div>
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                      <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>
                         {client
                           ? (client.type === 'physical' ? `${client.lastName} ${client.firstName}` : client.organizationName)
                           : 'Неизвестный гость'}
                       </div>
-                      <div className={cn("text-xs mt-0.5", isDarkMode ? "text-[#6E6964]" : "text-gray-400")}>
+                      <div className={cn("text-xs mt-0.5", isDarkMode ? "text-[#8B8B8B]" : "text-gray-400")}>
                         {(() => {
                           const mainBooking = contract.bookings.find(b => b.type === 'main') || contract.bookings[0];
                           if (mainBooking) {
@@ -466,8 +466,8 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <div className={cn('font-bold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{contract.totalAmount.toLocaleString()} ₽</div>
-                      <div className={cn("text-xs mt-0.5", isDarkMode ? "text-[#6E6964]" : "text-gray-400")}>Остаток: {contract.remainder.toLocaleString()} ₽</div>
+                      <div className={cn('font-bold text-sm', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>{contract.totalAmount.toLocaleString()} ₽</div>
+                      <div className={cn("text-xs mt-0.5", isDarkMode ? "text-[#8B8B8B]" : "text-gray-400")}>Остаток: {contract.remainder.toLocaleString()} ₽</div>
                     </td>
                     <td className="px-5 py-4">
                       <span className={cn(
@@ -477,7 +477,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           : contract.status === 'cancelled'
                             ? (isDarkMode ? "bg-[#F3B2BF]/20 border-[#F3B2BF]/35 text-[#F3B2BF]" : "bg-red-50 text-red-700 border-red-200")
                             : contract.status === 'signed_not_paid'
-                              ? (isDarkMode ? "bg-white/[0.08] border-white/15 text-[#B4CDD2]" : "bg-gray-50 text-gray-700 border-gray-200")
+                              ? (isDarkMode ? "bg-[#161616] border-[#262626] text-[#8B8B8B]" : "bg-gray-50 text-gray-700 border-gray-200")
                               : (isDarkMode ? "bg-[#FFE08A]/20 border-[#FFE08A]/35 text-[#FFE08A]" : "bg-amber-50 text-amber-700 border-amber-200")
                       )}>
                         {getStatusIcon(contract.status)}
@@ -496,7 +496,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           disabled={quickGeneratingId === `${contract.id}:print`}
                           className={cn(
                             "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 border",
-                            isDarkMode ? "bg-white/[0.07] border-white/15 hover:bg-white/[0.12] hover:border-white/25 text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent"
+                            isDarkMode ? "bg-[#161616] border-[#262626] hover:bg-[#1A1A1A] hover:border-[#8B8B8B]/40 text-[#8B8B8B] hover:text-[#F5F5F5]" : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent"
                           )}
                         >
                           {quickGeneratingId === `${contract.id}:print` ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
@@ -508,7 +508,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           disabled={quickGeneratingId === `${contract.id}:send`}
                           className={cn(
                             "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 border",
-                            isDarkMode ? "bg-[#8CAFBE]/15 border-[#8CAFBE]/30 text-[#8CAFBE] hover:bg-[#8CAFBE]/25" : "bg-orange-50 text-orange-700 hover:bg-orange-100 border-transparent"
+                            isDarkMode ? "bg-[#2D9CDB]/15 border-[#2D9CDB]/30 text-[#2D9CDB] hover:bg-[#2D9CDB]/25" : "bg-orange-50 text-orange-700 hover:bg-orange-100 border-transparent"
                           )}
                         >
                           {quickGeneratingId === `${contract.id}:send` ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
@@ -537,7 +537,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                 onClick={handleAddContract}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all",
-                  isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
+                  isDarkMode ? "bg-[#F97316] text-white hover:bg-[#FB923C]" : "bg-orange-500 text-white hover:bg-orange-600"
                 )}
               >
                 <Plus size={17} />
@@ -554,7 +554,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                 }}
                 className={cn(
                   "rounded-xl px-4 py-2 text-sm font-bold transition-all",
-                  isDarkMode ? "bg-white/10 text-white hover:bg-white/15" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  isDarkMode ? "bg-[#161616] text-[#F5F5F5] hover:bg-[#1A1A1A]" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                 )}
               >
                 Сбросить фильтры
@@ -564,14 +564,14 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
         )}
       </div>
 
-      <div className={cn("flex items-center justify-between text-sm", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
+      <div className={cn("flex items-center justify-between text-sm", isDarkMode ? "text-[#8B8B8B]" : "text-gray-500")}>
         <span>
           Страница {safeCurrentPage} из {pageCount} · показано {visibleContracts.length} из {filteredContracts.length}
         </span>
         <div className="flex items-center gap-2">
           <motion.button 
             whileTap={{ scale: 0.95 }}
-            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#222421] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100")} 
+            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")} 
             disabled={safeCurrentPage <= 1}
             onClick={() => setCurrentPage(page => clampPage(page - 1, pageCount))}
           >
@@ -579,7 +579,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
           </motion.button>
           <motion.button 
             whileTap={{ scale: 0.95 }}
-            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#222421] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100")} 
+            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")} 
             disabled={safeCurrentPage >= pageCount}
             onClick={() => setCurrentPage(page => clampPage(page + 1, pageCount))}
           >

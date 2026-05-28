@@ -199,8 +199,8 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
         'group grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 border-l-2 border-l-transparent px-4 py-3 transition-colors',
         TASK_COLOR_ACCENTS[task.color || 'none'],
         task.isDone
-          ? (isDarkMode ? 'bg-white/[0.025]' : 'bg-gray-50/70')
-          : (isDarkMode ? 'hover:bg-white/[0.035]' : 'hover:bg-gray-50')
+          ? (isDarkMode ? 'bg-[#161616]' : 'bg-gray-50/70')
+          : (isDarkMode ? 'hover:bg-[#1A1A1A]' : 'hover:bg-gray-50')
       )}
     >
       <button
@@ -279,9 +279,9 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <section className={cn(
         'min-w-0 overflow-hidden rounded-2xl border',
-        isDarkMode ? 'bg-[#0d0d0d] border-white/5' : 'bg-white border-gray-200 shadow-sm',
+        isDarkMode ? 'bg-[#0A0A0A] border-[#262626]' : 'bg-white border-gray-200 shadow-sm',
       )}>
-        <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-[#262626] px-5 py-4">
           <div>
             <h2 className="text-xl font-bold">Задачи</h2>
             <p className="mt-1 text-sm text-gray-500">Общий список для менеджеров с напоминаниями по времени.</p>
@@ -292,7 +292,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               onClick={() => setIsArchiveOpen(true)}
               className={cn(
                 'inline-flex h-8 items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-all',
-                isDarkMode ? 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10' : 'border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200'
+                isDarkMode ? 'border-[#262626] bg-[#161616] text-[#8B8B8B] hover:bg-[#1A1A1A]' : 'border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200'
               )}
             >
               <Archive size={14} />
@@ -300,7 +300,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             </button>
             <div className={cn(
               'hidden rounded-full px-3 py-1 text-xs font-semibold sm:block',
-              isDarkMode ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'
+              isDarkMode ? 'bg-[#161616] text-[#8B8B8B]' : 'bg-gray-100 text-gray-500'
             )}>
               {activeTasks.length} активных
             </div>
@@ -310,7 +310,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
         <div className="space-y-4 p-4">
         <form onSubmit={handleCreateTask} className={cn(
           'rounded-xl border p-4',
-          isDarkMode ? 'border-white/5 bg-white/[0.015]' : 'border-gray-100 bg-gray-50/70',
+          isDarkMode ? 'border-[#262626] bg-[#161616]' : 'border-gray-100 bg-gray-50/70',
         )}>
           <input
             value={title}
@@ -318,7 +318,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             placeholder="Что нужно сделать?"
             className={cn(
               'min-h-11 w-full rounded-xl border px-4 text-sm outline-none transition-all',
-              isDarkMode ? 'bg-black/30 border-white/10 focus:border-[#D98E2B]/50' : 'bg-white border-gray-200 focus:border-orange-500',
+              isDarkMode ? 'bg-[#161616] border-[#262626] focus:border-[#F97316]/50' : 'bg-white border-gray-200 focus:border-orange-500',
             )}
           />
 
@@ -331,8 +331,8 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               className={cn(
                 'inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold transition-all',
                 isTimeOpen
-                  ? (isDarkMode ? 'border-[#D98E2B]/40 bg-[#D98E2B]/15 text-[#F2B35B]' : 'border-orange-200 bg-orange-50 text-orange-700')
-                  : (isDarkMode ? 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
+                  ? (isDarkMode ? 'border-[#F97316]/40 bg-[#F97316]/15 text-[#FB923C]' : 'border-orange-200 bg-orange-50 text-orange-700')
+                  : (isDarkMode ? 'border-[#262626] bg-[#0A0A0A] text-[#8B8B8B] hover:bg-[#1A1A1A]' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
               )}
             >
               <CalendarClock size={15} />
@@ -348,7 +348,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 type="datetime-local"
                 className={cn(
                   'h-10 rounded-xl border px-3 text-xs outline-none transition-all',
-                  isDarkMode ? 'bg-black/30 border-white/10 focus:border-[#D98E2B]/50' : 'bg-white border-gray-200 focus:border-orange-500',
+                  isDarkMode ? 'bg-[#161616] border-[#262626] focus:border-[#F97316]/50' : 'bg-white border-gray-200 focus:border-orange-500',
                 )}
               />
             )}
@@ -361,8 +361,8 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               className={cn(
                 'inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold transition-all',
                 isColorOpen
-                  ? (isDarkMode ? 'border-white/20 bg-white/10 text-white' : 'border-gray-300 bg-gray-100 text-gray-800')
-                  : (isDarkMode ? 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
+                  ? (isDarkMode ? 'border-[#262626] bg-[#1A1A1A] text-[#F5F5F5]' : 'border-gray-300 bg-gray-100 text-gray-800')
+                  : (isDarkMode ? 'border-[#262626] bg-[#0A0A0A] text-[#8B8B8B] hover:bg-[#1A1A1A]' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
               )}
             >
               <Palette size={15} />
@@ -382,7 +382,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                     onClick={() => setSelectedColor(color.id)}
                     aria-label={color.label}
                     className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded-full transition-all hover:bg-white/5'
+                      'flex h-6 w-6 items-center justify-center rounded-full transition-all hover:bg-[#1A1A1A]'
                     )}
                   >
                     <span className={cn(
@@ -392,7 +392,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                       selectedColor === color.id && [
                         'ring-1 ring-offset-1',
                         color.ringClassName,
-                        isDarkMode ? 'ring-offset-[#111111]' : 'ring-offset-white',
+                        isDarkMode ? 'ring-offset-[#0A0A0A]' : 'ring-offset-white',
                       ]
                     )} />
                   </button>
@@ -409,7 +409,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 'inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold transition-all',
                 isCommentOpen
                   ? (isDarkMode ? 'border-sky-500/40 bg-sky-500/15 text-sky-300' : 'border-sky-200 bg-sky-50 text-sky-700')
-                  : (isDarkMode ? 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
+                  : (isDarkMode ? 'border-[#262626] bg-[#0A0A0A] text-[#8B8B8B] hover:bg-[#1A1A1A]' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
               )}
             >
               <MessageSquare size={15} />
@@ -423,7 +423,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               aria-label="Добавить"
               className={cn(
                 'inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold transition-all disabled:opacity-60',
-                isDarkMode ? 'bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]' : 'bg-orange-500 text-white hover:bg-orange-600',
+                isDarkMode ? 'bg-[#F97316] text-white hover:bg-[#FB923C]' : 'bg-orange-500 text-white hover:bg-orange-600',
               )}
             >
               {isSavingTask ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
@@ -445,7 +445,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 rows={2}
                 className={cn(
                   'mt-3 w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none transition-all',
-                  isDarkMode ? 'bg-black/30 border-white/10 focus:border-[#D98E2B]/50' : 'bg-white border-gray-200 focus:border-orange-500',
+                  isDarkMode ? 'bg-[#161616] border-[#262626] focus:border-[#F97316]/50' : 'bg-white border-gray-200 focus:border-orange-500',
                 )}
               />
             </motion.div>
@@ -454,12 +454,12 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
 
         <div className={cn(
           'rounded-xl border p-4',
-          isDarkMode ? 'border-white/5 bg-[#111111]' : 'border-gray-100 bg-white'
+          isDarkMode ? 'border-[#262626] bg-[#0A0A0A]' : 'border-gray-100 bg-white'
         )}>
           {activeTasks.length > 0 ? (
             <div className={cn(
               'overflow-hidden rounded-xl border',
-              isDarkMode ? 'border-white/5 bg-[#0d0d0d]' : 'border-gray-100 bg-white'
+              isDarkMode ? 'border-[#262626] bg-[#0A0A0A]' : 'border-gray-100 bg-white'
             )}>
               {activeTasks.map(renderTask)}
             </div>
@@ -479,7 +479,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               </div>
               <div className={cn(
                 'overflow-hidden rounded-xl border',
-                isDarkMode ? 'border-white/5 bg-[#111111]' : 'border-gray-100 bg-white'
+                isDarkMode ? 'border-[#262626] bg-[#0A0A0A]' : 'border-gray-100 bg-white'
               )}>
                 {completedTasks.map(renderTask)}
               </div>
@@ -491,7 +491,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
 
       <aside className={cn(
         'w-full max-w-[340px] justify-self-center rounded-2xl border p-3 lg:justify-self-end',
-        isDarkMode ? 'bg-[#0d0d0d] border-white/5' : 'bg-white border-gray-200 shadow-sm',
+        isDarkMode ? 'bg-[#0A0A0A] border-[#262626]' : 'bg-white border-gray-200 shadow-sm',
       )}>
         <div className="mb-2 flex items-center gap-2 px-1">
           <FileText size={16} className="text-gray-500" />
@@ -503,11 +503,11 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             onClick={() => setIsReturnDocumentOpen(true)}
             className={cn(
               'flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-all',
-              isDarkMode ? 'border-white/5 bg-white/[0.025] hover:bg-white/[0.055]' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'
+              isDarkMode ? 'border-[#262626] bg-[#161616] hover:bg-[#1A1A1A]' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'
             )}
           >
             <span className="flex min-w-0 items-center gap-2">
-              <FileText size={16} className="shrink-0 text-[#D98E2B]" />
+              <FileText size={16} className="shrink-0 text-[#F97316]" />
               <span className="min-w-0 flex-1 truncate text-sm font-semibold">Заявление на возврат</span>
             </span>
             <Plus size={15} className="shrink-0 text-gray-400" />
@@ -523,7 +523,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className={cn(
               'w-full max-w-sm rounded-2xl border p-4 shadow-2xl',
-              isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white'
+              isDarkMode ? 'border-[#262626] bg-[#0A0A0A]' : 'border-gray-200 bg-white'
             )}
           >
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -537,7 +537,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 aria-label="Закрыть"
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all',
-                  isDarkMode ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  isDarkMode ? 'bg-[#161616] text-[#8B8B8B] hover:bg-[#1A1A1A]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 )}
               >
                 <X size={16} />
@@ -552,7 +552,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 }}
                 className={cn(
                   'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all',
-                  isDarkMode ? 'bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]' : 'bg-orange-500 text-white hover:bg-orange-600'
+                  isDarkMode ? 'bg-[#F97316] text-white hover:bg-[#FB923C]' : 'bg-orange-500 text-white hover:bg-orange-600'
                 )}
               >
                 <Printer size={16} />
@@ -566,7 +566,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 }}
                 className={cn(
                   'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all',
-                  isDarkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  isDarkMode ? 'bg-[#161616] text-[#F5F5F5] hover:bg-[#1A1A1A]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 )}
               >
                 <Download size={16} />
@@ -585,10 +585,10 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className={cn(
               'flex max-h-[78vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border shadow-2xl',
-              isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white'
+              isDarkMode ? 'border-[#262626] bg-[#0A0A0A]' : 'border-gray-200 bg-white'
             )}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-white/5 p-4">
+            <div className="flex items-center justify-between gap-3 border-b border-[#262626] p-4">
               <div className="min-w-0">
                 <h3 className="font-bold">Архив задач</h3>
                 <p className="mt-1 text-sm text-gray-500">Здесь остаются выполненные задачи после выхода из аккаунта.</p>
@@ -599,7 +599,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 aria-label="Закрыть архив"
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all',
-                  isDarkMode ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  isDarkMode ? 'bg-[#161616] text-[#8B8B8B] hover:bg-[#1A1A1A]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 )}
               >
                 <X size={16} />
@@ -610,7 +610,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               {archivedTasks.length > 0 ? (
                 <div className={cn(
                   'overflow-hidden rounded-xl border',
-                  isDarkMode ? 'border-white/5 bg-[#0d0d0d]' : 'border-gray-100 bg-white'
+                  isDarkMode ? 'border-[#262626] bg-[#0A0A0A]' : 'border-gray-100 bg-white'
                 )}>
                   {archivedTasks.map(renderTask)}
                 </div>

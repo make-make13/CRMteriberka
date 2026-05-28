@@ -136,7 +136,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
           whileTap={{ scale: 0.95 }}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-            isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
+            isDarkMode ? "bg-[#F97316] text-white hover:bg-[#FB923C]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
           <Plus size={18} />
@@ -154,12 +154,12 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
               "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all border",
-              isDarkMode ? "bg-black/30 border-white/10 text-[#F4F1EA] placeholder:text-[#B4CDD2]/45 focus:border-[#D98E2B]/60" : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
+              isDarkMode ? "bg-[#161616] border-[#262626] text-[#F5F5F5] placeholder:text-[#8B8B8B]/60 focus:border-[#F97316]/60" : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
             )}
           />
         </div>
         
-        <div className={cn("flex items-center gap-2 p-1 rounded-xl", isDarkMode ? "bg-[#111111] border border-white/10" : "bg-black/20")}>
+        <div className={cn("flex items-center gap-2 p-1 rounded-xl", isDarkMode ? "bg-[#0A0A0A] border border-[#262626]" : "bg-black/20")}>
           {clientFilterItems.map((item) => (
             <motion.button
               key={item.id}
@@ -167,9 +167,9 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                filter === item.id 
-                  ? (isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B]" : "bg-white text-black shadow-sm")
-                  : (isDarkMode ? "text-[#B4CDD2] hover:bg-white/[0.08] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
+                filter === item.id
+                  ? (isDarkMode ? "bg-[#F97316] text-white" : "bg-white text-black shadow-sm")
+                  : (isDarkMode ? "text-[#8B8B8B] hover:bg-[#1A1A1A] hover:text-[#F5F5F5]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >
               {item.icon && <item.icon size={14} className={item.id === 'blacklist' ? 'text-[#F3B2BF]' : ''} />}
@@ -181,31 +181,31 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
 
       <div className={cn(
         "rounded-2xl border overflow-hidden",
-        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200 shadow-sm"
+        isDarkMode ? "bg-[#0A0A0A] border-[#262626]" : "bg-white border-gray-200 shadow-sm"
       )}>
         {filteredClients.length > 0 ? (
           <table className="w-full border-collapse">
             <thead>
               <tr className={cn(
                 "text-left text-[10px] uppercase tracking-wider font-bold",
-                isDarkMode ? "text-[#B4CDD2]/70 bg-white/[0.05]" : "text-gray-400 bg-gray-50"
+                isDarkMode ? "text-[#8B8B8B] bg-[#161616]" : "text-gray-400 bg-gray-50"
               )}>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Тип</th>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Имя / Организация</th>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Контакты</th>
-                <th className="px-5 py-3 border-b border-white/[0.08]">Адрес</th>
-                <th className="px-5 py-3 border-b border-white/[0.08] text-right">Статус</th>
-                {canDeleteClients && <th className="px-5 py-3 border-b border-white/[0.08] text-right">Действия</th>}
+                <th className="px-5 py-3 border-b border-[#262626]">Тип</th>
+                <th className="px-5 py-3 border-b border-[#262626]">Имя / Организация</th>
+                <th className="px-5 py-3 border-b border-[#262626]">Контакты</th>
+                <th className="px-5 py-3 border-b border-[#262626]">Адрес</th>
+                <th className="px-5 py-3 border-b border-[#262626] text-right">Статус</th>
+                {canDeleteClients && <th className="px-5 py-3 border-b border-[#262626] text-right">Действия</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.06]">
+            <tbody className="divide-y divide-[#262626]">
               {visibleClients.map(client => (
                 <tr
                   key={client.id}
                   onDoubleClick={() => handleViewClient(client)}
                   className={cn(
                   "group transition-colors cursor-pointer",
-                  isDarkMode ? "hover:bg-white/[0.04]" : "hover:bg-gray-50",
+                  isDarkMode ? "hover:bg-[#1A1A1A]" : "hover:bg-gray-50",
                 )}>
                   <td className="px-5 py-4">
                     {client.type === 'physical' ? (
@@ -219,21 +219,21 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                     )}
                   </td>
                   <td className="px-5 py-4">
-                    <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                    <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>
                       {client.type === 'physical'
                         ? `${client.lastName} ${client.firstName} ${client.middleName || ''}`
                         : client.organizationName}
                     </div>
-                    <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                    <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#8B8B8B]' : 'text-gray-400')}>
                         {client.type === 'physical' ? `Паспорт: ${client.passportSeries} ${client.passportNumber}` : `ИНН: ${client.inn}`}
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <div className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>{client.phone}</div>
-                    <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>{client.email || '—'}</div>
+                    <div className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-800')}>{client.phone}</div>
+                    <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#8B8B8B]' : 'text-gray-400')}>{client.email || '—'}</div>
                   </td>
                   <td className="px-5 py-4">
-                    <div className={cn('text-sm line-clamp-2', isDarkMode ? 'text-[#B4CDD2]/80' : 'text-gray-600')}>
+                    <div className={cn('text-sm line-clamp-2', isDarkMode ? 'text-[#8B8B8B]/80' : 'text-gray-600')}>
                       {client.type === 'physical' ? (client.registrationAddress || '—') : (client.legalAddress || '—')}
                     </div>
                   </td>
@@ -287,7 +287,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                 onClick={handleAddClient}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all",
-                  isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
+                  isDarkMode ? "bg-[#F97316] text-white hover:bg-[#FB923C]" : "bg-orange-500 text-white hover:bg-orange-600"
                 )}
               >
                 <Plus size={17} />
@@ -302,7 +302,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                 }}
                 className={cn(
                   "rounded-xl px-4 py-2 text-sm font-bold transition-all",
-                  isDarkMode ? "bg-white/10 text-white hover:bg-white/15" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  isDarkMode ? "bg-[#161616] text-[#F5F5F5] hover:bg-[#1A1A1A]" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                 )}
               >
                 Сбросить фильтры
@@ -312,14 +312,14 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
         )}
       </div>
 
-      <div className={cn("flex items-center justify-between text-sm", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
+      <div className={cn("flex items-center justify-between text-sm", isDarkMode ? "text-[#8B8B8B]/70" : "text-gray-500")}>
         <span>
           Страница {safeCurrentPage} из {pageCount} · показано {visibleClients.length} из {filteredClients.length}
         </span>
         <div className="flex items-center gap-2">
           <motion.button 
             whileTap={{ scale: 0.95 }}
-            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#222421] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100")} 
+            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")} 
             disabled={safeCurrentPage <= 1}
             onClick={() => setCurrentPage(page => clampPage(page - 1, pageCount))}
           >
@@ -327,7 +327,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
           </motion.button>
           <motion.button 
             whileTap={{ scale: 0.95 }}
-            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#222421] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100")} 
+            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")} 
             disabled={safeCurrentPage >= pageCount}
             onClick={() => setCurrentPage(page => clampPage(page + 1, pageCount))}
           >
