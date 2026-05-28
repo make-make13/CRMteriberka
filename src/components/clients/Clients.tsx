@@ -128,74 +128,79 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
+      {/* Заголовок */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Гости</h2>
-        <motion.button 
+        <h2 className="text-xl font-bold tracking-tight">Гости</h2>
+        <motion.button
           onClick={handleAddClient}
           whileTap={{ scale: 0.95 }}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+            "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
             isDarkMode ? "bg-[#F97316] text-white hover:bg-[#FB923C]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
-          <Plus size={18} />
+          <Plus size={16} />
           Добавить гостя
         </motion.button>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Поиск + фильтры */}
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B8B8B]" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B8B8B]" size={15} />
           <input
             type="text"
             placeholder="Поиск по имени, телефону, email, паспорту..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
-              "w-full pl-9 pr-4 h-10 rounded-xl text-sm outline-none transition-all border",
-              isDarkMode ? "bg-[#161616] border-[#262626] text-[#F5F5F5] placeholder:text-[#8B8B8B]/60 focus:border-[#F97316]/60" : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
+              "w-full pl-9 pr-4 h-9 rounded-lg text-sm outline-none transition-all border",
+              isDarkMode
+                ? "bg-[#161616] border-[#262626] text-[#F5F5F5] placeholder:text-[#8B8B8B]/60 focus:border-[#F97316]/60"
+                : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
             )}
           />
         </div>
 
-        <div className={cn("flex items-center gap-1 p-1 rounded-xl shrink-0", isDarkMode ? "bg-[#161616]" : "bg-black/20")}>
+        <div className={cn("flex items-center gap-0.5 p-0.5 rounded-lg shrink-0", isDarkMode ? "bg-[#161616]" : "bg-black/20")}>
           {clientFilterItems.map((item) => (
             <motion.button
               key={item.id}
               onClick={() => setFilter(item.id)}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
+                "flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                 filter === item.id
                   ? (isDarkMode ? "bg-[#F97316] text-white" : "bg-white text-black shadow-sm")
                   : (isDarkMode ? "text-[#8B8B8B] hover:bg-[#1A1A1A] hover:text-[#F5F5F5]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >
-              {item.icon && <item.icon size={13} className={item.id === 'blacklist' && filter !== item.id ? 'text-[#F3B2BF]' : ''} />}
+              {item.icon && <item.icon size={12} className={item.id === 'blacklist' && filter !== item.id ? 'text-[#F3B2BF]' : ''} />}
               {item.label}
             </motion.button>
           ))}
         </div>
       </div>
 
+      {/* Таблица */}
       <div className={cn(
-        "rounded-2xl border overflow-hidden",
+        "rounded-xl border overflow-hidden",
         isDarkMode ? "bg-[#0A0A0A] border-[#262626]" : "bg-white border-gray-200 shadow-sm"
       )}>
         {filteredClients.length > 0 ? (
           <table className="w-full border-collapse">
             <thead>
               <tr className={cn(
-                "text-left text-[10px] uppercase tracking-wider font-bold",
+                "text-left text-[10px] uppercase tracking-widest font-bold",
                 isDarkMode ? "text-[#8B8B8B] bg-[#161616]" : "text-gray-400 bg-gray-50"
               )}>
-                <th className="px-5 py-3 border-b border-[#262626]">Тип</th>
-                <th className="px-5 py-3 border-b border-[#262626]">Имя / Организация</th>
-                <th className="px-5 py-3 border-b border-[#262626]">Контакты</th>
-                <th className="px-5 py-3 border-b border-[#262626]">Адрес</th>
-                <th className="px-5 py-3 border-b border-[#262626] text-right">Статус</th>
-                {canDeleteClients && <th className="px-5 py-3 border-b border-[#262626] text-right">Действия</th>}
+                <th className="px-4 py-2.5 border-b border-[#262626] w-14">Тип</th>
+                <th className="px-4 py-2.5 border-b border-[#262626]">Имя / Организация</th>
+                <th className="px-4 py-2.5 border-b border-[#262626]">Контакты</th>
+                <th className="px-4 py-2.5 border-b border-[#262626]">Адрес</th>
+                <th className="px-4 py-2.5 border-b border-[#262626] text-right">Статус</th>
+                {canDeleteClients && <th className="px-4 py-2.5 border-b border-[#262626] text-right w-16">Действия</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#262626]">
@@ -204,53 +209,62 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                   key={client.id}
                   onDoubleClick={() => handleViewClient(client)}
                   className={cn(
-                  "group transition-colors cursor-pointer",
-                  isDarkMode ? "hover:bg-[#1A1A1A]" : "hover:bg-gray-50",
-                )}>
-                  <td className="px-5 py-4">
+                    "group transition-colors cursor-pointer",
+                    isDarkMode ? "hover:bg-[#111111]" : "hover:bg-gray-50",
+                  )}
+                >
+                  {/* Тип */}
+                  <td className="px-4 py-2.5">
                     {client.type === 'physical' ? (
-                      <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400">
-                        <User size={18} />
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-400">
+                        <User size={15} />
                       </div>
                     ) : (
-                      <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-400">
-                        <Building2 size={18} />
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400">
+                        <Building2 size={15} />
                       </div>
                     )}
                   </td>
-                  <td className="px-5 py-4">
-                    <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>
+                  {/* Имя */}
+                  <td className="px-4 py-2.5">
+                    <div className={cn('font-semibold text-sm leading-snug', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>
                       {client.type === 'physical'
-                        ? `${client.lastName} ${client.firstName} ${client.middleName || ''}`
+                        ? `${client.lastName} ${client.firstName} ${client.middleName || ''}`.trim()
                         : client.organizationName}
                     </div>
                     <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#8B8B8B]' : 'text-gray-400')}>
-                        {client.type === 'physical' ? `Паспорт: ${client.passportSeries} ${client.passportNumber}` : `ИНН: ${client.inn}`}
+                      {client.type === 'physical'
+                        ? `Паспорт: ${client.passportSeries} ${client.passportNumber}`
+                        : `ИНН: ${client.inn}`}
                     </div>
                   </td>
-                  <td className="px-5 py-4">
-                    <div className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-800')}>{client.phone}</div>
+                  {/* Контакты */}
+                  <td className="px-4 py-2.5">
+                    <div className={cn('text-sm font-medium', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-800')}>{client.phone}</div>
                     <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#8B8B8B]' : 'text-gray-400')}>{client.email || '—'}</div>
                   </td>
-                  <td className="px-5 py-4">
-                    <div className={cn('text-sm line-clamp-2', isDarkMode ? 'text-[#8B8B8B]/80' : 'text-gray-600')}>
+                  {/* Адрес */}
+                  <td className="px-4 py-2.5">
+                    <div className={cn('text-sm line-clamp-1', isDarkMode ? 'text-[#8B8B8B]' : 'text-gray-600')}>
                       {client.type === 'physical' ? (client.registrationAddress || '—') : (client.legalAddress || '—')}
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  {/* Статус */}
+                  <td className="px-4 py-2.5 text-right">
                     {client.isBlacklisted ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold uppercase">
-                        <Ban size={12} />
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/15 text-red-400 border border-red-500/25 text-[10px] font-bold uppercase tracking-wide">
+                        <Ban size={10} />
                         Чёрный список
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-teal-400/20 text-teal-300 border border-teal-400/30 text-[10px] font-bold uppercase">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-teal-400/15 text-teal-300 border border-teal-400/25 text-[10px] font-bold uppercase tracking-wide">
                         Активен
                       </span>
                     )}
                   </td>
+                  {/* Действия */}
                   {canDeleteClients && (
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-4 py-2.5 text-right">
                       <button
                         type="button"
                         onClick={(event) => {
@@ -258,12 +272,12 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                           setClientPendingDelete(client);
                         }}
                         className={cn(
-                          "inline-flex h-9 w-9 items-center justify-center rounded-xl text-red-400 transition-all",
+                          "inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-400 transition-all opacity-0 group-hover:opacity-100",
                           isDarkMode ? "bg-red-500/10 hover:bg-red-500/20 border border-red-500/20" : "bg-red-50 hover:bg-red-100"
                         )}
                         title="Удалить гостя"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={13} />
                       </button>
                     </td>
                   )}
@@ -274,7 +288,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
         ) : (
           <EmptyState
             isDarkMode={isDarkMode}
-            icon={<Users size={32} />}
+            icon={<Users size={28} />}
             title={clients.length === 0 ? 'Гостей пока нет' : 'Гости не найдены'}
             description={
               clients.length === 0
@@ -286,22 +300,19 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                 type="button"
                 onClick={handleAddClient}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all",
+                  "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
                   isDarkMode ? "bg-[#F97316] text-white hover:bg-[#FB923C]" : "bg-orange-500 text-white hover:bg-orange-600"
                 )}
               >
-                <Plus size={17} />
+                <Plus size={15} />
                 Добавить гостя
               </button>
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilter('all');
-                }}
+                onClick={() => { setSearchQuery(''); setFilter('all'); }}
                 className={cn(
-                  "rounded-xl px-4 py-2 text-sm font-bold transition-all",
+                  "rounded-lg px-4 py-2 text-sm font-semibold transition-all",
                   isDarkMode ? "bg-[#161616] text-[#F5F5F5] hover:bg-[#1A1A1A]" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                 )}
               >
@@ -312,22 +323,21 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
         )}
       </div>
 
-      <div className={cn("flex items-center justify-between text-sm", isDarkMode ? "text-[#8B8B8B]/70" : "text-gray-500")}>
-        <span>
-          Страница {safeCurrentPage} из {pageCount} · показано {visibleClients.length} из {filteredClients.length}
-        </span>
-        <div className="flex items-center gap-2">
-          <motion.button 
+      {/* Пагинация */}
+      <div className={cn("flex items-center justify-between text-xs", isDarkMode ? "text-[#8B8B8B]" : "text-gray-500")}>
+        <span>Страница {safeCurrentPage} из {pageCount} · показано {visibleClients.length} из {filteredClients.length}</span>
+        <div className="flex items-center gap-1">
+          <motion.button
             whileTap={{ scale: 0.95 }}
-            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")} 
+            className={cn("px-3 py-1.5 rounded-md disabled:opacity-40 transition-colors text-xs", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")}
             disabled={safeCurrentPage <= 1}
             onClick={() => setCurrentPage(page => clampPage(page - 1, pageCount))}
           >
             Назад
           </motion.button>
-          <motion.button 
+          <motion.button
             whileTap={{ scale: 0.95 }}
-            className={cn("px-3 py-1.5 rounded-lg disabled:opacity-50 transition-colors", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")} 
+            className={cn("px-3 py-1.5 rounded-md disabled:opacity-40 transition-colors text-xs", isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100")}
             disabled={safeCurrentPage >= pageCount}
             onClick={() => setCurrentPage(page => clampPage(page + 1, pageCount))}
           >
