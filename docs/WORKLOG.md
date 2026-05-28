@@ -103,6 +103,23 @@ Checks run:
 Risks/TODOs:
 - None.
 
+#### Session 7: Booking badge cleanup — name only, bigger font (branch)
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Completed:
+- Removed "Забронирован" / "Предбронь" status text from booking badge (плашка)
+- Badge now shows only the guest name (Имя Фамилия)
+- Font size: text-xs → text-sm (14px), font-weight: font-black → font-bold
+- Inner layout: stacked two-line → single-line flex items-center for proper vertical centering in h-9
+- `title` attribute still shows status + name on hover (unchanged)
+- `getStatusLabel` function retained (used in Excel/email export)
+- No business logic changes
+
+Checks run:
+- No npm run lint / build (UI-only)
+
 #### Session 6: Week view + bigger numbers + uniform background (branch)
 Branch: `feature/chessboard-restyle`
 Files changed:

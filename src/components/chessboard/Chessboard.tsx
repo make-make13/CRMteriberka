@@ -432,7 +432,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                           key={booking.id}
                           onClick={() => handleBookingClick(booking.contractId)}
                           className={cn(
-                            "absolute top-1/2 -translate-y-1/2 h-9 rounded-md border px-2.5 text-left shadow-sm overflow-hidden transition-all hover:brightness-110",
+                            "absolute top-1/2 -translate-y-1/2 h-9 rounded-md border px-2.5 flex items-center shadow-sm overflow-hidden transition-all hover:brightness-110",
                             getStatusClasses(bookingStatus),
                           )}
                           style={{
@@ -441,8 +441,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                           }}
                           title={`${getStatusLabel(bookingStatus)}${client ? `: ${client.name}` : ''}`}
                         >
-                          <div className="truncate text-xs font-black">{client?.name ?? 'Гость'}</div>
-                          <div className="truncate text-[10px] opacity-80">{getStatusLabel(bookingStatus)}</div>
+                          <div className="truncate text-sm font-bold">{client?.name ?? 'Гость'}</div>
                         </button>
                       );
                     })}
