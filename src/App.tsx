@@ -563,7 +563,7 @@ function AppShell() {
     return (
       <div className={cn(
         "min-h-screen flex items-center justify-center transition-colors duration-300 font-sans",
-        isDarkMode ? "bg-[#080807] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-[#1A1C1B] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
       )}>
         <Loader2 className="animate-spin text-[#8CAFBE]" size={32} />
       </div>
@@ -577,12 +577,12 @@ function AppShell() {
   return (
       <div className={cn(
         "min-h-screen transition-colors duration-300 font-sans",
-        isDarkMode ? "bg-[#080807] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
+        isDarkMode ? "bg-[#1A1C1B] text-[#F4F1EA]" : "bg-gray-50 text-gray-900"
       )}>
         {/* Header */}
         <header className={cn(
           "sticky top-0 z-50 border-b backdrop-blur-md",
-          isDarkMode ? "bg-[#080807]/88 border-[#6E6964]/25" : "bg-white/80 border-gray-200"
+          isDarkMode ? "bg-[#1A1C1B]/88 border-[#6E6964]/25" : "bg-white/80 border-gray-200"
         )}>
           <div className={cn(
             "mx-auto px-6 h-20 flex items-center justify-between transition-all duration-300",
@@ -651,7 +651,7 @@ function AppShell() {
                 >
                   <Bell size={20} className="text-gray-500" />
                   {activeAlertsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#8CAFBE] text-black text-[10px] font-bold flex items-center justify-center border-2 border-[#080807]">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#8CAFBE] text-black text-[10px] font-bold flex items-center justify-center border-2 border-[#1A1C1B]">
                       {activeAlertsCount}
                     </span>
                   )}
@@ -689,7 +689,7 @@ function AppShell() {
                     {auth.manager.role === 'admin' ? 'Админ' : 'Менеджер'}
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8CAFBE] to-[#6E6964] flex items-center justify-center font-bold text-[#080807] shadow-lg shadow-[#8CAFBE]/15">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8CAFBE] to-[#6E6964] flex items-center justify-center font-bold text-[#1A1C1B] shadow-lg shadow-[#8CAFBE]/15">
                   {auth.manager.name.slice(0, 1).toUpperCase()}
                 </div>
                 <motion.button

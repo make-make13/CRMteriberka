@@ -26,6 +26,23 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 03:01 +03:00 — Chessboard graphite visual theme and statuses refinement
+
+Files changed:
+- `src/App.tsx`
+- `src/components/chessboard/Chessboard.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Converted chessboard UI to a refined dark graphite palette (#1A1C1B for app background, #222421 for panels, #292B28 for tables, #2F3330 for calendar grid, #3D423E for borders, #F4F1EA for text).
+- Replaced status color codes with brighter, high-contrast colors (Prebooking #FFE08A, Occupied #F3B2BF, Currently staying #8CAFBE, Blocked #6E6964).
+- Implemented `getBookingStatus` logic that dynamically determines the "Currently staying" status only if the current date falls within the booking span, resolving to "Occupied" otherwise.
+- Updated the legend wording to display "Предбронь" instead of "Ожидает" and properly aligned the layout.
+- Refined buttons and filter controls styling for cohesive look-and-feel.
+
+Checks run:
+- `git status --short`
+
 ### 2026-05-28 02:53 +03:00 — Added GEMINI.md agent rules
 
 Files changed:
