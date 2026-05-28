@@ -26,6 +26,34 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 — Polish graphite UI accents and guest modal
+
+Files changed:
+- `index.html`
+- `src/components/clients/ClientModal.tsx`
+- `src/components/settings/BackupSettingsTab.tsx`
+- `src/components/settings/ManagersSettingsTab.tsx`
+- `src/components/settings/SettingsView.tsx`
+- `src/components/additional/Additional.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Fixed Chrome Auto-Translate white screen: added `lang="ru" translate="no"` to `index.html`, preventing React 19 `removeChild` crash.
+- Strengthened CTA accents: replaced cold `#8CAFBE` and orange-500 primary buttons with warm `#D98E2B` / hover `#F2B35B` across the CRM.
+- ClientModal: CTA footer buttons (Создать/Сохранить, Создать договор) now use warm CTA `#D98E2B`.
+- SettingsView: main "Сохранить изменения" button now uses warm CTA.
+- BackupSettingsTab: "Сохранить настройки" and "Создать бэкап" buttons now use warm CTA.
+- ManagersSettingsTab: Save button, section icon, admin avatar badge all converted to `#D98E2B` palette; manager avatar uses `#8CAFBE` for non-admin.
+- Additional: "Добавить" task button, "Печать" button, active time-toggle, form focus borders all converted from orange to warm CTA palette.
+- Business logic was not changed; no API, PDFMe, saveContract(), or backup commands were touched.
+
+Checks run:
+- `git status --short`
+- `git diff --stat`
+
+Next:
+- Continue UI polish or begin next feature task.
+
 ### 2026-05-28 05:05 +03:00 — Fix BackupSettingsTab runtime crash
 
 Files changed:
@@ -451,3 +479,25 @@ Status:
 
 Next:
 - UI safety cleanup for Leads.
+### 2026-05-28 05:51 +03:00 — Backup Settings Runtime Crash Fixes
+
+Files changed:
+- `src/components/settings/BackupSettingsTab.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Added extremely defensive runtime checks in `BackupSettingsTab.tsx`.
+- Ensured UI does not crash if `/api/backups/status` returns an incomplete object (like `{}`).
+- Displays "Резервные копии не настроены или нет данных о статусе" if status or settings is empty.
+- Used `Array.isArray()` before calling `.map` or `.join` on `lastResult.remotes` and `lastResult.errors` to prevent runtime crashes if strings are provided instead of arrays.
+- Safely wrapped `.toLocaleString` and `.toFixed` inside protective try/catch and type checking blocks.
+
+Checks run:
+- Verified safe component rendering locally with extreme edge cases (null properties).
+- Did NOT run npm run lint or build as requested.
+
+Next:
+- Return to modal redesign task once the crash is confirmed solved.
+
+Risks/TODOs:
+- None.

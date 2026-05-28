@@ -710,7 +710,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
           whileTap={{ scale: 0.95 }}
           className={cn(
             "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-            isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+            isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
           Создать договор
@@ -722,7 +722,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
           whileTap={{ scale: 0.95 }}
           className={cn(
             "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-            isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+            isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
           {initialData ? 'Сохранить' : 'Создать'}

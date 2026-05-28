@@ -14,20 +14,28 @@ interface BackupSettingsTabProps {
   isDarkMode: boolean;
 }
 
-const formatDateTime = (value?: string) => {
-  if (!value) return 'Нет данных';
-  return new Date(value).toLocaleString('ru-RU');
+const formatDateTime = (value?: string | null) => {
+  if (!value || typeof value !== 'string') return 'Нет данных';
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return 'Некорректная дата';
+    return d.toLocaleString('ru-RU');
+  } catch (e) {
+    return 'Некорректная дата';
+  }
 };
 
-const formatBytes = (bytes?: number) => {
-  if (!bytes) return '0 Б';
+const formatBytes = (bytes?: number | null) => {
+  if (bytes == null || typeof bytes !== 'number' || isNaN(bytes)) return '0 Б';
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`;
   return `${(bytes / 1024 / 1024).toFixed(1)} МБ`;
 };
 
-const displayRemoteName = (remote: string, settings: BackupSettings) => {
-  if (remote === 'crm_cloud_1') return settings.remote1;
-  if (remote === 'crm_cloud_2') return settings.remote2;
+const displayRemoteName = (remote: string, settings?: BackupSettings | null) => {
+  if (!remote || typeof remote !== 'string') return 'Неизвестно';
+  if (!settings || typeof settings !== 'object') return remote;
+  if (remote === 'crm_cloud_1') return settings.remote1 || remote;
+  if (remote === 'crm_cloud_2') return settings.remote2 || remote;
   return remote;
 };
 
@@ -73,9 +81,9 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
 
   const refresh = async () => {
     const nextStatus = await backupApi.status();
-    setStatus(nextStatus);
-    setSettings(nextStatus.settings);
-    setLastResult(nextStatus.lastRun);
+    setStatus(nextStatus || null);
+    setSettings(nextStatus?.settings || null);
+    setLastResult(nextStatus?.lastRun || null);
   };
 
   useEffect(() => {
@@ -89,7 +97,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
     setIsBusy(true);
     try {
       const saved = await backupApi.saveSettings(settings);
-      setSettings(saved);
+      setSettings(saved || null);
       await refresh();
       toast('Настройки резервных копий сохранены');
     } catch (error) {
@@ -103,12 +111,13 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
     setIsBusy(true);
     try {
       const result = await backupApi.run(mode);
-      setLastResult(result);
+      setLastResult(result || null);
       await refresh();
-      if (result.success) {
+      if (result?.success) {
         toast(mode === 'shutdown' ? 'Бэкап завершения работы создан и отправлен' : 'Резервная копия создана');
       } else {
-        toast(`Бэкап создан с ошибками: ${result.errors.join('; ')}`, 'error');
+        const errors = Array.isArray(result?.errors) ? result.errors : [];
+        toast(`Бэкап создан с ошибками: ${errors.join('; ')}`, 'error');
       }
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Ошибка создания резервной копии', 'error');
@@ -121,7 +130,8 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
     setIsBusy(true);
     try {
       const result = await backupApi.testRemotes();
-      const failed = result.remotes.filter(remote => !remote.ok);
+      const remotes = Array.isArray(result?.remotes) ? result.remotes : [];
+      const failed = remotes.filter(remote => !remote?.ok);
       await refresh();
       toast(failed.length ? `Проверка облаков: есть ошибки (${failed.length})` : 'Оба облака доступны', failed.length ? 'error' : 'success');
     } catch (error) {
@@ -139,7 +149,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
     }
   };
 
-  if (isLoading || !status || !settings) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-gray-500">
         <Loader2 className="animate-spin mr-2" size={20} />
@@ -148,9 +158,23 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
     );
   }
 
+  // 6. Если API /api/backups/status возвращает неполный объект, UI не должен падать.
+  if (!status || !settings || typeof status !== 'object' || typeof settings !== 'object') {
+    return (
+      <div className="flex items-center justify-center py-20 text-gray-500 font-bold">
+        Резервные копии не настроены или нет данных о статусе
+      </div>
+    );
+  }
+
+  // Safe checks with optional chaining and defaults
   const cloudOk = Boolean(status.lastSuccessfulCloudBackupAt && status.todayCloudBackupDone);
   const localOk = Boolean(status.lastSuccessfulLocalBackupAt);
-  const cloudBackupConfigured = Boolean(status.rclone?.available);
+  
+  // Safeguard against missing rclone completely
+  const rcloneAvailable = Boolean(status.rclone?.available);
+  const rcloneVersion = status.rclone?.version || 'Доступен';
+  const rcloneError = status.rclone?.error || 'Не найден';
 
   return (
     <div className="space-y-8">
@@ -171,9 +195,9 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
         />
         <StatusCard
           title="rclone"
-          subtitle={status.rclone?.available ? status.rclone.version || 'Доступен' : status.rclone?.error || 'Не найден'}
-          ok={Boolean(status.rclone?.available)}
-          icon={status.rclone?.available ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+          subtitle={rcloneAvailable ? rcloneVersion : rcloneError}
+          ok={rcloneAvailable}
+          icon={rcloneAvailable ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
           isDarkMode={isDarkMode}
         />
       </div>
@@ -187,7 +211,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <p className="text-xs text-gray-500 mt-1">
             Настройте в rclone два remote с такими именами. CRM будет отправлять архив в оба хранилища только когда rclone доступен.
           </p>
-          {!cloudBackupConfigured && (
+          {!rcloneAvailable && (
             <p className="mt-2 rounded-xl border border-[#8CAFBE]/25 bg-[#8CAFBE]/10 px-3 py-2 text-xs font-medium text-[#B4CDD2]">
               Резервные копии в облако не настроены: rclone недоступен. Облачные действия отключены, архивы не будут отправляться в старые хранилища.
             </p>
@@ -198,7 +222,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <label className="space-y-2">
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Облако 1</span>
             <input
-              value={settings.remote1}
+              value={settings.remote1 || ''}
               onChange={event => setSettings(prev => prev ? { ...prev, remote1: event.target.value } : prev)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
@@ -209,7 +233,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <label className="space-y-2">
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Облако 2</span>
             <input
-              value={settings.remote2}
+              value={settings.remote2 || ''}
               onChange={event => setSettings(prev => prev ? { ...prev, remote2: event.target.value } : prev)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
@@ -220,7 +244,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <label className="space-y-2">
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Путь в облаке</span>
             <input
-              value={settings.cloudPath}
+              value={settings.cloudPath || ''}
               onChange={event => setSettings(prev => prev ? { ...prev, cloudPath: event.target.value } : prev)}
               className={cn(
                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
@@ -236,7 +260,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
             onClick={saveSettings}
             disabled={isBusy}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8CAFBE] hover:bg-[#B4CDD2] text-black text-sm font-bold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D98E2B] hover:bg-[#F2B35B] text-[#1A1C1B] text-sm font-bold transition-all disabled:opacity-50"
           >
             <Save size={18} />
             Сохранить настройки
@@ -283,9 +307,9 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <motion.button
             type="button"
             onClick={() => runBackup('daily-cloud')}
-            disabled={isBusy || !cloudBackupConfigured}
+            disabled={isBusy || !rcloneAvailable}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8CAFBE] hover:bg-[#B4CDD2] text-black text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D98E2B] hover:bg-[#F2B35B] text-[#1A1C1B] text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isBusy ? <Loader2 className="animate-spin" size={18} /> : <Cloud size={18} />}
             Создать бэкап сейчас
@@ -306,7 +330,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           <motion.button
             type="button"
             onClick={() => runBackup('shutdown')}
-            disabled={isBusy || !cloudBackupConfigured}
+            disabled={isBusy || !rcloneAvailable}
             whileTap={{ scale: 0.95 }}
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50",
@@ -318,7 +342,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           </motion.button>
         </div>
 
-        {lastResult && (
+        {lastResult && typeof lastResult === 'object' && (
           <div className={cn(
             "rounded-2xl border p-4 text-sm space-y-2",
             lastResult.success
@@ -332,16 +356,16 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
               Архив: {lastResult.archiveName || 'нет'} · {formatBytes(lastResult.archiveSize)}
               {lastResult.localArchiveDeleted ? ' · локально удалён после загрузки' : ''}
             </div>
-            {lastResult.remotes?.length > 0 && (
+            {Array.isArray(lastResult.remotes) && lastResult.remotes.length > 0 && (
               <div className="text-xs">
-                {lastResult.remotes.map(remote => (
-                  <div key={remote.key}>
-                    {displayRemoteName(remote.remote, settings)}: {remote.ok ? 'успешно' : remote.message}
+                {lastResult.remotes.map((remote, idx) => (
+                  <div key={remote?.key || idx}>
+                    {displayRemoteName(remote?.remote || '', settings)}: {remote?.ok ? 'успешно' : (remote?.message || 'ошибка')}
                   </div>
                 ))}
               </div>
             )}
-            {lastResult.errors?.length > 0 && (
+            {Array.isArray(lastResult.errors) && lastResult.errors.length > 0 && (
               <div className="text-xs text-[#B4CDD2]">
                 {lastResult.errors.join('; ')}
               </div>

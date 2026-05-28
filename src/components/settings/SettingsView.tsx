@@ -310,7 +310,7 @@ export default function SettingsView({
             whileTap={{ scale: 0.95 }}
             className={cn(
               "shrink-0 flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50",
-              isDarkMode ? "bg-[#8CAFBE] text-black hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+              isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
             )}
           >
             <Save size={15} />

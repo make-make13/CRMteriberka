@@ -318,7 +318,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             placeholder="Что нужно сделать?"
             className={cn(
               'min-h-11 w-full rounded-xl border px-4 text-sm outline-none transition-all',
-              isDarkMode ? 'bg-black/30 border-white/10 focus:border-orange-500/50' : 'bg-white border-gray-200 focus:border-orange-500',
+              isDarkMode ? 'bg-black/30 border-white/10 focus:border-[#D98E2B]/50' : 'bg-white border-gray-200 focus:border-orange-500',
             )}
           />
 
@@ -331,7 +331,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               className={cn(
                 'inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-xs font-semibold transition-all',
                 isTimeOpen
-                  ? (isDarkMode ? 'border-orange-500/40 bg-orange-500/15 text-orange-300' : 'border-orange-200 bg-orange-50 text-orange-700')
+                  ? (isDarkMode ? 'border-[#D98E2B]/40 bg-[#D98E2B]/15 text-[#F2B35B]' : 'border-orange-200 bg-orange-50 text-orange-700')
                   : (isDarkMode ? 'border-white/10 bg-black/20 text-gray-400 hover:bg-white/5' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50')
               )}
             >
@@ -348,7 +348,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 type="datetime-local"
                 className={cn(
                   'h-10 rounded-xl border px-3 text-xs outline-none transition-all',
-                  isDarkMode ? 'bg-black/30 border-white/10 focus:border-orange-500/50' : 'bg-white border-gray-200 focus:border-orange-500',
+                  isDarkMode ? 'bg-black/30 border-white/10 focus:border-[#D98E2B]/50' : 'bg-white border-gray-200 focus:border-orange-500',
                 )}
               />
             )}
@@ -423,7 +423,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
               aria-label="Добавить"
               className={cn(
                 'inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold transition-all disabled:opacity-60',
-                isDarkMode ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600',
+                isDarkMode ? 'bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]' : 'bg-orange-500 text-white hover:bg-orange-600',
               )}
             >
               {isSavingTask ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
@@ -445,7 +445,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 rows={2}
                 className={cn(
                   'mt-3 w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none transition-all',
-                  isDarkMode ? 'bg-black/30 border-white/10 focus:border-orange-500/50' : 'bg-white border-gray-200 focus:border-orange-500',
+                  isDarkMode ? 'bg-black/30 border-white/10 focus:border-[#D98E2B]/50' : 'bg-white border-gray-200 focus:border-orange-500',
                 )}
               />
             </motion.div>
@@ -507,7 +507,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
             )}
           >
             <span className="flex min-w-0 items-center gap-2">
-              <FileText size={16} className="shrink-0 text-orange-500" />
+              <FileText size={16} className="shrink-0 text-[#D98E2B]" />
               <span className="min-w-0 flex-1 truncate text-sm font-semibold">Заявление на возврат</span>
             </span>
             <Plus size={15} className="shrink-0 text-gray-400" />
@@ -552,7 +552,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
                 }}
                 className={cn(
                   'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all',
-                  isDarkMode ? 'bg-orange-500 text-black hover:bg-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600'
+                  isDarkMode ? 'bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]' : 'bg-orange-500 text-white hover:bg-orange-600'
                 )}
               >
                 <Printer size={16} />
