@@ -893,7 +893,7 @@ export default function ContractModal({
                   disabled={mode === 'view'}
                   className={cn(
                     "px-2 py-1 rounded-lg text-sm font-bold outline-none border transition-all",
-                    isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                    isDarkMode ? "bg-white/5 border-white/10 focus:border-[#D98E2B]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                   )}
                 />
               </div>
@@ -918,7 +918,7 @@ export default function ContractModal({
                     onFocus={() => mode === 'edit' && setShowClientDropdown(true)}
                     className={cn(
                       "w-full pl-9 pr-4 py-2 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                      isDarkMode ? "bg-white/5 border-white/10 focus:border-[#D98E2B]" : "bg-gray-50 border-gray-200 focus:border-orange-500",
                       selectedClient?.isBlacklisted && "border-red-500/50"
                     )}
                   />
@@ -1225,7 +1225,7 @@ export default function ContractModal({
                       disabled={mode === 'view'}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                        isDarkMode ? "bg-white/5 border-white/10 focus:border-[#D98E2B]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                       )}
                     />
                   </div>
@@ -1237,7 +1237,7 @@ export default function ContractModal({
                       disabled={mode === 'view'}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                        isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                        isDarkMode ? "bg-white/5 border-white/10 focus:border-[#D98E2B]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                       )}
                     />
                   </div>
@@ -1278,7 +1278,7 @@ export default function ContractModal({
                     rows={3}
                     className={cn(
                       "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all resize-none",
-                      isDarkMode ? "bg-white/5 border-white/10 focus:border-orange-500" : "bg-gray-50 border-gray-200 focus:border-orange-500"
+                      isDarkMode ? "bg-white/5 border-white/10 focus:border-[#D98E2B]" : "bg-gray-50 border-gray-200 focus:border-orange-500"
                     )}
                   />
                 )}
@@ -1457,7 +1457,7 @@ export default function ContractModal({
                   whileTap={{ scale: 0.95 }}
                   className={cn(
                     "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-                    isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+                    isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
                   )}
                 >
                   Сохранить

@@ -193,7 +193,7 @@ export default function LeadModal({
 
   const inputClass = cn(
     'w-full rounded-lg border px-3 py-1.5 text-sm outline-none transition-colors',
-    isDarkMode ? 'border-[#3D423E] bg-[#1A1C1B] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60' : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400'
+    isDarkMode ? 'border-[#3D423E] bg-[#1A1C1B] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#D98E2B]/60' : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400'
   );
 
   const sectionClass = cn(
@@ -313,7 +313,7 @@ export default function LeadModal({
                       type="button"
                       disabled={isSaving}
                       onClick={handleCreateClient}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#8CAFBE] px-3 py-1.5 text-sm font-bold text-[#222421] transition-colors hover:bg-[#B4CDD2] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#D98E2B] px-3 py-1.5 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSaving && <Loader2 size={15} className="animate-spin" />}
                       Создать гостя
@@ -381,7 +381,7 @@ export default function LeadModal({
             <button type="button" disabled={isSaving} onClick={onClose} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
               Отмена
             </button>
-            <button type="submit" disabled={isSaving} className="inline-flex items-center gap-2 rounded-xl bg-[#8CAFBE] px-5 py-2 text-sm font-bold text-[#222421] transition-colors hover:bg-[#B4CDD2] disabled:cursor-not-allowed disabled:opacity-70">
+            <button type="submit" disabled={isSaving} className="inline-flex items-center gap-2 rounded-xl bg-[#D98E2B] px-5 py-2 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70">
               {isSaving && <Loader2 size={16} className="animate-spin" />}
               Сохранить
             </button>

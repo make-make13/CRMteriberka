@@ -153,7 +153,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
               "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all border",
-              isDarkMode ? "bg-[#222421] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/45 focus:border-[#8CAFBE]/60" : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
+              isDarkMode ? "bg-[#222421] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/45 focus:border-[#D98E2B]/60" : "bg-white border-gray-200 shadow-sm focus:border-orange-400"
             )}
           />
         </div>
@@ -167,7 +167,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                 filter === item.id 
-                  ? (isDarkMode ? "bg-[#8CAFBE] text-[#222421]" : "bg-white text-black shadow-sm")
+                  ? (isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B]" : "bg-white text-black shadow-sm")
                   : (isDarkMode ? "text-[#B4CDD2] hover:bg-[#292B28] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >

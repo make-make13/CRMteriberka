@@ -47,7 +47,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(() => new Date());
   const [selectedPeriod, setSelectedPeriod] = useState<HotelCalendarPeriod>('1-10');
-  const [selectedObjectId, setSelectedObjectId] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const visibleDays = useMemo(
     () => getHotelCalendarPeriodDays(selectedMonth, selectedPeriod),
@@ -64,8 +64,8 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   );
 
   const visibleObjects = useMemo(
-    () => selectedObjectId === 'all' ? roomObjects : roomObjects.filter(object => object.id === selectedObjectId),
-    [roomObjects, selectedObjectId],
+    () => selectedCategory === 'all' ? roomObjects : roomObjects.filter(object => object.category === selectedCategory),
+    [roomObjects, selectedCategory],
   );
 
   const bookingsByObject = useMemo(() => {
@@ -268,33 +268,33 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
         isDarkMode ? "bg-[#222421] border-[#3D423E]" : "bg-white border-gray-200 shadow-sm",
       )}>
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <motion.button
-              onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}
-              whileTap={{ scale: 0.9 }}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-600",
-              )}
-            >
-              <ChevronLeft size={20} />
-            </motion.button>
-            <h2 className="text-xl font-bold min-w-[180px] text-center capitalize">
-              {format(selectedMonth, 'LLLL yyyy', { locale: ru })}
-            </h2>
-            <motion.button
-              onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}
-              whileTap={{ scale: 0.9 }}
-              className={cn(
-                "p-2 rounded-lg transition-all",
-                isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-600",
-              )}
-            >
-              <ChevronRight size={20} />
-            </motion.button>
-          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <motion.button
+                onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}
+                whileTap={{ scale: 0.9 }}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-600",
+                )}
+              >
+                <ChevronLeft size={20} />
+              </motion.button>
+              <h2 className="text-xl font-bold min-w-[180px] text-center capitalize">
+                {format(selectedMonth, 'LLLL yyyy', { locale: ru })}
+              </h2>
+              <motion.button
+                onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}
+                whileTap={{ scale: 0.9 }}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-600",
+                )}
+              >
+                <ChevronRight size={20} />
+              </motion.button>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2">
             <div className={cn(
               "flex items-center rounded-xl p-1",
               isDarkMode ? "bg-[#292B28]" : "bg-gray-100",
@@ -306,7 +306,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                     selectedPeriod === period.id
-                      ? "bg-[#8CAFBE] text-[#222421]"
+                      ? "bg-[#D98E2B] text-[#1A1C1B]"
                       : isDarkMode ? "text-[#B4CDD2] hover:text-[#F4F1EA]" : "text-gray-600 hover:text-gray-900",
                   )}
                 >
@@ -316,28 +316,18 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
             </div>
 
             <select
-              value={selectedObjectId}
-              onChange={event => setSelectedObjectId(event.target.value)}
+              value={selectedCategory}
+              onChange={event => setSelectedCategory(event.target.value)}
               className={cn(
                 "h-9 rounded-lg border px-3 text-sm outline-none transition-all",
-                isDarkMode ? "bg-[#222421] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]" : "bg-white border-gray-200 text-gray-800",
-              )}
-            >
-              <option value="all">Все номера</option>
-              {roomObjects.map(object => (
-                <option key={object.id} value={object.id}>{getRoomName(object)}</option>
-              ))}
-            </select>
-
-            <select
-              disabled
-              value="all"
-              className={cn(
-                "h-9 rounded-lg border px-3 text-sm outline-none opacity-50",
-                isDarkMode ? "bg-[#222421] border-[#3D423E] text-[#B4CDD2]" : "bg-white border-gray-200 text-gray-500",
+                isDarkMode ? "bg-[#222421] border-[#3D423E] text-[#F4F1EA] focus:border-[#D98E2B]" : "bg-white border-gray-200 text-gray-800",
               )}
             >
               <option value="all">Все категории</option>
+              <option value="Одноместный стандарт">Одноместный стандарт</option>
+              <option value="Двухместный стандарт">Двухместный стандарт</option>
+              <option value="Джуниор сьют">Джуниор сьют</option>
+              <option value="Апартаменты">Апартаменты</option>
             </select>
           </div>
 
@@ -405,7 +395,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
       )}>
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
-            <div className={cn("grid grid-cols-[200px_1fr] border-b", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
+            <div className={cn("grid grid-cols-[260px_1fr] border-b", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
               <div className={cn(
                 "p-3 text-[10px] uppercase tracking-wider font-semibold border-r",
                 isDarkMode ? "text-[#B4CDD2] border-[#3D423E] bg-[#292B28]" : "text-gray-400 border-gray-100 bg-gray-50/50",
@@ -414,7 +404,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               </div>
               <div
                 className="grid"
-                style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(72px, 1fr))` }}
+                style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(50px, 1fr))` }}
               >
                 {visibleDays.map(day => (
                   <div
@@ -435,26 +425,32 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               const visibleBookings = getVisibleBookingsForObject(object.id);
 
               return (
-                <div key={object.id} className={cn("grid grid-cols-[200px_1fr] min-h-[60px] border-b last:border-b-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
+                <div key={object.id} className={cn("grid grid-cols-[260px_1fr] min-h-[72px] border-b last:border-b-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
                   <div className={cn(
-                    "p-2.5 border-r flex flex-col justify-center",
+                    "px-3 py-2.5 border-r flex flex-col justify-center gap-0.5",
                     isDarkMode ? "border-[#3D423E] bg-[#292B28]" : "border-gray-100 bg-gray-50/20",
                   )}>
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="text-sm font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
-                      <div className={cn("min-w-0 truncate text-[11px] font-semibold", isDarkMode ? "text-[#B4CDD2]" : "text-gray-400")}>{getRoomCategory(object)}</div>
+                      {object.seaView && (
+                        <span className="text-[9px] font-bold uppercase tracking-wide text-[#8CAFBE]">море</span>
+                      )}
                     </div>
-                    <div className={cn("mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] leading-tight", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
-                      {getRoomMeta(object).map(item => (
-                        <span key={item}>{item}</span>
-                      ))}
+                    <div className={cn("text-[11px] font-semibold leading-tight", isDarkMode ? "text-[#B4CDD2]" : "text-gray-400")}>{getRoomCategory(object)}</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {object.capacity && (
+                        <span className={cn("text-[10px]", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{object.capacity} чел</span>
+                      )}
+                      {object.pricePerNight && (
+                        <span className={cn("text-[11px] font-bold", isDarkMode ? "text-[#D98E2B]/90" : "text-gray-700")}>{formatRoomPrice(object.pricePerNight)}</span>
+                      )}
                     </div>
                   </div>
 
                   <div className="relative">
                     <div
-                      className={cn("grid h-full min-h-[60px]", isDarkMode ? "bg-[#2F3330]" : "bg-white")}
-                      style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(72px, 1fr))` }}
+                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#2F3330]" : "bg-white")}
+                      style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(50px, 1fr))` }}
                     >
                       {visibleDays.map(day => {
                         const booking = getBookingForObjectOnDay(object.id, day);
