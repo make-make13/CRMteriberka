@@ -395,7 +395,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
       )}>
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
-            <div className={cn("grid grid-cols-[260px_1fr] border-b", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
+            <div className={cn("grid grid-cols-[320px_1fr] border-b", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
               <div className={cn(
                 "p-3 text-[10px] uppercase tracking-wider font-semibold border-r",
                 isDarkMode ? "text-[#B4CDD2] border-[#3D423E] bg-[#111111]" : "text-gray-400 border-gray-100 bg-gray-50/50",
@@ -404,7 +404,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               </div>
               <div
                 className="grid"
-                style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(50px, 1fr))` }}
+                style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(48px, 1fr))` }}
               >
                 {visibleDays.map(day => (
                   <div
@@ -416,7 +416,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                   >
                     <div className={cn("text-sm font-black", isDarkMode ? "text-[#F4F1EA]" : "text-gray-900")}>{format(day, 'd', { locale: ru })}</div>
                     <div className={cn("text-[11px] font-medium", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-400")}>
-                      {format(day, 'EEEEEE', { locale: ru }).replace(/^./, c => c.toUpperCase())}
+                      {format(day, 'EEEE', { locale: ru })}
                     </div>
                   </div>
                 ))}
@@ -427,32 +427,32 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               const visibleBookings = getVisibleBookingsForObject(object.id);
 
               return (
-                <div key={object.id} className={cn("grid grid-cols-[260px_1fr] min-h-[72px] border-b last:border-b-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
+                <div key={object.id} className={cn("grid grid-cols-[320px_1fr] min-h-[72px] border-b last:border-b-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
                   <div className={cn(
-                    "px-3 py-2.5 border-r flex flex-col justify-center gap-0.5",
+                    "px-3 py-2.5 border-r flex flex-col justify-center gap-1",
                     isDarkMode ? "border-[#3D423E] bg-[#111111]" : "border-gray-100 bg-gray-50/20",
                   )}>
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="text-xs font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
+                      <div className={cn("text-xs font-black leading-none", isDarkMode ? "text-[#B4CDD2]" : "text-gray-500")}>{getRoomCategory(object)}</div>
                       {object.seaView && (
-                        <Waves size={13} className="text-[#8CAFBE] shrink-0" title="Вид на море" />
+                        <Waves size={12} className="text-[#8CAFBE] shrink-0" title="Вид на море" />
                       )}
                     </div>
-                    <div className={cn("text-[13px] font-semibold leading-tight mt-0.5", isDarkMode ? "text-[#B4CDD2]" : "text-gray-500")}>{getRoomCategory(object)}</div>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-2">
                       {object.capacity && (
-                        <span className={cn("text-[10px]", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{object.capacity} чел</span>
+                        <span className={cn("text-[11px]", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>{object.capacity} чел</span>
                       )}
                       {object.pricePerNight && (
-                        <span className={cn("text-[11px] font-bold", isDarkMode ? "text-[#D98E2B]/90" : "text-gray-700")}>{formatRoomPrice(object.pricePerNight)}</span>
+                        <span className={cn("text-[11px] font-bold", isDarkMode ? "text-[#FFD700]" : "text-amber-600")}>{formatRoomPrice(object.pricePerNight)}</span>
                       )}
                     </div>
                   </div>
 
                   <div className="relative">
                     <div
-                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#0d0d0d]" : "bg-white")}
-                      style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(50px, 1fr))` }}
+                      className={cn("grid h-full min-h-[72px]", isDarkMode ? "bg-[#1A1C1B]" : "bg-gray-50/30")}
+                      style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(48px, 1fr))` }}
                     >
                       {visibleDays.map(day => {
                         const booking = getBookingForObjectOnDay(object.id, day);

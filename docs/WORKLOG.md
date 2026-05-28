@@ -1,5 +1,31 @@
 # WORKLOG
 
+### 2026-05-28 — Chessboard UI improvements
+
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Completed:
+- Widened left column (260px → 320px) for better room information layout
+- Reorganized room data: room number + category + sea icon on first line, capacity + price on second
+- Replaced day abbreviations with full Russian names (пятница, суббота, воскресенье, etc.)
+- Reduced cell background saturation for cleaner grid appearance
+- Verified category filter contains exactly 4 categories (Одноместный стандарт, Двухместный стандарт, Джуниор сьют, Апартаменты)
+- Confirmed sea view icon (🌊) appears only for rooms with seaView property
+- Price text remains yellow and readable
+- No business logic changes, no data modifications
+
+Checks run:
+- Playwright verification: chessboard loads, left column wider, text readable, icons display correctly
+- Category filtering tested and working
+- Browser console: no errors
+
+Next:
+- Continue with visual interface unification.
+
+Risks/TODOs:
+- None.
+
 ## Current state
 
 CRM «Большая Медведица» is a local hotel CRM based on the cleaned previous CRM.
