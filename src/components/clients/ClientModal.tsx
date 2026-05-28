@@ -700,22 +700,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
       >
         Отмена
       </motion.button>
-      {isViewMode ? (
-        <motion.button 
-          type="button"
-          onClick={() => {
-            // TODO: Handle create contract from client
-            onClose();
-          }}
-          whileTap={{ scale: 0.95 }}
-          className={cn(
-            "px-10 py-2.5 rounded-xl text-sm font-bold transition-all",
-            isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
-          )}
-        >
-          Создать договор
-        </motion.button>
-      ) : (
+      {!isViewMode && (
         <motion.button 
           type="submit"
           form={clientFormId}

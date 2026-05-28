@@ -282,51 +282,65 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] border-collapse text-sm">
               <thead>
-                <tr className={cn('text-left text-xs font-bold uppercase tracking-wider', isDarkMode ? 'bg-white/[0.05] text-[#B4CDD2]' : 'bg-gray-50 text-gray-400')}>
-                  <th className="border-b border-[#3D423E] p-4">Дата</th>
-                  <th className="border-b border-[#3D423E] p-4">Гость</th>
-                  <th className="border-b border-[#3D423E] p-4">Контакты</th>
-                  <th className="border-b border-[#3D423E] p-4">Даты</th>
-                  <th className="border-b border-[#3D423E] p-4">Гостей</th>
-                  <th className="border-b border-[#3D423E] p-4">Источник</th>
-                  <th className="border-b border-[#3D423E] p-4">Статус</th>
-                  <th className="border-b border-[#3D423E] p-4 text-right">Действия</th>
+                <tr className={cn('text-left text-[10px] font-bold uppercase tracking-wider', isDarkMode ? 'bg-white/[0.05] text-[#B4CDD2]/70' : 'bg-gray-50 text-gray-400')}>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Дата</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Гость</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Контакты</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Даты</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Гостей</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Источник</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3">Статус</th>
+                  <th className="border-b border-white/[0.08] px-5 py-3 text-right">Действия</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#3D423E]">
+              <tbody className="divide-y divide-white/[0.06]">
                 {filteredLeads.map(lead => (
                   <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-white/[0.04] text-[#F4F1EA]' : 'hover:bg-gray-50')}>
-                    <td className="p-4 text-gray-500">
-                      <div className="flex items-center gap-2">
-                        <CalendarDays size={15} className={isDarkMode ? 'text-[#B4CDD2]/70' : 'text-gray-500'} />
-                        <span className={isDarkMode ? 'text-[#B4CDD2]/70' : ''}>{formatDateTime(lead.createdAt)}</span>
+                    <td className="px-5 py-4">
+                      <div className={cn('text-xs leading-snug', isDarkMode ? 'text-[#B4CDD2]/60' : 'text-gray-500')}>
+                        {formatDateTime(lead.createdAt)}
                       </div>
                     </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <UserRound size={16} className={isDarkMode ? 'text-[#B4CDD2]/70' : 'text-gray-500'} />
-                        <div>
-                          <div className="font-bold">{cleanText(lead.guestName, 'Без имени')}</div>
-                          <div className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}</div>
-                        </div>
+                    <td className="px-5 py-4">
+                      <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                        {cleanText(lead.guestName, 'Без имени')}
+                      </div>
+                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                        {cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}
                       </div>
                     </td>
-                    <td className="p-4">
-                      <div className="font-medium">{cleanText(lead.phone, 'Телефон не указан')}</div>
-                      <div className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{cleanText(lead.email, 'Email не указан')}</div>
+                    <td className="px-5 py-4">
+                      <div className={cn('font-semibold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>
+                        {cleanText(lead.phone, '—')}
+                      </div>
+                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                        {cleanText(lead.email, '—')}
+                      </div>
                     </td>
-                    <td className="p-4">
-                      <div>{formatDateRange(lead)}</div>
-                      <div className={cn("text-xs", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{cleanText(lead.desiredTime, 'Время не указано')}</div>
+                    <td className="px-5 py-4">
+                      <div className={cn('text-sm font-medium', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-700')}>
+                        {formatDateRange(lead)}
+                      </div>
+                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                        {cleanText(lead.desiredTime, '')}
+                      </div>
                     </td>
-                    <td className="p-4">{lead.guestsCount ?? '-'}</td>
-                    <td className="p-4">{formatLeadSource(lead.source)}</td>
-                    <td className="p-4"><LeadStatusBadge status={lead.status} /></td>
-                    <td className="p-4 text-right">
+                    <td className="px-5 py-4">
+                      <span className={cn('text-sm font-semibold', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-700')}>
+                        {lead.guestsCount ?? '—'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={cn('text-sm', isDarkMode ? 'text-[#B4CDD2]/80' : 'text-gray-600')}>
+                        {formatLeadSource(lead.source)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4"><LeadStatusBadge status={lead.status} /></td>
+                    <td className="px-5 py-4 text-right">
                       <button
                         type="button"
                         onClick={() => openLead(lead)}
-                        className={cn('rounded-xl px-3 py-2 text-xs font-bold transition-colors', isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+                        className={cn('rounded-xl px-4 py-2 text-xs font-bold transition-all', isDarkMode ? 'bg-white/[0.07] border border-white/15 hover:bg-white/[0.12] hover:border-white/25 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
                       >
                         Открыть
                       </button>

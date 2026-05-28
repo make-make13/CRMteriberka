@@ -26,6 +26,50 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 — Harden guest deletion and email settings (audit fix)
+
+Files changed:
+- `server.ts`
+- `server/localDatabase.ts`
+- `src/components/settings/EmailSettingsTab.tsx`
+- `src/components/clients/ClientModal.tsx`
+
+Completed:
+
+**1. Guest deletion guard**
+- `DELETE /api/clients/:id` now calls `listContractsByClient(id)` before deleting.
+- If any contracts/pre-bookings exist → returns HTTP 409 with a Russian error message.
+- Existing error handler in `Clients.tsx` shows the message via toast — no UI changes needed.
+- Guest with zero contracts deletes as before.
+
+**2. SMTP app password persistence**
+- Confirmed bug: `saveEmailSettings` was explicitly stripping `appPassword` before writing to DB.
+- `getSmtpConfig` read password only from `process.env.SMTP_PASSWORD`, never from DB.
+- The UI password field was `disabled` with `value=""` — completely non-functional.
+- Fix: `saveEmailSettings` now saves `appPassword` if non-empty; if empty string received, preserves existing stored password.
+- `getSmtpConfig` now checks `storedSettings.appPassword` as fallback when env var is absent.
+- UI field made interactive with correct placeholder "Оставьте пустым, чтобы не менять".
+- GET `/api/email-settings` still strips password from response (correct — never expose to frontend).
+
+**3. "Создать договор" stub removed from ClientModal**
+- The button in view mode was a TODO stub: clicked → modal closed, nothing happened.
+- Replaced with no primary action in footer when in view mode (header already has "Редактировать").
+- No business logic changed; contract creation flow untouched.
+
+**4. contractId / prebookingId on Lead — analysis only, no changes**
+- Confirmed: when prebooking is created from lead, both `contractId` and `prebookingId` are set to prebooking's ID.
+- When prebooking is converted to real contract, `contractId` is updated to real contract ID.
+- The overloading of `contractId` is architecturally ambiguous but the current flow works correctly.
+- Not changed pending separate review.
+
+Checks run:
+- `git status --short`
+- `git diff --stat`
+
+Risks/TODOs:
+- `npm run lint` and `npm run build` not run per task rules.
+- SQLite schema has no FK constraint — the server-level guard is the only protection against orphan contracts.
+
 ### 2026-05-28 — Polish graphite UI accents and guest modal
 
 Files changed:

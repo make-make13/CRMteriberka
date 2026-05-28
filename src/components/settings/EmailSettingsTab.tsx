@@ -94,7 +94,7 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
       const cleanedSettings = {
         ...settings,
         senderEmail: settings.senderEmail.trim(),
-        appPassword: ''
+        appPassword: settings.appPassword.trim(),
       };
       const saved = await emailSettingsApi.save(cleanedSettings);
       setSettings(prev => ({ ...prev, ...saved, appPassword: '' }));
@@ -158,14 +158,14 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
         </div>
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пароль приложения (Yandex)</label>
-          <input 
+          <input
             type="password"
-            value=""
-            disabled
-            placeholder="SMTP_PASSWORD"
+            value={settings.appPassword}
+            onChange={(e) => setSettings({ ...settings, appPassword: e.target.value })}
+            placeholder="Оставьте пустым, чтобы не менять"
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all disabled:opacity-60",
-              isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"
+              "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
+              isDarkMode ? "bg-black/30 border-white/10 text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#D98E2B]/60" : "bg-white border-gray-200 focus:border-orange-400"
             )}
           />
         </div>

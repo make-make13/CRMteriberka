@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Mail, Waves } from 'lucide-react';
 import { addMonths, format, subMonths } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
@@ -157,10 +157,10 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   ].filter(Boolean);
 
   const getStatusClasses = (status: string | undefined) => {
-    if (status === 'pre_booking') return 'bg-[#FFE08A] text-[#222421] border-[#FFE08A]';
-    if (status === 'signed_not_paid' || status === 'partial_paid') return 'bg-[#F3B2BF] text-[#222421] border-[#F3B2BF]';
-    if (status === 'paid') return 'bg-[#8CAFBE] text-[#222421] border-[#8CAFBE]';
-    if (status === 'closed') return 'bg-[#6E6964] text-[#F4F1EA] border-[#6E6964]';
+    if (status === 'pre_booking') return 'bg-[#FFE08A]/65 text-[#1A1C1B] border-[#FFE08A]/50';
+    if (status === 'signed_not_paid' || status === 'partial_paid') return 'bg-[#F3B2BF]/65 text-[#1A1C1B] border-[#F3B2BF]/50';
+    if (status === 'paid') return 'bg-[#8CAFBE]/65 text-[#1A1C1B] border-[#8CAFBE]/50';
+    if (status === 'closed') return 'bg-[#6E6964]/65 text-[#F4F1EA] border-[#6E6964]/50';
     return 'bg-[#2F3330] text-[#B4CDD2] border-[#3D423E]';
   };
 
@@ -415,7 +415,9 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                     )}
                   >
                     <div className={cn("text-sm font-black", isDarkMode ? "text-[#F4F1EA]" : "text-gray-900")}>{format(day, 'd', { locale: ru })}</div>
-                    <div className={cn("text-[10px] uppercase tracking-wider", isDarkMode ? "text-[#B4CDD2]" : "text-gray-500")}>{format(day, 'EEE', { locale: ru })}</div>
+                    <div className={cn("text-[11px] font-medium", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-400")}>
+                      {format(day, 'EEEEEE', { locale: ru }).replace(/^./, c => c.toUpperCase())}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -433,10 +435,10 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
                       {object.seaView && (
-                        <span className="text-[9px] font-bold uppercase tracking-wide text-[#8CAFBE]">море</span>
+                        <Waves size={13} className="text-[#8CAFBE] shrink-0" title="Вид на море" />
                       )}
                     </div>
-                    <div className={cn("text-[11px] font-semibold leading-tight", isDarkMode ? "text-[#B4CDD2]" : "text-gray-400")}>{getRoomCategory(object)}</div>
+                    <div className={cn("text-[13px] font-semibold leading-tight mt-0.5", isDarkMode ? "text-[#B4CDD2]" : "text-gray-500")}>{getRoomCategory(object)}</div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {object.capacity && (
                         <span className={cn("text-[10px]", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>{object.capacity} чел</span>

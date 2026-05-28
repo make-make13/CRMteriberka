@@ -1025,8 +1025,21 @@ export class LocalDatabase {
   }
 
   saveEmailSettings<T extends object>(settings: T) {
-    const { appPassword: _appPassword, ...safeSettings } = settings as T & { appPassword?: unknown };
-    this.upsertJson('email_settings', 'smtp', safeSettings);
+    const typed = settings as T & { appPassword?: string };
+    const newPassword = (typed.appPassword ?? '').trim();
+    const { appPassword: _pw, ...rest } = typed as any;
+
+    let toSave: object;
+    if (newPassword) {
+      toSave = { ...rest, appPassword: newPassword };
+    } else {
+      // Preserve existing password if no new one provided
+      const existing = this.getEmailSettings<{ appPassword?: string }>() || {};
+      toSave = existing.appPassword ? { ...rest, appPassword: existing.appPassword } : rest;
+    }
+
+    this.upsertJson('email_settings', 'smtp', toSave);
+    const { appPassword: _stripped, ...safeSettings } = toSave as any;
     return safeSettings;
   }
 

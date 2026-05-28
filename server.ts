@@ -92,7 +92,7 @@ function cleanString(value: unknown) {
 function getSmtpConfig(body: any) {
   const storedSettings = localDb.getEmailSettings<any>() || {};
   const senderEmail = process.env.SMTP_USER || storedSettings.senderEmail;
-  const appPassword = process.env.SMTP_PASSWORD;
+  const appPassword = process.env.SMTP_PASSWORD || storedSettings.appPassword;
   const senderName = process.env.SMTP_FROM_NAME || storedSettings.senderName || body.senderName || '';
   const host = process.env.SMTP_HOST || 'smtp.yandex.ru';
   const port = Number(process.env.SMTP_PORT || 465);
@@ -191,7 +191,15 @@ async function startServer() {
   });
 
   app.delete('/api/clients/:id', requireAdmin, (req, res) => {
-    localDb.deleteClient(req.params.id);
+    const id = req.params.id;
+    const linked = (localDb.listContractsByClient(id) as unknown[]);
+    if (linked.length > 0) {
+      res.status(409).json({
+        error: `Нельзя удалить гостя: найдено договоров/предброней — ${linked.length}. Сначала удалите или отмените все связанные договоры.`,
+      });
+      return;
+    }
+    localDb.deleteClient(id);
     res.json({ success: true });
   });
 

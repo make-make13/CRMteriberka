@@ -187,70 +187,69 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
             <thead>
               <tr className={cn(
                 "text-left text-[10px] uppercase tracking-wider font-bold",
-                isDarkMode ? "text-[#B4CDD2] bg-white/[0.05]" : "text-gray-400 bg-gray-50"
+                isDarkMode ? "text-[#B4CDD2]/70 bg-white/[0.05]" : "text-gray-400 bg-gray-50"
               )}>
-                <th className="p-4 border-b border-[#3D423E]">Тип</th>
-                <th className="p-4 border-b border-[#3D423E]">Имя / Организация</th>
-                <th className="p-4 border-b border-[#3D423E]">Контакты</th>
-                <th className="p-4 border-b border-[#3D423E]">Адрес</th>
-                <th className="p-4 border-b border-[#3D423E] text-right">Статус</th>
-                {canDeleteClients && <th className="p-4 border-b border-[#3D423E] text-right">Действия</th>}
+                <th className="px-5 py-3 border-b border-white/[0.08]">Тип</th>
+                <th className="px-5 py-3 border-b border-white/[0.08]">Имя / Организация</th>
+                <th className="px-5 py-3 border-b border-white/[0.08]">Контакты</th>
+                <th className="px-5 py-3 border-b border-white/[0.08]">Адрес</th>
+                <th className="px-5 py-3 border-b border-white/[0.08] text-right">Статус</th>
+                {canDeleteClients && <th className="px-5 py-3 border-b border-white/[0.08] text-right">Действия</th>}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/[0.06]">
               {visibleClients.map(client => (
-                <tr 
-                  key={client.id} 
+                <tr
+                  key={client.id}
                   onDoubleClick={() => handleViewClient(client)}
                   className={cn(
                   "group transition-colors cursor-pointer",
-                  isDarkMode ? "hover:bg-white/[0.02] border-[#3D423E]" : "hover:bg-gray-50 border-gray-100",
-                  "border-b last:border-0"
+                  isDarkMode ? "hover:bg-white/[0.04]" : "hover:bg-gray-50",
                 )}>
-                  <td className="p-4">
+                  <td className="px-5 py-4">
                     {client.type === 'physical' ? (
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                      <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400">
                         <User size={18} />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+                      <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-400">
                         <Building2 size={18} />
                       </div>
                     )}
                   </td>
-                  <td className="p-4">
-                    <div className="font-bold">
-                      {client.type === 'physical' 
+                  <td className="px-5 py-4">
+                    <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                      {client.type === 'physical'
                         ? `${client.lastName} ${client.firstName} ${client.middleName || ''}`
                         : client.organizationName}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
                         {client.type === 'physical' ? `Паспорт: ${client.passportSeries} ${client.passportNumber}` : `ИНН: ${client.inn}`}
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="text-sm">{client.phone}</div>
-                    <div className="text-xs text-gray-500">{client.email || '—'}</div>
+                  <td className="px-5 py-4">
+                    <div className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>{client.phone}</div>
+                    <div className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>{client.email || '—'}</div>
                   </td>
-                  <td className="p-4">
-                    <div className="text-sm line-clamp-2 text-gray-600 dark:text-gray-400">
+                  <td className="px-5 py-4">
+                    <div className={cn('text-sm line-clamp-2', isDarkMode ? 'text-[#B4CDD2]/80' : 'text-gray-600')}>
                       {client.type === 'physical' ? (client.registrationAddress || '—') : (client.legalAddress || '—')}
                     </div>
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="px-5 py-4 text-right">
                     {client.isBlacklisted ? (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/10 text-red-500 text-[10px] font-bold uppercase">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-bold uppercase">
                         <Ban size={12} />
                         Чёрный список
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-[10px] font-bold uppercase">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-teal-400/20 text-teal-300 border border-teal-400/30 text-[10px] font-bold uppercase">
                         Активен
                       </span>
                     )}
                   </td>
                   {canDeleteClients && (
-                    <td className="p-4 text-right">
+                    <td className="px-5 py-4 text-right">
                       <button
                         type="button"
                         onClick={(event) => {
@@ -258,8 +257,8 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                           setClientPendingDelete(client);
                         }}
                         className={cn(
-                          "inline-flex h-9 w-9 items-center justify-center rounded-xl text-red-500 transition-all",
-                          isDarkMode ? "bg-red-500/10 hover:bg-red-500/20" : "bg-red-50 hover:bg-red-100"
+                          "inline-flex h-9 w-9 items-center justify-center rounded-xl text-red-400 transition-all",
+                          isDarkMode ? "bg-red-500/10 hover:bg-red-500/20 border border-red-500/20" : "bg-red-50 hover:bg-red-100"
                         )}
                         title="Удалить гостя"
                       >
