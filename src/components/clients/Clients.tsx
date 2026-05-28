@@ -135,7 +135,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
           whileTap={{ scale: 0.95 }}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-            isDarkMode ? "bg-[#8CAFBE] text-[#222421] hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+            isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
           <Plus size={18} />
@@ -287,7 +287,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                 onClick={handleAddClient}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all",
-                  isDarkMode ? "bg-[#8CAFBE] text-black hover:bg-[#B4CDD2]" : "bg-orange-500 text-white hover:bg-orange-600"
+                  isDarkMode ? "bg-[#D98E2B] text-[#1A1C1B] hover:bg-[#F2B35B]" : "bg-orange-500 text-white hover:bg-orange-600"
                 )}
               >
                 <Plus size={17} />
@@ -337,7 +337,9 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
       </div>
 
       {isModalOpen && (
-        <ClientModal 
+        <ClientModal
+          isDarkMode={isDarkMode}
+          onClose={() => setIsModalOpen(false)}
           onSave={handleSaveClient}
           initialData={editingClient}
           mode={modalMode}
