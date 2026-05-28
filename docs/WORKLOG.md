@@ -26,6 +26,38 @@ Next recommended step:
 
 ## Entries
 
+### 2026-05-28 — Investigate guest deletion guard failure (post-mortem)
+
+Backup created before investigation:
+`data/backups/manual-before-guest-delete-guard-fix-2026-05-28-08-38-23.crm.sqlite`
+
+**Root cause of guard failure:**
+The server runs via `npm run dev` → `tsx server.ts` (no auto-reload/watch).
+After commit `e385aff` added the `listContractsByClient` guard, the running server
+process was NOT restarted. The old code (without the guard) continued running and
+directly called `deleteClient` with no contract check.
+
+The guard code itself is correct:
+- SQL `WHERE client_id = ?` finds contracts correctly (verified directly in SQLite)
+- `apiRequest` correctly propagates HTTP 409 as a thrown Error
+- UI catch block shows toast and closes dialog (fixed in `ca74217`)
+
+No code changes needed. The guard is correct and will work after server restart.
+
+**Data state after incident:**
+- clients table: 0 rows (all deleted during testing)
+- contracts table: 3 rows with orphaned client_ids:
+  - `client-1779903443154-zfyotz` → contract БМ1 (recoverable from daily backup)
+  - `client-1779915472838-2sukfz` → contract ЧЧ2 (already missing before this session)
+  - `client-1779917238631-4j9es7` → contract БМ3 (already missing before this session)
+
+**Recoverable client (from daily backup `crm-daily-2026-05-28-08-24-12.zip`):**
+"Тест после очистки" — test client (empty passport, test phone/email).
+Recovery SQL available on request; awaiting user confirmation before restoring.
+
+**Action required by user:**
+Restart the server (`npm run dev`) to activate the guard code from commit `e385aff`.
+
 ### 2026-05-28 — Fix guest deletion warning visibility
 
 Files changed:
