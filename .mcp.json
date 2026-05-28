@@ -13,11 +13,14 @@
       "url": "https://mcp.supabase.com/mcp?project_ref=mvhedjznddqrzlatuwqy&read_only=true&features=database,docs"
     },
     "shadcn": {
+      "type": "stdio",
       "command": "npx",
       "args": [
+        "-y",
         "shadcn@latest",
         "mcp"
-      ]
+      ],
+      "env": {}
     }
   }
 }
