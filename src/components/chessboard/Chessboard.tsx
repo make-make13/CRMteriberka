@@ -106,15 +106,8 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   };
 
   const getStatusLabel = (status: string | undefined) => {
-    switch (status) {
-      case 'pre_booking': return 'Предбронь';
-      case 'signed_not_paid': return 'Занят';
-      case 'partial_paid': return 'Занят';
-      case 'paid': return 'Проживает';
-      case 'closed': return 'Закрыт';
-      case 'cancelled': return 'Отменён';
-      default: return 'Свободен';
-    }
+    if (status === 'pre_booking') return 'Предбронь';
+    return 'Забронирован';
   };
 
   const getClientInfo = (contract: Contract | null | undefined) => {
@@ -157,11 +150,8 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   ].filter(Boolean);
 
   const getStatusClasses = (status: string | undefined) => {
-    if (status === 'pre_booking') return 'bg-[#FFE08A]/65 text-[#1A1C1B] border-[#FFE08A]/50';
-    if (status === 'signed_not_paid' || status === 'partial_paid') return 'bg-[#F3B2BF]/65 text-[#1A1C1B] border-[#F3B2BF]/50';
-    if (status === 'paid') return 'bg-[#8CAFBE]/65 text-[#1A1C1B] border-[#8CAFBE]/50';
-    if (status === 'closed') return 'bg-[#6E6964]/65 text-[#F4F1EA] border-[#6E6964]/50';
-    return 'bg-[#2F3330] text-[#B4CDD2] border-[#3D423E]';
+    if (status === 'pre_booking') return 'bg-[#2D9CDB] text-white border-[#2D9CDB]';
+    return 'bg-[#F97316] text-white border-[#F97316]';
   };
 
   const getBookingForObjectOnDay = (objectId: string, date: Date) => {
@@ -265,7 +255,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
     <div className="flex flex-col gap-6">
       <div className={cn(
         "flex flex-col gap-4 rounded-2xl border p-4",
-        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200 shadow-sm",
+        isDarkMode ? "bg-[#0A0A0A] border-white/10" : "bg-white border-gray-200 shadow-sm",
       )}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -275,7 +265,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                 whileTap={{ scale: 0.9 }}
                 className={cn(
                   "p-2 rounded-lg transition-all",
-                  isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-600",
+                  isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100 text-gray-600",
                 )}
               >
                 <ChevronLeft size={20} />
@@ -288,7 +278,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                 whileTap={{ scale: 0.9 }}
                 className={cn(
                   "p-2 rounded-lg transition-all",
-                  isDarkMode ? "hover:bg-[#292B28] text-[#B4CDD2] hover:text-[#F4F1EA]" : "hover:bg-gray-100 text-gray-600",
+                  isDarkMode ? "hover:bg-[#1A1A1A] text-[#8B8B8B] hover:text-[#F5F5F5]" : "hover:bg-gray-100 text-gray-600",
                 )}
               >
                 <ChevronRight size={20} />
@@ -306,8 +296,8 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                     selectedPeriod === period.id
-                      ? "bg-[#D98E2B] text-[#1A1C1B]"
-                      : isDarkMode ? "text-[#B4CDD2] hover:text-[#F4F1EA]" : "text-gray-600 hover:text-gray-900",
+                      ? "bg-[#F97316] text-white"
+                      : isDarkMode ? "text-[#8B8B8B] hover:text-[#F5F5F5]" : "text-gray-600 hover:text-gray-900",
                   )}
                 >
                   {period.label}
@@ -320,7 +310,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               onChange={event => setSelectedCategory(event.target.value)}
               className={cn(
                 "h-9 rounded-lg border px-3 text-sm outline-none transition-all",
-                isDarkMode ? "bg-[#222421] border-[#3D423E] text-[#F4F1EA] focus:border-[#D98E2B]" : "bg-white border-gray-200 text-gray-800",
+                isDarkMode ? "bg-[#161616] border-[#262626] text-[#F5F5F5] focus:border-[#F97316]" : "bg-white border-gray-200 text-gray-800",
               )}
             >
               <option value="all">Все категории</option>
@@ -337,7 +327,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                isDarkMode ? "bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-gray-100 hover:bg-gray-200 text-gray-600",
+                isDarkMode ? "bg-[#161616] border border-[#262626] hover:border-[#8B8B8B] text-[#8B8B8B] hover:text-[#F5F5F5]" : "bg-gray-100 hover:bg-gray-200 text-gray-600",
               )}
             >
               <Download size={18} />
@@ -349,7 +339,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                isDarkMode ? "bg-[#222421] border border-[#3D423E] hover:border-[#B4CDD2] text-[#B4CDD2] hover:text-[#F4F1EA]" : "bg-gray-100 hover:bg-gray-200 text-gray-600",
+                isDarkMode ? "bg-[#161616] border border-[#262626] hover:border-[#8B8B8B] text-[#8B8B8B] hover:text-[#F5F5F5]" : "bg-gray-100 hover:bg-gray-200 text-gray-600",
                 isSendingEmail && "opacity-50 cursor-not-allowed",
               )}
             >
@@ -379,26 +369,23 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
 
         <div className={cn(
           "flex flex-wrap items-center gap-4 text-xs p-3 rounded-xl border",
-          isDarkMode ? "text-[#F4F1EA] bg-white/[0.04] border-white/10" : "text-gray-500 bg-gray-50 border-gray-100 shadow-sm"
+          isDarkMode ? "text-[#F5F5F5] bg-white/[0.04] border-white/10" : "text-gray-500 bg-gray-50 border-gray-100 shadow-sm"
         )}>
-          <div className="flex items-center gap-2"><span className={cn("w-3 h-3 rounded-full border", isDarkMode ? "bg-[#2F3330] border-[#3D423E]" : "bg-white border-gray-300")} />Свободен</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#F3B2BF]" />Занят</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#FFE08A]" />Предбронь</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#8CAFBE]" />Проживает</div>
-          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#6E6964]" />Закрыт</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#F97316]" />Забронирован</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#2D9CDB]" />Предбронь</div>
         </div>
       </div>
 
       <div className={cn(
         "rounded-2xl border overflow-hidden",
-        isDarkMode ? "bg-[#111111] border-white/10" : "bg-white border-gray-200 shadow-sm",
+        isDarkMode ? "bg-[#0A0A0A] border-white/10" : "bg-white border-gray-200 shadow-sm",
       )}>
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
-            <div className={cn("grid grid-cols-[320px_1fr] border-b", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
+            <div className={cn("grid grid-cols-[320px_1fr] border-b", isDarkMode ? "border-[#262626]" : "border-gray-200")}>
               <div className={cn(
                 "p-3 text-[10px] uppercase tracking-wider font-semibold border-r",
-                isDarkMode ? "text-[#B4CDD2] border-[#3D423E] bg-[#111111]" : "text-gray-400 border-gray-100 bg-gray-50/50",
+                isDarkMode ? "text-[#8B8B8B] border-[#262626] bg-[#0A0A0A]" : "text-gray-400 border-gray-100 bg-gray-50/50",
               )}>
                 Номера
               </div>
@@ -411,11 +398,11 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                     key={day.toISOString()}
                     className={cn(
                       "p-2 text-center border-r last:border-r-0",
-                      isDarkMode ? "border-[#3D423E] bg-[#111111]" : "border-gray-100",
+                      isDarkMode ? "border-[#262626] bg-[#0A0A0A]" : "border-gray-100",
                     )}
                   >
-                    <div className={cn("text-sm font-black", isDarkMode ? "text-[#F4F1EA]" : "text-gray-900")}>{format(day, 'd', { locale: ru })}</div>
-                    <div className="text-[11px] font-medium text-[#F4F1EA]">
+                    <div className={cn("text-sm font-black", isDarkMode ? "text-[#F5F5F5]" : "text-gray-900")}>{format(day, 'd', { locale: ru })}</div>
+                    <div className="text-[11px] font-medium text-[#F5F5F5]">
                       {format(day, 'EEEE', { locale: ru })}
                     </div>
                   </div>
@@ -427,21 +414,21 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
               const visibleBookings = getVisibleBookingsForObject(object.id);
 
               return (
-                <div key={object.id} className={cn("grid grid-cols-[320px_1fr] min-h-[72px] border-b last:border-b-0", isDarkMode ? "border-[#3D423E]" : "border-gray-200")}>
+                <div key={object.id} className={cn("grid grid-cols-[320px_1fr] min-h-[72px] border-b last:border-b-0", isDarkMode ? "border-[#262626]" : "border-gray-200")}>
                   <div className={cn(
                     "px-3 py-2.5 border-r flex flex-col justify-center gap-1",
-                    isDarkMode ? "border-[#3D423E] bg-[#111111]" : "border-gray-100 bg-gray-50/20",
+                    isDarkMode ? "border-[#262626] bg-[#0A0A0A]" : "border-gray-100 bg-gray-50/20",
                   )}>
                     <div className="flex items-center gap-1.5">
-                      <div className="text-xs font-black leading-none text-[#F4F1EA]">{getRoomName(object)}</div>
-                      <div className="text-sm font-bold leading-none text-[#F4F1EA] uppercase">{getRoomCategory(object)}</div>
+                      <div className="text-xs font-black leading-none text-[#F5F5F5]">{getRoomName(object)}</div>
+                      <div className="text-sm font-bold leading-none text-[#F5F5F5] uppercase">{getRoomCategory(object)}</div>
                       {object.seaView && (
                         <Waves size={12} className="text-[#8CAFBE] shrink-0" title="Вид на море" />
                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       {object.capacity && (
-                        <span className={cn("text-[11px]", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>{object.capacity} чел</span>
+                        <span className={cn("text-[11px]", isDarkMode ? "text-[#8B8B8B]/70" : "text-gray-500")}>{object.capacity} чел</span>
                       )}
                       {object.pricePerNight && (
                         <span className={cn("text-[11px] font-bold", isDarkMode ? "text-[#FFD700]" : "text-amber-600")}>{formatRoomPrice(object.pricePerNight)}</span>
@@ -462,7 +449,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                             onClick={() => !booking && handleFreeCellClick(object.id, day)}
                             className={cn(
                               "border-r last:border-r-0 transition-all",
-                              isDarkMode ? "border-[#3D423E] hover:bg-[#3D423E]/50" : "border-gray-100 hover:bg-gray-50",
+                              isDarkMode ? "border-[#262626] hover:bg-[#262626]/50" : "border-gray-100 hover:bg-gray-50",
                               booking && "cursor-default",
                             )}
                             aria-label={`${getRoomName(object)}, ${format(day, 'd MMMM yyyy', { locale: ru })}`}

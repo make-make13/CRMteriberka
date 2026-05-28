@@ -53,6 +53,39 @@ Completed:
 Checks run:
 - No business logic changes
 
+#### Session 4: Chessboard re-skin to previous app design (branch)
+Branch: `feature/chessboard-restyle` (created off main for safe rollback — `git checkout main` reverts)
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Goal: keep current chessboard LAYOUT, adopt the COLOR/FONT style from the user's previous app (Figma reference). Layout untouched, only visual tokens.
+
+Completed:
+- Accent color: muted gold #D98E2B → bright orange #F97316 (period buttons, select focus, active states)
+- Background: #111111 → near-black #0A0A0A
+- Borders: warm graphite #3D423E → neutral #262626
+- Secondary text: teal #B4CDD2 → neutral gray #8B8B8B
+- Primary text: warm white #F4F1EA → cool white #F5F5F5
+- Button/select surface: #222421 → #161616; nav hover #292B28 → #1A1A1A
+- Statuses simplified per user: removed "Свободен" entirely; only two states remain:
+  - "Забронирован" → orange #F97316 (collapses signed_not_paid/partial_paid/paid/closed)
+  - "Предбронь" → blue #2D9CDB
+- Legend reduced to 2 items (Забронирован, Предбронь)
+- getBookingStatus computation NOT changed (booking conflict logic untouched) — only display label/colors collapsed
+- Price kept yellow #FFD700 per earlier user preference (candidate for follow-up if it should match orange accent)
+- Sea icon kept teal #8CAFBE
+
+Checks run:
+- Playwright: chessboard loads, orange accent applied, near-black bg, neutral grays, 2-item legend, full day names, console has no errors
+- Note: current visible period had no bookings, so badge colors confirmed via legend + getStatusClasses (not live booking plашки)
+- No npm run lint / build (UI-only, per project policy)
+
+Next:
+- User review of restyle on branch; if approved, merge to main; then continue interface unification.
+
+Risks/TODOs:
+- Status display collapsed 5→2 in chessboard view only; other modules (Договоры/Заявки) still use their own status labels — unaffected.
+
 Next:
 - Continue with visual interface unification.
 
