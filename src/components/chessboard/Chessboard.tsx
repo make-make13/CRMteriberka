@@ -423,17 +423,14 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                       <div className="text-xs font-black leading-none text-[#F5F5F5]">{getRoomName(object)}</div>
                       <div className="text-sm font-bold leading-none text-[#F5F5F5] uppercase">{getRoomCategory(object)}</div>
                       {object.seaView && (
-                        <Waves size={12} className="text-[#8CAFBE] shrink-0" title="Вид на море" />
+                        <Waves size={18} strokeWidth={2.5} className="text-[#2D9CDB] shrink-0" title="Вид на море" />
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {object.capacity && (
-                        <span className={cn("text-[11px]", isDarkMode ? "text-[#8B8B8B]/70" : "text-gray-500")}>{object.capacity} чел</span>
-                      )}
-                      {object.pricePerNight && (
-                        <span className={cn("text-[11px] font-bold", isDarkMode ? "text-[#FFD700]" : "text-amber-600")}>{formatRoomPrice(object.pricePerNight)}</span>
-                      )}
-                    </div>
+                    {object.pricePerNight && (
+                      <div className={cn("text-xs font-semibold mt-1.5", isDarkMode ? "text-[#F5F5F5]" : "text-gray-700")}>
+                        {formatRoomPrice(object.pricePerNight)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative">

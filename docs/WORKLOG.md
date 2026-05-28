@@ -86,6 +86,23 @@ Next:
 Risks/TODOs:
 - Status display collapsed 5→2 in chessboard view only; other modules (Договоры/Заявки) still use their own status labels — unaffected.
 
+#### Session 5: Room card cleanup (branch)
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+
+Completed:
+- Removed capacity ("N чел") from the left room column
+- Price color: yellow #FFD700 → white #F5F5F5, placed on its own line under the name (mt-1.5) for a cleaner card
+- Sea view icon made more noticeable: size 12 → 18, strokeWidth 2.5, color #8CAFBE → vivid blue #2D9CDB; still only for rooms with seaView
+
+Checks run:
+- Playwright: card shows name + UPPERCASE category + bolder blue sea icon, white price below, no capacity; console no errors
+- No npm run lint / build (UI-only)
+
+Risks/TODOs:
+- None.
+
 Next:
 - Continue with visual interface unification.
 
