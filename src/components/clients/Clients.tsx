@@ -172,8 +172,8 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
               className={cn(
                 "flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
                 filter === item.id
-                  ? (isDarkMode ? "bg-[#161616] text-[#F4F1EA]" : "bg-white text-black shadow-sm")
-                  : (isDarkMode ? "text-[#8F9894] hover:bg-[#111111] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
+                  ? (isDarkMode ? "bg-[#232323] text-[#F4F1EA] border border-[#3a3a3a]" : "bg-white text-black shadow-sm")
+                  : (isDarkMode ? "text-[#8F9894] hover:bg-[#161616] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >
               {item.icon && <item.icon size={12} className={item.id === 'blacklist' && filter !== item.id ? 'text-[#F3B2BF]' : ''} />}
@@ -257,7 +257,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                         Чёрный список
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-teal-400/15 text-teal-300 border border-teal-400/25 text-[10px] font-bold uppercase tracking-wide">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wide">
                         Активен
                       </span>
                     )}
@@ -272,7 +272,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                           setClientPendingDelete(client);
                         }}
                         className={cn(
-                          "inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-400 transition-all opacity-0 group-hover:opacity-100",
+                          "inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-400 transition-all opacity-40 group-hover:opacity-100",
                           isDarkMode ? "bg-red-500/10 hover:bg-red-500/20 border border-red-500/20" : "bg-red-50 hover:bg-red-100"
                         )}
                         title="Удалить гостя"

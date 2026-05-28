@@ -496,7 +496,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           disabled={quickGeneratingId === `${contract.id}:print`}
                           className={cn(
                             "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 border",
-                            isDarkMode ? "bg-[#161616] border-[#262626] hover:bg-[#1A1A1A] hover:border-[#8B8B8B]/40 text-[#8B8B8B] hover:text-[#F5F5F5]" : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent"
+                            isDarkMode ? "bg-[#111111] border-[#232323] hover:bg-[#161616] hover:border-[#3a3a3a] text-[#8F9894] hover:text-[#F4F1EA]" : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent"
                           )}
                         >
                           {quickGeneratingId === `${contract.id}:print` ? <Loader2 size={14} className="animate-spin" /> : <Printer size={14} />}
@@ -508,7 +508,7 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           disabled={quickGeneratingId === `${contract.id}:send`}
                           className={cn(
                             "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 border",
-                            isDarkMode ? "bg-[#2D9CDB]/15 border-[#2D9CDB]/30 text-[#2D9CDB] hover:bg-[#2D9CDB]/25" : "bg-orange-50 text-orange-700 hover:bg-orange-100 border-transparent"
+                            isDarkMode ? "bg-[#F97316]/10 border-[#F97316]/25 text-[#F97316] hover:bg-[#F97316]/20" : "bg-orange-50 text-orange-700 hover:bg-orange-100 border-transparent"
                           )}
                         >
                           {quickGeneratingId === `${contract.id}:send` ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
