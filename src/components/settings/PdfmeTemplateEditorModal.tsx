@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Template } from '@pdfme/common';
 import { Designer } from '@pdfme/ui';
 import { X, Save, RotateCcw, Loader2, Eye, ChevronLeft, ChevronRight, Undo2, AlignLeft, Bookmark } from 'lucide-react';
@@ -655,7 +655,8 @@ export default function PdfmeTemplateEditorModal({
         const tpl = await (async () => {
           if (templateId === PDFME_CC_CONTRACT_TEMPLATE_ID) {
             if (saved?.template?.schemas) {
-              return saved.template;
+              const invoiceTemplate = await loadInvoiceTemplateForPackage();
+              return createChungaChangaPackagePdfmeTemplate(saved.template, invoiceTemplate);
             }
 
             return createDefaultTemplateForId(templateId);
@@ -663,7 +664,8 @@ export default function PdfmeTemplateEditorModal({
 
           if (templateId === PDFME_GB_CONTRACT_TEMPLATE_ID) {
             if (saved?.template?.schemas) {
-              return saved.template;
+              const invoiceTemplate = await loadInvoiceTemplateForPackage();
+              return createGolubayaBukhtaPackagePdfmeTemplate(saved.template, invoiceTemplate);
             }
 
             return createDefaultTemplateForId(templateId);
@@ -671,7 +673,9 @@ export default function PdfmeTemplateEditorModal({
 
           if (templateId === PDFME_BANYA_CONTRACT_TEMPLATE_ID) {
             if (saved?.template?.schemas) {
-              return saved.template;
+              const gbSaved = await pdfTemplateApi.get<Template>(PDFME_GB_CONTRACT_TEMPLATE_ID);
+              const gbSourceTemplate = gbSaved?.template?.schemas ? gbSaved.template : saved.template;
+              return createBanyaPackagePdfmeTemplate(gbSourceTemplate, saved.template);
             }
 
             return createDefaultTemplateForId(templateId);

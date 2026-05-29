@@ -669,6 +669,19 @@ function cloneTemplatePageWithSchema(template: Template, schemaName: string, fal
 const CC_CONTRACT_FONT_SIZE = 8;
 const CC_CONTRACT_LINE_HEIGHT = 1.15;
 
+const CC_CLIENT_REQUISITES_VARIABLES = [
+  'client_name',
+  'client_dob',
+  'client_passport_type',
+  'client_passport',
+  'client_passport_date',
+  'client_passport_by',
+  'client_passport_code',
+  'client_address',
+  'client_phone',
+  'client_email',
+];
+
 const CC_LAYOUT_OVERRIDES: Record<string, SchemaOptions> = {
   cc_contract_header: { position: { x: 64, y: 10 }, height: 6.5 },
   cc_contract_subtitle: {
@@ -712,7 +725,26 @@ const CC_LAYOUT_OVERRIDES: Record<string, SchemaOptions> = {
     lineHeight: 1.12,
     alignment: 'center',
   },
-  cc_client_requisites: { position: { x: 110, y: 136 }, width: 82, height: 44, fontSize: 7.75, lineHeight: 1.12 },
+  cc_client_requisites: {
+    type: 'multiVariableText',
+    text: 'Ф.И.О.: {client_name}\n'
+      + 'Дата рождения: {client_dob}\n'
+      + 'Тип документа: {client_passport_type}\n'
+      + 'Серия и номер: {client_passport}\n'
+      + 'Дата выдачи: {client_passport_date}\n'
+      + 'Кем выдан: {client_passport_by}\n'
+      + 'Код подразделения: {client_passport_code}\n'
+      + 'Адрес регистрации: {client_address}\n'
+      + 'Телефон: {client_phone}\n'
+      + 'E-mail: {client_email}',
+    variables: CC_CLIENT_REQUISITES_VARIABLES,
+    boldVariableFontName: 'NotoSerifBold',
+    position: { x: 110, y: 136 },
+    width: 82,
+    height: 44,
+    fontSize: 7.75,
+    lineHeight: 1.12,
+  },
 
   cc_addendum_city: { position: { x: 22, y: 25 } },
   cc_addendum_date: { position: { x: 153, y: 24 }, width: 40 },
@@ -790,6 +822,16 @@ const CC_OLD_CLIENT_REQUISITES_FIELDS = new Set([
   'client_phone',
   'cc_client_email_label',
   'client_email',
+  'cc_client_name_label',
+  'client_name',
+  'cc_client_address_label',
+  'client_address',
+  'cc_client_passport_type_label',
+  'client_passport_type',
+  'cc_client_passport_date_label',
+  'client_passport_date',
+  'cc_client_passport_code_label',
+  'client_passport_code',
 ]);
 const CC_SECTION_1_BODY_VARIABLES = [
   'cottage_number',
@@ -801,13 +843,6 @@ const CC_SECTION_1_BODY_VARIABLES = [
   'prepayment_words',
   'total',
   'total_words',
-];
-const CC_CLIENT_REQUISITES_VARIABLES = [
-  'client_dob',
-  'client_passport',
-  'client_passport_by',
-  'client_phone',
-  'client_email',
 ];
 const CC_SECTION_3_BODY_TEXT = [
   '3.1. В целях обеспечения надлежащего порядка Сторона-1 вправе осуществлять видеоконтроль территории.',
@@ -947,7 +982,16 @@ function migrateChungaChangaContractPage(page: Template['schemas'][number]) {
       if (shouldCreateClientRequisites && !insertedClientRequisites) {
         migrated.push(mvt(
           'cc_client_requisites',
-          'Дата рождения: {client_dob}\nПаспорт: {client_passport}\nВыдан: {client_passport_by}\nТелефон: {client_phone}\nЭлектронная почта: {client_email}',
+          'Ф.И.О.: {client_name}\n'
+          + 'Дата рождения: {client_dob}\n'
+          + 'Тип документа: {client_passport_type}\n'
+          + 'Серия и номер: {client_passport}\n'
+          + 'Дата выдачи: {client_passport_date}\n'
+          + 'Кем выдан: {client_passport_by}\n'
+          + 'Код подразделения: {client_passport_code}\n'
+          + 'Адрес регистрации: {client_address}\n'
+          + 'Телефон: {client_phone}\n'
+          + 'E-mail: {client_email}',
           CC_CLIENT_REQUISITES_VARIABLES,
           112,
           175,
