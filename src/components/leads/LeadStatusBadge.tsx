@@ -18,13 +18,13 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 const statusClass: Record<LeadStatus, string> = {
-  new: 'bg-sky-400/20 text-sky-300 border-sky-400/30',
-  in_progress: 'bg-amber-400/20 text-amber-300 border-amber-400/30',
-  client_created: 'bg-teal-400/20 text-teal-300 border-teal-400/30',
-  prebooking_created: 'bg-[#FFE08A]/20 text-[#FFE08A] border-[#FFE08A]/35',
-  contract_created: 'bg-[#8CAFBE]/20 text-[#8CAFBE] border-[#8CAFBE]/40',
-  rejected: 'bg-[#F3B2BF]/20 text-[#F3B2BF] border-[#F3B2BF]/35',
-  duplicate: 'bg-white/[0.08] text-[#B4CDD2]/70 border-white/10',
+  new:                'bg-blue-500/10 text-blue-400',
+  in_progress:        'bg-amber-500/10 text-amber-400',
+  client_created:     'bg-green-500/10 text-green-500',
+  prebooking_created: 'bg-sky-500/10 text-sky-400',
+  contract_created:   'bg-green-500/10 text-green-500',
+  rejected:           'bg-red-500/10 text-red-500',
+  duplicate:          'bg-[#161616] text-[#8F9894]',
 };
 
 const statusIcon: Record<LeadStatus, typeof CircleDot> = {
@@ -45,12 +45,12 @@ interface LeadStatusBadgeProps {
 export default function LeadStatusBadge({ status, className }: LeadStatusBadgeProps) {
   const knownStatus = status as LeadStatus;
   const Icon = statusIcon[knownStatus] || CircleDot;
-  const classNameForStatus = statusClass[knownStatus] || 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+  const classNameForStatus = statusClass[knownStatus] || 'bg-[#161616] text-[#8F9894]';
   const label = LEAD_STATUS_LABELS[knownStatus] || 'Неизвестный статус';
 
   return (
     <span className={cn(
-      'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold',
+      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
       classNameForStatus,
       className
     )}>

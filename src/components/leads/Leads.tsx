@@ -194,6 +194,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Заголовок */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Заявки</h2>
         <div className="flex items-center gap-2">
@@ -203,7 +204,9 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             title="Проверить новые заявки с сайта"
             className={cn(
               'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
-              isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              isDarkMode
+                ? 'bg-[#161616] border border-[#232323] text-[#8F9894] hover:bg-[#1A1A1A] hover:text-[#F4F1EA]'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             )}
           >
             {isSyncing ? <Loader2 size={17} className="animate-spin" /> : <RefreshCw size={17} />}
@@ -213,7 +216,12 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             type="button"
             onClick={openNewLead}
             whileTap={{ scale: 0.96 }}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#D98E2B] px-4 py-2 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B]"
+            className={cn(
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
+              isDarkMode
+                ? 'bg-[#F59E0B] text-[#050505] hover:bg-[#D97706]'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            )}
           >
             <Plus size={18} />
             Новая заявка
@@ -221,49 +229,62 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         </div>
       </div>
 
-      <div className={cn('rounded-2xl border p-4', isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white')}>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className={cn(
-            'flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border px-3 py-2',
-            isDarkMode ? 'border-white/10 bg-black/30 focus-within:border-[#D98E2B]/60' : 'border-gray-200 bg-gray-50'
-          )}>
-            <Search size={18} className="text-gray-500" />
-            <input
-              value={searchQuery}
-              onChange={event => setSearchQuery(event.target.value)}
-              placeholder="Поиск по имени, телефону, email"
-              className="w-full bg-transparent text-sm outline-none text-[#F4F1EA] placeholder:text-[#B4CDD2]/45"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {STATUS_FILTERS.map(item => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setStatusFilter(item.id)}
-                className={cn(
-                  'rounded-xl px-3 py-2 text-xs font-bold transition-colors',
-                  statusFilter === item.id
-                    ? 'bg-[#D98E2B] text-[#1A1C1B]'
-                    : (isDarkMode ? 'bg-white/[0.05] text-[#B4CDD2] hover:bg-white/[0.08] hover:text-[#F4F1EA] border border-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+      {/* Поиск + фильтры */}
+      <div className="flex flex-col gap-3">
+        <div className={cn(
+          'flex items-center gap-2 rounded-xl border px-3 py-2',
+          isDarkMode ? 'border-[#232323] bg-[#161616] focus-within:border-[#F59E0B]/60' : 'border-gray-200 bg-gray-50'
+        )}>
+          <Search size={16} className="text-[#8F9894] shrink-0" />
+          <input
+            value={searchQuery}
+            onChange={event => setSearchQuery(event.target.value)}
+            placeholder="Поиск по имени, телефону, email"
+            className={cn(
+              'w-full bg-transparent text-sm outline-none',
+              isDarkMode ? 'text-[#F4F1EA] placeholder:text-[#8F9894]/60' : 'text-gray-800 placeholder:text-gray-400'
+            )}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {STATUS_FILTERS.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setStatusFilter(item.id)}
+              className={cn(
+                'rounded-xl px-3 py-1.5 text-xs font-bold transition-colors',
+                statusFilter === item.id
+                  ? (isDarkMode
+                    ? 'bg-[#F59E0B] text-[#050505] shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                    : 'bg-orange-500 text-white shadow-sm')
+                  : (isDarkMode
+                    ? 'bg-[#161616] border border-[#232323] text-[#8F9894] hover:bg-[#1A1A1A] hover:text-[#F4F1EA]'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className={cn('overflow-hidden rounded-2xl border', isDarkMode ? 'border-white/10 bg-[#111111]' : 'border-gray-200 bg-white')}>
+      {/* Таблица */}
+      <div className={cn(
+        'overflow-hidden rounded-xl border',
+        isDarkMode ? 'border-[#232323] bg-[#111111]' : 'border-gray-200 bg-white'
+      )}>
         {leadOpenError && (
-          <div className={cn('border-b px-4 py-3 text-sm font-medium', isDarkMode ? 'border-[#3D423E] bg-red-500/10 text-red-200' : 'border-red-100 bg-red-50 text-red-700')}>
+          <div className={cn(
+            'border-b px-4 py-3 text-sm font-medium',
+            isDarkMode ? 'border-[#232323] bg-red-500/10 text-red-500' : 'border-red-100 bg-red-50 text-red-700'
+          )}>
             {leadOpenError}
           </div>
         )}
         {isLoading ? (
           <div className="flex min-h-[260px] items-center justify-center">
-            <Loader2 className="animate-spin text-[#8CAFBE]" size={28} />
+            <Loader2 className={cn('animate-spin', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')} size={28} />
           </div>
         ) : filteredLeads.length === 0 ? (
           <EmptyState
@@ -272,7 +293,16 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
             title="Заявок пока нет"
             description="Заявок пока нет. Позже здесь будут отображаться обращения с сайта."
             action={leads.length === 0 ? (
-              <button type="button" onClick={openNewLead} className="inline-flex items-center gap-2 rounded-xl bg-[#D98E2B] px-4 py-2 text-sm font-bold text-[#1A1C1B]">
+              <button
+                type="button"
+                onClick={openNewLead}
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors',
+                  isDarkMode
+                    ? 'bg-[#F59E0B] text-[#050505] hover:bg-[#D97706]'
+                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                )}
+              >
                 <Plus size={17} />
                 Новая заявка
               </button>
@@ -282,65 +312,81 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] border-collapse text-sm">
               <thead>
-                <tr className={cn('text-left text-[10px] font-bold uppercase tracking-wider', isDarkMode ? 'bg-white/[0.05] text-[#B4CDD2]/70' : 'bg-gray-50 text-gray-400')}>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Дата</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Гость</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Контакты</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Даты</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Гостей</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Источник</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3">Статус</th>
-                  <th className="border-b border-white/[0.08] px-5 py-3 text-right">Действия</th>
+                <tr className={cn(
+                  'text-left text-[10px] font-bold uppercase tracking-wider',
+                  isDarkMode ? 'bg-[#161616] text-[#8F9894]' : 'bg-gray-50 text-gray-400'
+                )}>
+                  <th className="border-b border-[#232323] px-5 py-3">Дата</th>
+                  <th className="border-b border-[#232323] px-5 py-3">Гость</th>
+                  <th className="border-b border-[#232323] px-5 py-3">Контакты</th>
+                  <th className="border-b border-[#232323] px-5 py-3">Даты</th>
+                  <th className="border-b border-[#232323] px-5 py-3">Гостей</th>
+                  <th className="border-b border-[#232323] px-5 py-3">Источник</th>
+                  <th className="border-b border-[#232323] px-5 py-3">Статус</th>
+                  <th className="border-b border-[#232323] px-5 py-3 text-right">Действия</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y divide-[#232323]">
                 {filteredLeads.map(lead => (
-                  <tr key={lead.id} className={cn('transition-colors', isDarkMode ? 'hover:bg-white/[0.04] text-[#F4F1EA]' : 'hover:bg-gray-50')}>
-                    <td className="px-5 py-4">
-                      <div className={cn('text-xs leading-snug', isDarkMode ? 'text-[#B4CDD2]/60' : 'text-gray-500')}>
+                  <tr
+                    key={lead.id}
+                    className={cn(
+                      'transition-colors cursor-pointer',
+                      isDarkMode ? 'hover:bg-[#161616] text-[#F4F1EA]' : 'hover:bg-gray-50'
+                    )}
+                  >
+                    <td className="px-5 py-3.5">
+                      <div className={cn('text-xs leading-snug', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
                         {formatDateTime(lead.createdAt)}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className={cn('font-bold text-[15px] leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                    <td className="px-5 py-3.5">
+                      <div className={cn('font-bold text-sm leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
                         {cleanText(lead.guestName, 'Без имени')}
                       </div>
-                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
                         {cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-3.5">
                       <div className={cn('font-semibold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>
                         {cleanText(lead.phone, '—')}
                       </div>
-                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
                         {cleanText(lead.email, '—')}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className={cn('text-sm font-medium', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-700')}>
+                    <td className="px-5 py-3.5">
+                      <div className={cn('text-sm font-medium', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-700')}>
                         {formatDateRange(lead)}
                       </div>
-                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#6E6964]' : 'text-gray-400')}>
+                      <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
                         {cleanText(lead.desiredTime, '')}
                       </div>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className={cn('text-sm font-semibold', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-700')}>
+                    <td className="px-5 py-3.5">
+                      <span className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-700')}>
                         {lead.guestsCount ?? '—'}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className={cn('text-sm', isDarkMode ? 'text-[#B4CDD2]/80' : 'text-gray-600')}>
+                    <td className="px-5 py-3.5">
+                      <span className={cn('text-sm', isDarkMode ? 'text-[#8F9894]' : 'text-gray-600')}>
                         {formatLeadSource(lead.source)}
                       </span>
                     </td>
-                    <td className="px-5 py-4"><LeadStatusBadge status={lead.status} /></td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-5 py-3.5">
+                      <LeadStatusBadge status={lead.status} />
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
                       <button
                         type="button"
                         onClick={() => openLead(lead)}
-                        className={cn('rounded-xl px-4 py-2 text-xs font-bold transition-all', isDarkMode ? 'bg-white/[0.07] border border-white/15 hover:bg-white/[0.12] hover:border-white/25 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+                        className={cn(
+                          'rounded-xl px-4 py-2 text-xs font-bold transition-all',
+                          isDarkMode
+                            ? 'bg-[#161616] text-[#F4F1EA] hover:bg-[#232323]'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        )}
                       >
                         Открыть
                       </button>
