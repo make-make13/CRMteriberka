@@ -176,7 +176,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                   : (isDarkMode ? "text-[#8F9894] hover:bg-[#161616] hover:text-[#F4F1EA]" : "text-gray-500 hover:text-[#3D423E]")
               )}
             >
-              {item.icon && <item.icon size={12} className={item.id === 'blacklist' && filter !== item.id ? 'text-[#F3B2BF]' : ''} />}
+              {item.icon && <item.icon size={12} className="text-red-500" />}
               {item.label}
             </motion.button>
           ))}
