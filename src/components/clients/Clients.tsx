@@ -137,7 +137,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
           whileTap={{ scale: 0.95 }}
           className={cn(
             "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
-            isDarkMode ? "bg-[#F59E0B] text-[#050505] hover:bg-[#F97316] hover:text-white" : "bg-orange-500 text-white hover:bg-orange-600"
+            isDarkMode ? "bg-[#F59E0B] text-[#050505] hover:bg-[#D97706]" : "bg-orange-500 text-white hover:bg-orange-600"
           )}
         >
           <Plus size={16} />
@@ -301,7 +301,7 @@ export default function Clients({ isDarkMode, clients, setClients, canDeleteClie
                 onClick={handleAddClient}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
-                  isDarkMode ? "bg-[#F59E0B] text-[#050505] hover:bg-[#F97316] hover:text-white" : "bg-orange-500 text-white hover:bg-orange-600"
+                  isDarkMode ? "bg-[#F59E0B] text-[#050505] hover:bg-[#D97706]" : "bg-orange-500 text-white hover:bg-orange-600"
                 )}
               >
                 <Plus size={15} />

@@ -785,6 +785,32 @@ Checks run:
 - No npm run lint / build (UI-only, per project policy)
 - Reference sources only READ, never modified
 
+### 2026-05-29 — Match reference amber (#F59E0B) on filled buttons (branch)
+
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/contracts/Contracts.tsx`
+- `src/components/clients/Clients.tsx`
+
+Issue: our filled CTA/active-filter used the redder orange `#F97316` + white text,
+not the reference amber `#f59e0b` + black text.
+
+**Договоры:**
+- CTA «Новый договор» (header + EmptyState): `bg-[#F97316] text-white hover:bg-[#FB923C]`
+  → `bg-[#F59E0B] text-[#050505] hover:bg-[#D97706]`
+- Active status filter: `bg-[#F97316] text-white` → `bg-[#F59E0B] text-[#050505]
+  shadow-[0_0_15px_rgba(245,158,11,0.3)]` (reference glow)
+- Input focus borders kept `#F97316` — matches reference `focus-within:border-orange-500/50`
+  (orange-500 = #f97316)
+
+**Гости:**
+- CTA «Добавить гостя» hover no longer jumps to orange+white: `hover:bg-[#F97316]
+  hover:text-white` → `hover:bg-[#D97706]` (stays amber, black text)
+
+Checks run:
+- Claude_in_Chrome screenshot: Договоры — «Все» filter + «Новый договор» now amber
+- No console errors; no npm run lint / build (UI-only)
+
 ### 2026-05-28 05:51 +03:00 — Backup Settings Runtime Crash Fixes
 
 Files changed:
