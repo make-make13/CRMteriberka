@@ -833,3 +833,70 @@ Next:
 
 Risks/TODOs:
 - None.
+
+### 2026-05-29 — Create definitive UI_STYLE.md design system documentation (branch)
+
+Branch: `feature/chessboard-restyle`
+Files changed/created:
+- `docs/UI_STYLE.md` (new, 768 lines)
+
+**Task**: Create immutable reference document of current dark enterprise CRM design system
+by collecting REAL values from live interface and source code (NOT guessing, NOT inventing).
+
+**Approach**:
+- Read all component source files (Leads.tsx, Clients.tsx, Contracts.tsx, Chessboard.tsx, App.tsx)
+- Used grep to extract all `bg-[#...]`, `text-[#...]`, `border-[#...]` Tailwind classes
+- Navigated live app on localhost:3002 to verify colors visually
+- Evaluated JavaScript in browser to confirm computed styles
+- Organized real hex values into semantic sections
+
+**Document sections** (16 total):
+1. Design philosophy (compact dark CRM, no unnecessary panels)
+2. Color tokens (page #050505, surface #111111, elevated #161616, border #232323)
+3. Text colors (primary #F4F1EA, secondary #8F9894)
+4. Interface layers (hierarchical depth: page → surface → elevated → interactive)
+5. Buttons (primary CTA amber #F59E0B + black #050505, secondary neutral, danger red)
+6. Tables (compact rows py-3, header bg-[#161616] text-[#8F9894], borders #232323)
+7. Filters/tabs (active amber + glow, inactive neutral #161616 — NEVER share colors)
+8. Chessboard special rules (booking #F97316 + #2D9CDB, "Свободен" no highlight, legend compact)
+9. Typography (sizes 11-20px, weights 400-700 by element, standard font stack)
+10. Inputs/forms (bg-[#161616], focus border-[#F97316]/60, placeholder text-[#8F9894]/60)
+11. Modals/panels (bg-[#111111], header/footer borders, specific padding)
+12. Navigation (header bg-[#050505]/95, active tab #232323, inactive hover #161616)
+13. Forbidden patterns (❌ no big panels, no amber mixing, no orange on buttons, no bright accents)
+14. Screen examples (Leads, Clients, Contracts, Chessboard with actual class sequences)
+15. Legacy migration (deprecated colors: #D98E2B → #F59E0B, #B4CDD2 → #8F9894, etc.)
+16. Compliance checklist (verify before adding elements: layer, text color, CTA, filters, borders, badge pattern, hover, panels, palette, border-radius)
+
+**Real values collected from**:
+- Live interface: Chessboard (orange bookings #F97316, sea icon #8CAFBE, legend)
+- Live interface: Leads (amber CTA #F59E0B, filter glow shadow, table structure)
+- Live interface: Clients (green status badges, red delete button)
+- Live interface: Contracts (status colors, action buttons)
+- Source code grep: 250+ matches of hex color patterns across all components
+- Browser DevTools computed styles: header, buttons, inputs, table cells
+
+**Key decisions documented**:
+- Orange (#F97316) is input focus ONLY, never CTA (CTA = amber #F59E0B)
+- Filters: active uses amber with glow, inactive uses neutral #161616 (NEVER compete for amber)
+- Badges: pattern is `bg-{color}/10 text-{color}` (no borders, 10% opacity bg)
+- "Свободен" booking status has NO color highlight (already removed from legend)
+- Row hover is #161616 (lift to next surface layer)
+- Text is ONLY #F4F1EA (primary) or #8F9894 (secondary), no other grays
+
+**Commits**:
+- 4d0cb59: docs: Create definitive UI_STYLE.md with actual design system values
+
+Checks run:
+- Document created with 768 lines, all sections filled with real hex values
+- No npm lint / build (documentation-only, per project policy)
+- No code changes, no file modifications
+- Manual verification: visual inspection of app matched hex values in doc
+
+**Next**:
+- Document serves as immutable reference for all future UI work
+- All future changes must be documented here
+- If old palette colors appear again, refer to migration section and replace
+
+**Risks/TODOs**:
+- None. Document is complete and reflects current state of feature/chessboard-restyle branch.
