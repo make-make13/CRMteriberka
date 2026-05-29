@@ -316,6 +316,7 @@ export interface ContractData {
   nights: number;
   guests: number;
   cottageNumber: string;
+  roomCategory?: string;
   base: 'golubaya-bukhta' | 'chunga-changa';
   totalRub: number;
   prepaymentRub: number;

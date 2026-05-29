@@ -1,7 +1,7 @@
 ﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Template } from '@pdfme/common';
 import { Designer } from '@pdfme/ui';
-import { X, Save, RotateCcw, Loader2, Eye, ChevronLeft, ChevronRight, Undo2, AlignLeft } from 'lucide-react';
+import { X, Save, RotateCcw, Loader2, Eye, ChevronLeft, ChevronRight, Undo2, AlignLeft, Bookmark } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { pdfTemplateApi } from '../../services/localApi';
 import {
@@ -551,6 +551,7 @@ export default function PdfmeTemplateEditorModal({
   const [template,     setTemplate]     = useState<Template | null>(null);
   const [isLoading,    setIsLoading]    = useState(true);
   const [isSaving,     setIsSaving]     = useState(false);
+  const [isSavingAsStandard, setIsSavingAsStandard] = useState(false);
   const [isDirty,      setIsDirty]      = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [canUndo,      setCanUndo]      = useState(false);
@@ -916,6 +917,45 @@ export default function PdfmeTemplateEditorModal({
     }
   }, [getCurrentTemplate, onSaved, setDesignerDirty, templateFileName, templateId]);
 
+  // Save as standard/baseline point
+  const handleSaveAsStandard = useCallback(async () => {
+    const tpl = getCurrentTemplate();
+    if (!tpl) return;
+    setIsSavingAsStandard(true);
+    try {
+      const templateToPersist = templateId === PDFME_CC_CONTRACT_TEMPLATE_ID || templateId === PDFME_GB_CONTRACT_TEMPLATE_ID || templateId === PDFME_BANYA_CONTRACT_TEMPLATE_ID
+        ? (tpl as Template)
+        : normalizePdfmeTemplateFonts(tpl as Template);
+
+      // Save as active template
+      await pdfTemplateApi.save(templateId, templateToPersist, {
+        id: templateId,
+        uploadedAt: new Date().toISOString(),
+        fileName: templateFileName,
+        uploadedBy: 'pdfme-designer',
+      });
+
+      // Save backup copy
+      const backupId = `${templateId}_backup`;
+      await pdfTemplateApi.save(backupId, templateToPersist, {
+        id: backupId,
+        uploadedAt: new Date().toISOString(),
+        fileName: `${templateFileName} (Резервная копия)`,
+        uploadedBy: 'pdfme-designer-backup',
+      });
+
+      latestTplRef.current = templateToPersist;
+      lastTplRef.current = templateToPersist;
+      setDesignerDirty(false);
+      onSaved?.();
+      toast.success('Шаблон сохранен как стандартный (установлена точка восстановления)');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Ошибка сохранения');
+    } finally {
+      setIsSavingAsStandard(false);
+    }
+  }, [getCurrentTemplate, onSaved, setDesignerDirty, templateFileName, templateId]);
+
   const handleClose = useCallback(() => {
     if (dirtyRef.current && !confirm('Закрыть редактор без сохранения изменений?')) return;
     onClose();
@@ -923,22 +963,38 @@ export default function PdfmeTemplateEditorModal({
 
  // Reset
   const handleReset = useCallback(async () => {
-    if (!confirm(`Сбросить шаблон "${templateTitle}" к стандартной версии? Текущие несохранённые изменения будут потеряны.`)) return;
-    historyRef.current = [];
-    setDesignerCanUndo(false);
-    const saved = isLockedStandardTemplate
-      ? await pdfTemplateApi.get<Template>(templateId)
-      : null;
-    const next = await hydratePdfmeStaticAssetsInTemplate(
-      saved?.template?.schemas
-        ? saved.template
-        : await createDefaultTemplateForId(templateId),
-    );
-    latestTplRef.current = next;
-    lastTplRef.current = next;
-    setTemplate(next); // triggers Designer re-init
-    markDesignerDirty();
-  }, [isLockedStandardTemplate, markDesignerDirty, setDesignerCanUndo, templateId, templateTitle]);
+    try {
+      const backupId = `${templateId}_backup`;
+      const savedBackup = await pdfTemplateApi.get<Template>(backupId);
+
+      let targetTemplate: Template | null = null;
+
+      if (savedBackup?.template?.schemas) {
+        if (confirm('Сбросить шаблон к вашей сохраненной стандартной версии? (ОК - к вашей сохраненной, Отмена - к заводскому макету из кода)')) {
+          targetTemplate = savedBackup.template;
+        } else if (confirm('Сбросить к первоначальному заводскому макету из кода?')) {
+          targetTemplate = await createDefaultTemplateForId(templateId);
+        } else {
+          return;
+        }
+      } else {
+        if (!confirm('Сбросить шаблон к стандартной версии из кода? Текущие несохранённые изменения будут потеряны.')) return;
+        targetTemplate = await createDefaultTemplateForId(templateId);
+      }
+
+      historyRef.current = [];
+      setDesignerCanUndo(false);
+
+      const next = await hydratePdfmeStaticAssetsInTemplate(targetTemplate);
+      latestTplRef.current = next;
+      lastTplRef.current = next;
+      setTemplate(next); // triggers Designer re-init
+      markDesignerDirty();
+      toast.success('Шаблон успешно сброшен');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Ошибка сброса');
+    }
+  }, [templateId, setDesignerCanUndo, markDesignerDirty]);
 
  // Undo
   const handleUndo = useCallback(() => {
@@ -1133,17 +1189,30 @@ export default function PdfmeTemplateEditorModal({
           {/* Reset */}
           <button
             onClick={handleReset}
-            disabled={isSaving || isLoading}
+            disabled={isSaving || isSavingAsStandard || isLoading}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs bg-white/8 hover:bg-white/15 disabled:opacity-40 transition-colors"
           >
             <RotateCcw size={13} />
             Сбросить
           </button>
 
+          {/* Make template */}
+          <button
+            onClick={handleSaveAsStandard}
+            disabled={isSaving || isSavingAsStandard || isLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 transition-colors"
+          >
+            {isSavingAsStandard
+              ? <Loader2 size={13} className="animate-spin" />
+              : <Bookmark size={13} />
+            }
+            Сделать шаблоном
+          </button>
+
           {/* Save */}
           <button
             onClick={handleSave}
-            disabled={isSaving || isLoading}
+            disabled={isSaving || isSavingAsStandard || isLoading}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-orange-500 hover:bg-orange-400 disabled:opacity-40 transition-colors"
           >
             {isSaving

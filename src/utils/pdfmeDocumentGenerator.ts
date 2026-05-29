@@ -1,4 +1,4 @@
-﻿import type { Template } from '@pdfme/common';
+import type { Template } from '@pdfme/common';
 import { generate } from '@pdfme/generator';
 import { ContractData, Organization } from '../types';
 import { organizationApi, pdfTemplateApi, settingsApi } from '../services/localApi';
@@ -90,14 +90,14 @@ function formatActDateWithYearWord(value: string) {
 }
 
 function getCleanCottageNumber(value: string) {
-  return String(value || '').replace(/^(КОТТЕДЖ|ДОМ)\s*№?\s*/i, '').trim();
+  return String(value || '').replace(/^(КОТТЕДЖ|ДОМ)\s*№?\s*/i, '').replace(/^№\s*/i, '').trim();
 }
 
 function getContractNumberBody(value: string) {
   const normalized = String(value || '').trim();
   const sequence = extractContractNumberSequence(normalized);
   if (sequence > 0) return String(sequence);
-  return normalized.replace(/^(ЧЧ|ГБ|БК|ФР|Б|Ф)[\s-]*/i, '').trim();
+  return normalized.replace(/^(ЧЧ|ГБ|БК|ФР|Б|Ф|БМ)[\s-]*/i, '').trim();
 }
 
 function resolveContractTemplateId(contractData: ContractData): PdfmeTemplateId {
@@ -117,7 +117,8 @@ function buildServiceRow(contractData: ContractData) {
     serviceName = `Услуги по предоставлению фурако (${contractData.dateIn}, ${contractData.services.furako.timeFrom}–${contractData.services.furako.timeTo})`;
   } else {
     const cottageNumber = getCleanCottageNumber(contractData.cottageNumber);
-    serviceName = `Услуги по временному размещению в коттедже №${cottageNumber} (${contractData.dateIn}–${contractData.dateOut})`;
+    const unitLabel = contractData.base === 'chunga-changa' ? 'номере' : 'коттедже';
+    serviceName = `Услуги по временному размещению в ${unitLabel} №${cottageNumber} (${contractData.dateIn}–${contractData.dateOut})`;
   }
 
   const isBanya = Boolean(contractData.services?.banya);
@@ -287,6 +288,7 @@ export function buildPdfmeInput(contractData: ContractData, org: Partial<Organiz
     nights_label: formatHotelDaysLabel(contractData.nights),
     guests: String(contractData.guests),
     cottage_number: getCleanCottageNumber(contractData.cottageNumber),
+    room_category: (contractData.roomCategory || '').trim(),
 
     client_name: contractData.client.fullName.trim(),
     client_name_gen: nameGen.trim(),
@@ -398,7 +400,7 @@ export function buildPdfmeContractInput(
   const contractSignDate = formatDateWithLeadingZeroWords(contractData.signDate);
   const clientShortName = `/${makeShortName(contractData.client.fullName).trim()}/`;
   const contractPrefix = templateId === PDFME_CC_CONTRACT_TEMPLATE_ID
-    ? 'ЧЧ'
+    ? 'БМ-'
     : templateId === PDFME_BANYA_CONTRACT_TEMPLATE_ID
       ? 'БК'
       : 'ГБ';

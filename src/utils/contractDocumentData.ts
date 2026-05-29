@@ -37,6 +37,12 @@ function getCottageName(objectId: string) {
     || '';
 }
 
+function getRoomCategory(objectId: string) {
+  return CC_OBJECTS.find(object => object.id === objectId)?.category
+    || GB_OBJECTS.find(object => object.id === objectId)?.category
+    || '';
+}
+
 export function prepareContractDataFromContract(contract: Contract, client: Client): ContractData {
   const mainBooking = contract.bookings.find(booking => booking.type === 'main');
   const banyaBooking = contract.bookings.find(booking => booking.objectId === 'gb-bath');
@@ -58,6 +64,7 @@ export function prepareContractDataFromContract(contract: Contract, client: Clie
         : 0,
     guests: contract.guestsCount || 0,
     cottageNumber: mainBooking ? getCottageName(mainBooking.objectId) : '',
+    roomCategory: mainBooking ? getRoomCategory(mainBooking.objectId) : '',
     base: contract.baseType,
     totalRub: contract.totalAmount,
     prepaymentRub: contract.prepayment,
