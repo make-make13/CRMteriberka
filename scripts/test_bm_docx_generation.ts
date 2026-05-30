@@ -1,5 +1,5 @@
 /**
- * Тестовый CLI для DOCX-генерации договора БМ.
+ * Тестовый CLI для DOCX/PDF-генерации договора БМ.
  *
  * Запуск:
  *   npx tsx scripts/test_bm_docx_generation.ts
@@ -9,25 +9,26 @@
  *   - LibreOffice установлен (для DOCX→PDF)
  *
  * Результат:
- *   scratch/bm_contract_print.docx       (без подписи/печати)
+ *   scratch/bm_contract_print.docx
  *   scratch/bm_contract_print.pdf
- *   scratch/bm_contract_signed.docx      (с подписью и печатью)
+ *   scratch/bm_contract_signed.docx
  *   scratch/bm_contract_signed.pdf
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { PDFDocument } from '@pdfme/pdf-lib';
 
 import { authApi, setAuthToken, organizationApi, settingsApi } from '../src/services/localApi';
 import type { ContractData, Organization } from '../src/types';
-import { buildBmDocxVariables } from '../src/utils/docx/bmDocxData';
-import { buildBmContractDocx } from '../src/utils/docx/bmDocxBuilder';
-import { docxToPdf, getSofficePathHint } from '../src/utils/docx/docxToPdf';
+import {
+  generateBmContractDocx,
+  type BmContractMode,
+} from '../src/utils/docx/bmContractGenerator';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const SCRATCH = path.resolve(ROOT, 'scratch');
-const PUBLIC_ASSETS = path.resolve(ROOT, 'public', 'pdfme-assets');
 
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
@@ -71,32 +72,44 @@ async function loadOrg(): Promise<Partial<Organization>> {
   return org;
 }
 
-async function generateOne(mode: 'print_contract' | 'contract_signed', vars: ReturnType<typeof buildBmDocxVariables>) {
-  const isSigned = mode === 'contract_signed';
-  const docxBuf = await buildBmContractDocx(vars, {
-    withStamp: isSigned,
-    withSignature: isSigned,
-    stampPath: path.resolve(PUBLIC_ASSETS, 'stamp.png'),
-    signaturePath: path.resolve(PUBLIC_ASSETS, 'signature.png'),
-  });
+interface PerModeResult {
+  mode: BmContractMode;
+  docxPath: string;
+  docxBytes: number;
+  pdfPath: string;
+  pdfBytes: number;
+  pdfPages: number;
+}
 
-  const docxPath = path.resolve(SCRATCH, `bm_contract_${mode === 'print_contract' ? 'print' : 'signed'}.docx`);
+async function generateForMode(
+  contractData: ContractData,
+  org: Partial<Organization>,
+  mode: BmContractMode,
+): Promise<PerModeResult> {
+  const tag = mode; // 'print' | 'signed' — совпадает с именем файла
+  const docxPath = path.resolve(SCRATCH, `bm_contract_${tag}.docx`);
+  const pdfPath = path.resolve(SCRATCH, `bm_contract_${tag}.pdf`);
+
+  console.log(`\n[${mode}] generating DOCX...`);
+  const docxBuf = await generateBmContractDocx(contractData, org, { mode, output: 'docx' });
   fs.writeFileSync(docxPath, docxBuf);
-  console.log(`  DOCX: ${docxPath} (${docxBuf.byteLength} bytes)`);
+  console.log(`  DOCX: ${docxPath}  (${docxBuf.byteLength} bytes)`);
 
-  let pdfPath = '';
-  try {
-    const pdfBuf = await docxToPdf(docxBuf);
-    pdfPath = docxPath.replace(/\.docx$/, '.pdf');
-    fs.writeFileSync(pdfPath, pdfBuf);
-    console.log(`  PDF:  ${pdfPath} (${pdfBuf.byteLength} bytes)`);
-  } catch (err: any) {
-    console.warn(`  PDF:  FAILED — ${err?.message || err}`);
-    console.warn(`        soffice hint: ${getSofficePathHint()}`);
-    console.warn(`        Установите LibreOffice или задайте env LIBREOFFICE_PATH.`);
-  }
+  console.log(`[${mode}] generating PDF...`);
+  const pdfBuf = await generateBmContractDocx(contractData, org, { mode, output: 'pdf' });
+  fs.writeFileSync(pdfPath, pdfBuf);
+  const pdfDoc = await PDFDocument.load(pdfBuf);
+  const pages = pdfDoc.getPageCount();
+  console.log(`  PDF:  ${pdfPath}   (${pdfBuf.byteLength} bytes, ${pages} pages)`);
 
-  return { docxPath, pdfPath };
+  return {
+    mode,
+    docxPath,
+    docxBytes: docxBuf.byteLength,
+    pdfPath,
+    pdfBytes: pdfBuf.byteLength,
+    pdfPages: pages,
+  };
 }
 
 async function main() {
@@ -109,19 +122,26 @@ async function main() {
   console.log('Loading organization details...');
   const org = await loadOrg();
 
-  const vars = buildBmDocxVariables(checklistData, org);
-  console.log('Variables ready. contract_header =', vars.contract_header);
-  console.log('                  contract_period =', vars.contract_period);
-  console.log('                  guests_label    =', vars.guests_label);
-  console.log('                  nights_label    =', vars.nights_label);
+  const results: PerModeResult[] = [];
+  results.push(await generateForMode(checklistData, org, 'print'));
+  results.push(await generateForMode(checklistData, org, 'signed'));
 
-  console.log('\n[1/2] mode = print_contract (без печати/подписи)');
-  await generateOne('print_contract', vars);
-
-  console.log('\n[2/2] mode = contract_signed (с печатью и подписью)');
-  await generateOne('contract_signed', vars);
-
-  console.log('\nDone.');
+  // --- Финальная сводка + sanity-проверки ---
+  console.log('\n=== Summary ===');
+  let allOk = true;
+  for (const r of results) {
+    const docxOk = fs.existsSync(r.docxPath);
+    const pdfOk = fs.existsSync(r.pdfPath);
+    const pagesOk = r.pdfPages === 6;
+    const status = docxOk && pdfOk && pagesOk ? 'OK' : 'FAIL';
+    if (status === 'FAIL') allOk = false;
+    console.log(`  [${r.mode}] DOCX=${docxOk ? '✓' : '✗'} PDF=${pdfOk ? '✓' : '✗'} pages=${r.pdfPages}${pagesOk ? '' : ' (expected 6)'}  ${status}`);
+  }
+  if (!allOk) {
+    console.error('\nFAIL — see above.');
+    process.exit(1);
+  }
+  console.log('\nAll 4 files generated; both PDFs have 6 pages.');
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
