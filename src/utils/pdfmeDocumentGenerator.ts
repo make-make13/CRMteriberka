@@ -144,12 +144,21 @@ function formatHotelDaysLabel(days: number) {
   if (mod10 === 1 && mod100 !== 11) {
     return `${normalizedDays} сутки`;
   }
-
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-    return `${normalizedDays} суток`;
-  }
-
   return `${normalizedDays} суток`;
+}
+
+function formatGuestsLabel(guests: number) {
+  const normalizedGuests = Math.max(1, Math.trunc(guests));
+  const mod10 = normalizedGuests % 10;
+  const mod100 = normalizedGuests % 100;
+  
+  if (mod10 === 1 && mod100 !== 11) {
+    return `${normalizedGuests} человек`;
+  }
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return `${normalizedGuests} человека`;
+  }
+  return `${normalizedGuests} человек`;
 }
 
 function createDefaultTemplateForId(templateId: PdfmeTemplateId): Template {
@@ -287,6 +296,7 @@ export function buildPdfmeInput(contractData: ContractData, org: Partial<Organiz
     nights: String(contractData.nights),
     nights_label: formatHotelDaysLabel(contractData.nights),
     guests: String(contractData.guests),
+    guests_label: formatGuestsLabel(contractData.guests),
     cottage_number: getCleanCottageNumber(contractData.cottageNumber),
     room_category: (contractData.roomCategory || '').trim(),
 

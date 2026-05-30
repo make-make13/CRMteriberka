@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, format, parseISO } from 'date-fns';
+import { differenceInCalendarDays, format, parseISO, addDays, isSameDay } from 'date-fns';
 import { CC_OBJECTS, GB_OBJECTS } from '../constants';
 import type { Client, Contract, ContractData } from '../types';
 
@@ -49,20 +49,42 @@ export function prepareContractDataFromContract(contract: Contract, client: Clie
   const furakoBooking = contract.bookings.find(booking => booking.objectId === 'gb-furako');
   const primaryBooking = mainBooking || banyaBooking || furakoBooking;
 
+  let dateIn = primaryBooking ? formatDateTime(primaryBooking.startTime, 'dd.MM.yyyy') : '';
+  let timeIn = primaryBooking ? formatDateTime(primaryBooking.startTime, 'HH:mm') : '';
+  let dateOut = primaryBooking ? formatDateTime(primaryBooking.endTime, 'dd.MM.yyyy') : '';
+  let timeOut = primaryBooking ? formatDateTime(primaryBooking.endTime, 'HH:mm') : '';
+  
+  let nights = mainBooking
+    ? getHotelDaysCount(mainBooking.startTime, mainBooking.endTime)
+    : primaryBooking
+      ? getHoursCount(primaryBooking.startTime, primaryBooking.endTime)
+      : 0;
+
+  if (contract.baseType === 'chunga-changa' && primaryBooking) {
+    const startIso = parseISO(primaryBooking.startTime);
+    const endIso = parseISO(primaryBooking.endTime);
+    if (!isNaN(startIso.getTime()) && !isNaN(endIso.getTime())) {
+      timeIn = '14:00';
+      timeOut = '12:00';
+      if (isSameDay(startIso, endIso) || nights === 0) {
+        nights = 1;
+        dateOut = format(addDays(startIso, 1), 'dd.MM.yyyy');
+      }
+    }
+  }
+
+  const guests = contract.guestsCount || 0;
+
   return {
     contractNumber: contract.number,
     signDate: contract.dateSigned,
     current_date: format(new Date(), 'dd.MM.yyyy'),
-    dateIn: primaryBooking ? formatDateTime(primaryBooking.startTime, 'dd.MM.yyyy') : '',
-    timeIn: primaryBooking ? formatDateTime(primaryBooking.startTime, 'HH:mm') : '',
-    dateOut: primaryBooking ? formatDateTime(primaryBooking.endTime, 'dd.MM.yyyy') : '',
-    timeOut: primaryBooking ? formatDateTime(primaryBooking.endTime, 'HH:mm') : '',
-    nights: mainBooking
-      ? getHotelDaysCount(mainBooking.startTime, mainBooking.endTime)
-      : primaryBooking
-        ? getHoursCount(primaryBooking.startTime, primaryBooking.endTime)
-        : 0,
-    guests: contract.guestsCount || 0,
+    dateIn,
+    timeIn,
+    dateOut,
+    timeOut,
+    nights: nights || 1, // ensure at least 1 for display fallback
+    guests: guests || 1, // ensure at least 1 for display fallback
     cottageNumber: mainBooking ? getCottageName(mainBooking.objectId) : '',
     roomCategory: mainBooking ? getRoomCategory(mainBooking.objectId) : '',
     base: contract.baseType,
