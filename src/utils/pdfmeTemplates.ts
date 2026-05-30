@@ -264,6 +264,12 @@ export async function getPdfmeFont() {
   const angryFontData = await fetch('/fonts/ANGRY.OTF')
     .then(res => (res.ok ? res.arrayBuffer() : fontData))
     .catch(() => fontData);
+  const sansData = await fetch('/fonts/NotoSans-Regular.ttf')
+    .then(res => (res.ok ? res.arrayBuffer() : fontData))
+    .catch(() => fontData);
+  const sansBoldData = await fetch('/fonts/NotoSans-Bold.ttf')
+    .then(res => (res.ok ? res.arrayBuffer() : sansData))
+    .catch(() => sansData);
 
   return {
     NotoSerif: {
@@ -275,6 +281,12 @@ export async function getPdfmeFont() {
     },
     NotoSerifBold: {
       data: boldFontData,
+    },
+    NotoSans: {
+      data: sansData,
+    },
+    NotoSansBold: {
+      data: sansBoldData,
     },
     angry: {
       data: angryFontData,
@@ -385,6 +397,12 @@ function t(name: string, x: number, y: number, w: number, h: number, opts: Schem
 function st(name: string, content: string, x: number, y: number, w: number, h: number, opts: SchemaOptions = {}) {
   return t(name, x, y, w, h, { content, readOnly: true, ...opts });
 }
+
+/** Static text field with NotoSans as default — used for BM contract body paragraphs */
+function bst(name: string, content: string, x: number, y: number, w: number, h: number, opts: SchemaOptions = {}) {
+  return st(name, content, x, y, w, h, { fontName: 'NotoSans', ...opts });
+}
+
 
 function r(name: string, x: number, y: number, w: number, h: number, opts: SchemaOptions = {}) {
   return {
@@ -1889,7 +1907,7 @@ function createGbContractPage1Schemas() {
       alignment: 'center',
       verticalAlignment: 'middle',
     }),
-    mvt('cc_contract_subtitle', 'оказания услуг по размещению\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 17.2, 100, 10, {
+    # subtitle already has no fontName, 'оказания услуг по размещению\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 17.2, 100, 10, {
       fontSize: 7.3,
       lineHeight: 1.18,
       alignment: 'center',
@@ -2061,12 +2079,12 @@ function createDefaultGolubayaBukhtaContractOnlyPdfmeTemplate(): Template {
 function createCcContractPage1Schemas() {
   return [
     mvt('cc_contract_header', '{contract_header}', ['contract_header'], 64, 8, 82, 7, {
-      fontName: 'NotoSerifBold',
+      fontName: 'NotoSansBold',
       fontSize: 9.8,
       alignment: 'center',
       verticalAlignment: 'middle',
     }),
-    mvt('cc_contract_subtitle', 'оказания гостиничных услуг\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 16.2, 100, 10, {
+    # subtitle already has no fontName, 'оказания гостиничных услуг\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 16.2, 100, 10, {
       fontSize: 7.9,
       alignment: 'center',
       lineHeight: 1.18,
@@ -2075,7 +2093,7 @@ function createCcContractPage1Schemas() {
     t('sign_date', 153, 31, 40, 6, {
       fontSize: 7.9,
       alignment: 'right',
-      fontName: 'NotoSerifBold',
+      fontName: 'NotoSansBold',
     }),
 
     // Preamble
@@ -2090,14 +2108,14 @@ function createCcContractPage1Schemas() {
       39,
       173,
       18,
-      { fontSize: 7.15, lineHeight: 1.08 },
+      { fontSize: 7.15, lineHeight: 1.08, fontName: 'NotoSans' },
     ),
 
     // §1 Форма заключения договора и состав документов
     st('bm_s1_title', '1. Форма заключения договора и состав документов', 20, 60, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s1_body',
       '1.1. Настоящий договор заключается в письменной форме. Письменная форма считается соблюденной при подписании'
       + ' одного документа Сторонами, направлении Исполнителем подтверждения бронирования, внесении Гостем оплаты,'
@@ -2116,7 +2134,7 @@ function createCcContractPage1Schemas() {
 
     // §2 Предмет договора
     st('bm_s2_title', '2. Предмет договора', 20, 99, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
     mvt(
       'bm_s2_body',
@@ -2137,9 +2155,9 @@ function createCcContractPage1Schemas() {
 
     // §3 Состав услуг
     st('bm_s3_title', '3. Состав услуг', 20, 139, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s3_body',
       '3.1. В стоимость проживания входит набор услуг, указанный в подтверждении бронирования, выбранном тарифе,'
       + ' настоящем договоре или Правилах проживания бутик-отеля. Бесплатные услуги, предусмотренные законодательством'
@@ -2160,7 +2178,7 @@ function createCcContractPage1Schemas() {
 
     // §4 Цена и порядок оплаты
     st('bm_s4_title', '4. Цена и порядок оплаты', 20, 187, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
     mvt(
       'bm_s4_body',
@@ -2190,7 +2208,7 @@ function createCcContractPage1Schemas() {
 
 function createCcContractPage2Schemas() {
   return [
-    st(
+    bst(
       'bm_s4_tail',
       'простой номера и иные документально подтвержденные расходы Исполнителя, возникшие по вине Гостя или лиц,'
       + ' которым Гость предоставил доступ в номер.',
@@ -2200,9 +2218,9 @@ function createCcContractPage2Schemas() {
 
     // §5 Бронирование, отмена, незаезд и досрочный выезд
     st('bm_s5_title', '5. Бронирование, отмена, незаезд и досрочный выезд', 20, 16, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s5_body',
       '5.1. Бронирование считается гарантированным после получения Исполнителем установленной предоплаты и'
       + ' направления Гостю подтверждения бронирования.\n'
@@ -2234,9 +2252,9 @@ function createCcContractPage2Schemas() {
 
     // §6 Заселение, регистрация и выезд
     st('bm_s6_title', '6. Заселение, регистрация и выезд', 20, 81, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s6_body',
       '6.1. Заезд осуществляется с 14:00 местного времени, выезд — до 12:00 местного времени, если иное не указано'
       + ' в подтверждении бронирования.\n'
@@ -2262,9 +2280,9 @@ function createCcContractPage2Schemas() {
 
     // §7 Правила проживания и ограничения
     st('bm_s7_title', '7. Правила проживания и ограничения', 20, 138, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s7_body',
       '7.1. Гость обязан соблюдать Правила проживания бутик-отеля, требования пожарной безопасности, санитарные'
       + ' нормы, общественный порядок, права других гостей и законные требования администрации.\n'
@@ -2298,9 +2316,9 @@ function createCcContractPage3Schemas() {
   return [
     // §8 Имущество бутик-отеля и ответственность Гостя (полностью на стр. 3)
     st('bm_s8_title', '8. Имущество бутик-отеля и ответственность Гостя', 20, 8, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s8_body',
       '8.1. Гость обязан бережно относиться к номеру, мебели, оборудованию, отделке, инженерным системам,'
       + ' текстилю, посуде, ключам, картам доступа и иному имуществу бутик-отеля.\n'
@@ -2321,9 +2339,9 @@ function createCcContractPage3Schemas() {
 
     // §9 Ответственность Исполнителя и хранение вещей
     st('bm_s9_title', '9. Ответственность Исполнителя и хранение вещей', 20, 59, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s9_body',
       '9.1. Исполнитель оказывает услуги в соответствии с законодательством РФ, настоящим договором, подтверждением'
       + ' бронирования, выбранным тарифом и Правилами проживания бутик-отеля.\n'
@@ -2347,9 +2365,9 @@ function createCcContractPage3Schemas() {
 
     // §10 Односторонний отказ и прекращение проживания
     st('bm_s10_title', '10. Односторонний отказ и прекращение проживания', 20, 127, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s10_body',
       '10.1. Гость вправе отказаться от исполнения договора в любое время при условии оплаты фактически оказанных услуг'
       + ' и фактически понесённых Исполнителем расходов, связанных с исполнением договора.\n'
@@ -2366,9 +2384,9 @@ function createCcContractPage3Schemas() {
 
     // §11 Персональные данные и электронные коммуникации
     st('bm_s11_title', '11. Персональные данные и электронные коммуникации', 20, 170, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s11_body',
       '11.1. Подписывая настоящий договор, направляя заявку на бронирование, оплачивая услуги или заселяясь в бутик-отель,'
       + ' Гость подтверждает предоставление персональных данных, необходимых для заключения и исполнения договора,'
@@ -2387,9 +2405,9 @@ function createCcContractPage3Schemas() {
 
     // §12 Форс-мажор, погодные условия и транспортная доступность (part 1)
     st('bm_s12_title', '12. Форс-мажор, погодные условия и транспортная доступность', 20, 210, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s12_body_part1',
       '12.1. Стороны освобождаются от ответственности за частичное или полное неисполнение обязательств, если оно'
       + ' явилось следствием чрезвычайных и непредотвратимых обстоятельств, включая стихийные бедствия, опасные'
@@ -2418,7 +2436,7 @@ function createCcContractPage3Schemas() {
 
 function createCcContractPage4Schemas() {
   return [
-    st(
+    bst(
       'bm_s12_body_part2',
       'согласовано с администрацией. Продление проживания в такой ситуации допускается только при наличии свободных'
       + ' номеров, технической и организационной возможности бутик-отеля и с оплатой по действующему тарифу бутик-отеля.',
@@ -2428,9 +2446,9 @@ function createCcContractPage4Schemas() {
 
     // §13 Порядок разрешения споров
     st('bm_s13_title', '13. Порядок разрешения споров', 20, 21, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s13_body',
       '13.1. Все спорные вопросы Стороны стремятся урегулировать путем переговоров и обмена письменными обращениями.\n'
       + '13.2. Претензии Гостя рассматриваются Исполнителем в порядке и сроки, предусмотренные законодательством РФ.\n'
@@ -2442,9 +2460,9 @@ function createCcContractPage4Schemas() {
 
     // §14 Заключительные положения
     st('bm_s14_title', '14. Заключительные положения', 20, 50, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
-    st(
+    bst(
       'bm_s14_body',
       '14.1. Настоящий договор вступает в силу с момента его подписания Сторонами, направления Исполнителем'
       + ' подтверждения бронирования, внесения Гостем оплаты / предоплаты или фактического заселения Гостя — в'
@@ -2469,13 +2487,13 @@ function createCcContractPage4Schemas() {
 
     // §15 Реквизиты и подписи Сторон
     st('bm_s15_title', '15. Реквизиты и подписи Сторон', 20, 113, 173, 5, {
-      fontName: 'NotoSerifBold', alignment: 'center',
+      fontName: 'NotoSansBold', alignment: 'center',
     }),
 
     st('cc_executor_party_title', 'Исполнитель\nООО «Золото Арктики»', 20, 120, 88, 8, {
       fontSize: 8.2,
       alignment: 'center',
-      fontName: 'NotoSerifBold',
+      fontName: 'NotoSansBold',
       lineHeight: 1.08,
     }),
     st(
@@ -2499,7 +2517,7 @@ function createCcContractPage4Schemas() {
     ),
     mvt('cc_client_party_title', 'Гость\n{client_name}', ['client_name'], 112, 120, 81, 8, {
       fontSize: 8.2,
-      fontName: 'NotoSerifBold',
+      fontName: 'NotoSansBold',
       lineHeight: 1.12,
       alignment: 'center',
     }),
@@ -2527,7 +2545,7 @@ function createCcContractPage4Schemas() {
     l('cc_client_sign_line', 115, 214, 37, 0.1),
     t('cc_client_sign_name', 155, 210, 32, 5, {
       fontSize: 7.8,
-      fontName: 'NotoSerifBold',
+      fontName: 'NotoSansBold',
     }),
   ];
 }
