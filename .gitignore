@@ -21,6 +21,9 @@ logs/
 
 server-dev.err
 tmp/
+scratch/
+templates/docx/*.docx
+
 tools/rclone/
 template_out.json
 user_requested_schema*.json
