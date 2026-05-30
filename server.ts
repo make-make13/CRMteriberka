@@ -10,6 +10,7 @@ import { authService } from './server/authService';
 import { syncSupabaseLeads } from './server/supabaseLeadSync';
 import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
+import { registerBmDocxRoutes } from './server/bmDocxRouter';
 import type { Client } from './src/types';
 
 dotenv.config({ path: '.env.local' });
@@ -117,6 +118,11 @@ async function startServer() {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
   });
+
+  // Экспериментальный DOCX-генератор договора БМ.
+  // Параллельно действующему PDFMe — основная кнопка генерации не меняется.
+  // Маршруты: GET /api/bm-docx/contract/:contractId{?mode,output}, /info.
+  registerBmDocxRoutes(app, requireAuth);
 
   app.post('/api/auth/login', (req, res) => {
     try {
