@@ -1907,7 +1907,7 @@ function createGbContractPage1Schemas() {
       alignment: 'center',
       verticalAlignment: 'middle',
     }),
-    # subtitle already has no fontName, 'оказания услуг по размещению\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 17.2, 100, 10, {
+    mvt('cc_contract_subtitle', 'оказания услуг по размещению\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 17.2, 100, 10, {
       fontSize: 7.3,
       lineHeight: 1.18,
       alignment: 'center',
@@ -2084,7 +2084,7 @@ function createCcContractPage1Schemas() {
       alignment: 'center',
       verticalAlignment: 'middle',
     }),
-    # subtitle already has no fontName, 'оказания гостиничных услуг\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 16.2, 100, 10, {
+    mvt('cc_contract_subtitle', 'оказания гостиничных услуг\nв период с {date_in_short} по {date_out_short}', ['date_in_short', 'date_out_short'], 55, 16.2, 100, 10, {
       fontSize: 7.9,
       alignment: 'center',
       lineHeight: 1.18,
