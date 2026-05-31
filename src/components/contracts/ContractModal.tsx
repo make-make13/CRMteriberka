@@ -262,13 +262,6 @@ export default function ContractModal({
     return object ? object.name : 'Старый объект / неактивный объект';
   };
 
-  const formatObjectOptionLabel = (object: typeof ccObjectOptions[number]) => [
-    object.name,
-    object.category,
-    object.capacity ? `${object.capacity} чел` : '',
-    object.seaView ? 'вид на море' : '',
-    object.pricePerNight ? `${object.pricePerNight.toLocaleString('ru-RU')} ₽/ночь` : '',
-  ].filter(Boolean).join(' · ');
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
@@ -1026,7 +1019,8 @@ export default function ContractModal({
                         </div>
                       )}
                     </div>
-                            <div 
+                            {/* Триггер — показывает выбранный номер */}
+                            <div
                               className={cn(
                                 "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all flex items-center justify-between",
                                 mode === 'edit' ? "cursor-pointer" : "cursor-default opacity-70 pointer-events-none",
@@ -1034,23 +1028,61 @@ export default function ContractModal({
                               )}
                               onClick={() => mode === 'edit' && setShowCcCottageDropdown(!showCcCottageDropdown)}
                             >
-                              <span>{ccCottageId ? getCcObjectLabel(ccCottageId) : 'Выберите номер'}</span>
+                              <span>{ccCottageId ? ccObjectOptions.find(o => o.id === ccCottageId)?.name ?? getCcObjectLabel(ccCottageId) : 'Выберите номер'}</span>
                               <ChevronDown size={16} className="text-gray-500" />
                             </div>
+
+                            {/* Компактный инфо-блок под выбранным номером */}
+                            {ccCottageId && (() => {
+                              const sel = ccObjectOptions.find(o => o.id === ccCottageId);
+                              if (!sel) return null;
+                              const parts = [
+                                sel.category,
+                                sel.capacity ? `до ${sel.capacity} гост.` : '',
+                                sel.seaView ? 'вид на море' : '',
+                                sel.pricePerNight ? `${sel.pricePerNight.toLocaleString('ru-RU')} ₽/ночь` : '',
+                              ].filter(Boolean);
+                              return (
+                                <p className={cn("text-[11px] leading-tight mt-0.5", isDarkMode ? "text-gray-400" : "text-gray-500")}>
+                                  {parts.join(' · ')}
+                                </p>
+                              );
+                            })()}
+
+                            {/* Сетка выбора номера */}
                             {showCcCottageDropdown && (
-                              <div className={cn("absolute top-full left-0 w-full mt-2 rounded-xl border shadow-lg z-50", isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-gray-200")}>
-                                {ccObjectOptions.map(obj => (
-                                  <div 
-                                    key={obj.id} 
-                                    className={cn("px-4 py-2 cursor-pointer text-sm", isDarkMode ? "hover:bg-white/5" : "hover:bg-gray-50")}
-                                    onClick={() => {
-                                      setValue('ccCottageId', obj.id);
-                                      setShowCcCottageDropdown(false);
-                                    }}
-                                  >
-                                    {formatObjectOptionLabel(obj)}
-                                  </div>
-                                ))}
+                              <div className={cn(
+                                "absolute top-full left-0 w-full mt-2 rounded-xl border shadow-lg z-50 p-3",
+                                isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-gray-200"
+                              )}>
+                                <div
+                                  className="grid gap-1.5 overflow-y-auto"
+                                  style={{ gridTemplateColumns: 'repeat(5, 1fr)', maxHeight: '220px' }}
+                                >
+                                  {ccObjectOptions.map(obj => {
+                                    const isSelected = ccCottageId === obj.id;
+                                    return (
+                                      <button
+                                        key={obj.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setValue('ccCottageId', obj.id);
+                                          setShowCcCottageDropdown(false);
+                                        }}
+                                        className={cn(
+                                          "rounded-lg py-2 text-xs font-bold text-center transition-colors",
+                                          isSelected
+                                            ? "bg-orange-500 text-white"
+                                            : isDarkMode
+                                              ? "bg-white/5 text-gray-300 hover:bg-white/10"
+                                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        )}
+                                      >
+                                        {obj.name}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             )}
                   </div>
