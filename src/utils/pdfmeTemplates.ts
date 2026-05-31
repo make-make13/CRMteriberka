@@ -473,7 +473,8 @@ function clonePage(page: Template['schemas'][number]) {
   return JSON.parse(JSON.stringify(page)) as Template['schemas'][number];
 }
 
-const PDFME_DOCUMENT_STAMP_SIZE = 40;
+// 29mm — совпадает с размером печати в active DOCX-шаблоне signed.docx (1044000 EMU).
+const PDFME_DOCUMENT_STAMP_SIZE = 29;
 const PDFME_DOCUMENT_SIGNATURE_WIDTH = 34;
 const PDFME_DOCUMENT_SIGNATURE_HEIGHT = 20;
 const PDFME_DOCUMENT_STAMP_OPACITY = 1;

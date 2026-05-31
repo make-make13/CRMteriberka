@@ -12,6 +12,7 @@ import {
   createDefaultGolubayaBukhtaContractPdfmeTemplate,
   createDefaultInvoicePdfmeTemplate,
   createGolubayaBukhtaPackagePdfmeTemplate,
+  ensureChungaChangaPackagePdfmeTemplate,
   ensureInvoiceActPage,
   pdfmePlugins,
   getPdfmeFont,
@@ -30,7 +31,7 @@ import { getPdfmeSchemaValueKey } from './pdfmeFieldNames';
 import { hydratePdfmeStaticAssetsInTemplate } from './pdfmeStaticAssets';
 import { extractContractNumberSequence } from './contractNumbers';
 
-export type PdfmeContractGenerationMode = 'print' | 'send';
+export type PdfmeContractGenerationMode = 'print' | 'send' | 'send-no-stamp';
 
 export interface GiftCertificateInput {
   amount: string;
@@ -182,11 +183,14 @@ async function loadPdfmeTemplate(templateId: PdfmeTemplateId): Promise<Template>
   const saved = await pdfTemplateApi.get<Template>(templateId);
 
   if (templateId === PDFME_CC_CONTRACT_TEMPLATE_ID) {
-    if (saved?.template?.schemas) {
-      return saved.template;
-    }
-
+    // Всегда загружаем invoice-шаблон (нужен как fallback для ensure-функции).
     const invoiceTemplate = await loadInvoiceTemplateForPackage();
+    if (saved?.template?.schemas) {
+      // ensureChungaChangaPackagePdfmeTemplate ре-нормализует страницы счёта и акта
+      // (normalizeDocumentSignatureImagesAndLayers), что гарантирует актуальный
+      // PDFME_DOCUMENT_STAMP_SIZE даже если шаблон был сохранён со старыми размерами.
+      return ensureChungaChangaPackagePdfmeTemplate(saved.template, invoiceTemplate);
+    }
     return createChungaChangaPackagePdfmeTemplate(createDefaultTemplateForId(templateId), invoiceTemplate);
   }
 
@@ -244,7 +248,12 @@ function createContractOutputTemplate(
     };
   }
 
-  const pageLimit = PRINT_PAGE_LIMIT_BY_TEMPLATE[templateId] ?? template.schemas.length;
+  // 'print'         → только первые N страниц (договор), печати/подписи скрыты.
+  // 'send-no-stamp' → все страницы (включая счёт+акт), печати/подписи скрыты.
+  //                   Используется для генерации счёта/акта без печати.
+  const pageLimit = mode === 'print'
+    ? (PRINT_PAGE_LIMIT_BY_TEMPLATE[templateId] ?? template.schemas.length)
+    : template.schemas.length;
 
   return {
     ...template,

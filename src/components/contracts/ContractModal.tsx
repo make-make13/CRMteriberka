@@ -82,7 +82,7 @@ interface PreviewEmailPayload {
   contractNumber: string;
   toEmail: string;
   toName: string;
-  documentType: 'Договор' | 'Пакет документов';
+  documentType: 'Договор' | 'Пакет документов' | 'Счёт и акт';
 }
 
 const getContractCategory = (contract: Contract): ContractNumberCategory => {
@@ -597,6 +597,33 @@ export default function ContractModal({
     }
   };
 
+  const handleBmInvoiceActGenerate = async (mode: 'send' | 'print') => {
+    if (!selectedClient) { toast('Выберите гостя', 'error'); return; }
+    if (!initialData?.id) { toast('Сначала сохраните договор, затем сформируйте документ.', 'info'); return; }
+    setIsGenerating(true);
+    setShowGenerateDropdown(false);
+    try {
+      const data = getValues();
+      const contract = createContractObject(data);
+      const contractData = prepareContractDataFromContract(contract, selectedClient);
+      const { generateBmInvoiceActPdf } = await import('../../utils/docx/bmSendPackage');
+      const pdfBlob = await generateBmInvoiceActPdf(contractData, mode);
+      const fileName = mode === 'send'
+        ? `Счёт_и_акт_на_отправку_${contract.number}`
+        : `Счёт_и_акт_на_печать_${contract.number}`;
+      setPreviewMode(mode);
+      setPreviewPdfBlob(pdfBlob);
+      setPreviewFileName(fileName);
+      setPreviewEmailPayload(buildPreviewEmailPayload(contract, selectedClient, 'Счёт и акт'));
+      setIsPreviewOpen(true);
+    } catch (error: any) {
+      console.error('Invoice+act generation error:', error);
+      toast(error.message || 'Ошибка при генерации счёта и акта', 'error');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleGenerateDoc = async (type: GeneratedDocumentType) => {
     if (!selectedClient) {
       toast('Выберите гостя', 'error');
@@ -629,10 +656,18 @@ export default function ContractModal({
         }
         // Сохранённый БМ-договор: active DOCX-шаблон → fallback на code generator.
         const bmMode = type === 'send' ? 'signed' : 'print';
-        const { blob } = await bmDocxApi.downloadBmContract(
+        const { blob: contractBlob } = await bmDocxApi.downloadBmContract(
           String(initialData.id), bmMode, 'pdf', 'template-fallback',
         );
-        pdfBlob = blob;
+        if (type === 'send') {
+          // «На отправку»: договор (DOCX) + счёт + акт
+          const contractData = prepareContractDataFromContract(contract, selectedClient);
+          const { generateBmSendPackageBlob } = await import('../../utils/docx/bmSendPackage');
+          pdfBlob = await generateBmSendPackageBlob(contractBlob, contractData);
+        } else {
+          // «На печать»: только договор без печати и подписи
+          pdfBlob = contractBlob;
+        }
       }
 
       setPreviewMode(type);
@@ -1454,12 +1489,37 @@ export default function ContractModal({
                     onClick={() => handleGenerateDoc('send')}
                     className={cn(
                       "w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors",
-                      isDarkMode ? "hover:bg-[#222421]" : "hover:bg-gray-50"
+                      isDarkMode ? "hover:bg-[#222421]" : "hover:bg-gray-50",
+                      !isLegacyGbContract && (isDarkMode ? "border-b border-[#3D423E]" : "border-b border-gray-100")
                     )}
                   >
                     <FileText size={16} className="text-orange-500" />
                     На отправку
                   </button>
+                  {!isLegacyGbContract && (<>
+                    <button
+                      type="button"
+                      onClick={() => handleBmInvoiceActGenerate('print')}
+                      className={cn(
+                        "w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors",
+                        isDarkMode ? "hover:bg-[#222421] border-b border-[#3D423E]" : "hover:bg-gray-50 border-b border-gray-100"
+                      )}
+                    >
+                      <FileText size={16} className="text-blue-400" />
+                      Счёт и акт на печать
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleBmInvoiceActGenerate('send')}
+                      className={cn(
+                        "w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors",
+                        isDarkMode ? "hover:bg-[#222421]" : "hover:bg-gray-50"
+                      )}
+                    >
+                      <FileText size={16} className="text-orange-400" />
+                      Счёт и акт на отправку
+                    </button>
+                  </>)}
                 </div>
               )}
             </div>
