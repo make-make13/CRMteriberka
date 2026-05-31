@@ -5,14 +5,14 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Calendar, FileText, CheckCircle2, Clock, AlertCircle, XCircle, Trash2, Printer, Mail, Loader2 } from 'lucide-react';
+import { Plus, Search, Calendar, FileText, CheckCircle2, Clock, AlertCircle, XCircle, Trash2, Printer, Mail, Loader2, FlaskConical } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Contract, Client, Settings, ContractStatus } from '../../types';
 import ContractModal from './ContractModal';
-import { contractApi, emailSettingsApi } from '../../services/localApi';
+import { contractApi, emailSettingsApi, bmDocxApi } from '../../services/localApi';
 import { getErrorMessage, getErrorConflict } from '../../utils/errors';
 import { bookingOverlapsDateRange, contractMatchesSearch } from '../../utils/listFilters';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -60,6 +60,9 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
   const [contractPendingDelete, setContractPendingDelete] = useState<Contract | null>(null);
   const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [quickGeneratingId, setQuickGeneratingId] = useState<string | null>(null);
+  // Экспериментальное DOCX-меню (только для БМ; параллельно основной кнопке)
+  const [bmDocxMenuOpenFor, setBmDocxMenuOpenFor] = useState<string | null>(null);
+  const [bmDocxDownloadingId, setBmDocxDownloadingId] = useState<string | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [previewPdfBlob, setPreviewPdfBlob] = useState<Blob | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
@@ -138,6 +141,25 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
   useEffect(() => {
     setCurrentPage(page => clampPage(page, pageCount));
   }, [pageCount]);
+
+  // Закрываем popover-меню DOCX-генератора БМ при клике/Esc вне него.
+  useEffect(() => {
+    if (!bmDocxMenuOpenFor) return;
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('[data-bm-docx-menu]')) return;
+      setBmDocxMenuOpenFor(null);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBmDocxMenuOpenFor(null);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [bmDocxMenuOpenFor]);
 
   const handleAddContract = () => {
     setEditingContract(null);
@@ -263,6 +285,41 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
       toast(getErrorMessage(error, 'Ошибка при формировании документа'), 'error');
     } finally {
       setQuickGeneratingId(null);
+    }
+  };
+
+  // --- Экспериментальный DOCX-договор БМ (отдельно от основной генерации) ---
+  const handleBmDocxDownload = async (
+    contract: Contract,
+    mode: 'print' | 'signed',
+    output: 'docx' | 'pdf',
+  ) => {
+    if (contract.baseType !== 'chunga-changa') {
+      toast('DOCX-генератор поддерживает только договоры БМ', 'error');
+      return;
+    }
+    const downloadKey = `${contract.id}:${mode}:${output}`;
+    setBmDocxDownloadingId(downloadKey);
+    try {
+      const blob = await bmDocxApi.download(contract.id, mode, output);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      // Локально безопасное имя файла (cерверный Content-Disposition
+      // уже отдаёт правильное имя через RFC 5987, но если браузер
+      // им не воспользуется — fallback ниже):
+      const safeNumber = String(contract.number || contract.id).replace(/[^A-Za-z0-9_\-]/g, '_');
+      a.download = `bm_contract_${safeNumber}_${mode}.${output}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBmDocxMenuOpenFor(null);
+    } catch (error) {
+      console.error('BM DOCX download error:', error);
+      toast(getErrorMessage(error, 'Не удалось скачать DOCX-договор БМ'), 'error');
+    } finally {
+      setBmDocxDownloadingId(null);
     }
   };
 
@@ -514,6 +571,65 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                           {quickGeneratingId === `${contract.id}:send` ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
                           На отправку
                         </button>
+
+                        {/* Экспериментальная кнопка DOCX-договора БМ.
+                            Видна ТОЛЬКО для baseType === 'chunga-changa'. Не заменяет
+                            основные кнопки выше — параллельный путь для тестирования. */}
+                        {contract.baseType === 'chunga-changa' && (
+                          <div className="relative" data-bm-docx-menu>
+                            <button
+                              type="button"
+                              onClick={() => setBmDocxMenuOpenFor(prev => prev === contract.id ? null : contract.id)}
+                              disabled={bmDocxDownloadingId !== null && bmDocxDownloadingId.startsWith(`${contract.id}:`)}
+                              title="Экспериментальный DOCX-генератор (только БМ)"
+                              className={cn(
+                                "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60",
+                                isDarkMode ? "bg-purple-500/10 text-purple-300 hover:bg-purple-500/20" : "bg-purple-50 text-purple-700 hover:bg-purple-100"
+                              )}
+                            >
+                              {bmDocxDownloadingId && bmDocxDownloadingId.startsWith(`${contract.id}:`)
+                                ? <Loader2 size={14} className="animate-spin" />
+                                : <FlaskConical size={14} />}
+                              DOCX БМ
+                            </button>
+                            {bmDocxMenuOpenFor === contract.id && (
+                              <div
+                                className={cn(
+                                  "absolute right-0 z-20 mt-1 w-56 rounded-xl border p-1 shadow-lg",
+                                  isDarkMode ? "bg-[#161616] border-[#2a2a2a] text-[#F4F1EA]" : "bg-white border-gray-200 text-gray-800"
+                                )}
+                              >
+                                <div className={cn("px-3 py-1.5 text-[10px] uppercase tracking-wide", isDarkMode ? "text-purple-300" : "text-purple-700")}>
+                                  Тестовый DOCX-генератор
+                                </div>
+                                {([
+                                  { mode: 'print',  output: 'pdf',  label: 'PDF — для печати' },
+                                  { mode: 'print',  output: 'docx', label: 'DOCX — для печати' },
+                                  { mode: 'signed', output: 'pdf',  label: 'PDF — с подписью' },
+                                  { mode: 'signed', output: 'docx', label: 'DOCX — с подписью' },
+                                ] as const).map(opt => {
+                                  const downloadKey = `${contract.id}:${opt.mode}:${opt.output}`;
+                                  const isDownloading = bmDocxDownloadingId === downloadKey;
+                                  return (
+                                    <button
+                                      key={downloadKey}
+                                      type="button"
+                                      onClick={() => handleBmDocxDownload(contract, opt.mode, opt.output)}
+                                      disabled={bmDocxDownloadingId !== null}
+                                      className={cn(
+                                        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors disabled:cursor-wait disabled:opacity-60",
+                                        isDarkMode ? "hover:bg-[#232323]" : "hover:bg-gray-100"
+                                      )}
+                                    >
+                                      {isDownloading ? <Loader2 size={12} className="animate-spin" /> : <FileText size={12} />}
+                                      {opt.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

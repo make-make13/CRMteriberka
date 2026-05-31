@@ -209,6 +209,38 @@ export const emailSettingsApi = {
   }),
 };
 
+/**
+ * Экспериментальный API DOCX-генератора договора БМ.
+ * Эндпоинт принимает contract.id (НЕ номер — кириллица в URL ломается),
+ * mode = 'print' | 'signed', output = 'docx' | 'pdf'.
+ * Возвращает Blob (PDF или DOCX) с правильным Content-Type.
+ *
+ * Параллельно действующему PDFMe — основная кнопка генерации не затрагивается.
+ */
+export const bmDocxApi = {
+  async download(
+    contractId: string,
+    mode: 'print' | 'signed',
+    output: 'docx' | 'pdf',
+  ): Promise<Blob> {
+    const url = `/api/bm-docx/contract/${encodeURIComponent(contractId)}?mode=${mode}&output=${output}`;
+    const response = await fetch(url, {
+      headers: {
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+    });
+    if (!response.ok) {
+      let message = `Ошибка запроса ${response.status}`;
+      try {
+        const data = await response.json();
+        if (data?.error) message = data.error;
+      } catch { /* not JSON */ }
+      throw new Error(message);
+    }
+    return response.blob();
+  },
+};
+
 export const maintenanceApi = {
   createBackup: () => apiRequest<{ success: true; path: string }>('/api/backups', {
     method: 'POST',
