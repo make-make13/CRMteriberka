@@ -14,6 +14,7 @@ import EmailSettingsTab from './EmailSettingsTab';
 import BackupSettingsTab from './BackupSettingsTab';
 import ManagersSettingsTab from './ManagersSettingsTab';
 import BmDocxTemplatesTab from './BmDocxTemplatesTab';
+import RoomPricesCard from './RoomPricesCard';
 import { TEMPLATE_VARIABLES } from '../../utils/templateVariables';
 import { PDFME_TEMPLATE_DEFINITIONS, type PdfmeTemplateDefinition } from '../../utils/pdfmeTemplateIds';
 import { useToast } from '../../context/ToastContext';
@@ -321,6 +322,7 @@ export default function SettingsView({
       </div>
 
       {activeTab === 'general' ? (
+        <div className="space-y-8">
         <div className="grid grid-cols-2 gap-8">
           {/* Company Info */}
           <section className={cn(
@@ -431,6 +433,10 @@ export default function SettingsView({
             </section>
             )}
           </div>
+        </div>
+
+        {/* Стоимость номеров — полная ширина */}
+        <RoomPricesCard isDarkMode={isDarkMode} />
         </div>
       ) : activeTab === 'templates' ? (
         <div className="space-y-8">

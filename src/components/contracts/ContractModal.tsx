@@ -11,7 +11,8 @@ import { CC_OBJECTS, GB_OBJECTS, GB_SERVICES } from '../../constants';
 import { formatVisibleContractNumber, getNextContractNumberValue, resolveContractNumberCategory, type ContractNumberCategory } from '../../utils/contractNumbers';
 import DocumentPreviewModal, { type DocumentPreviewMode } from '../common/DocumentPreviewModal';
 import { emailService } from '../../services/emailService';
-import { emailSettingsApi, bmDocxApi } from '../../services/localApi';
+import { emailSettingsApi, bmDocxApi, settingsApi } from '../../services/localApi';
+import { ROOM_PRICES_SETTINGS_ID, getDefaultRoomPrices } from '../settings/RoomPricesCard';
 import { buildClientContractHistory } from '../../utils/clientHistory';
 import { prepareContractDataFromContract } from '../../utils/contractDocumentData';
 import { phoneMatchesSearch } from '../../utils/phoneSearch';
@@ -189,6 +190,8 @@ export default function ContractModal({
 
   const [showCcCottageDropdown, setShowCcCottageDropdown] = useState(false);
   const [showGbCottageDropdown, setShowGbCottageDropdown] = useState(false);
+  // Цены номеров из настроек (room-prices)
+  const [roomPrices, setRoomPrices] = useState<Record<string, number>>({});
   const clientDropdownRef = useRef<HTMLDivElement>(null);
   const ccDropdownRef = useRef<HTMLDivElement>(null);
   const gbDropdownRef = useRef<HTMLDivElement>(null);
@@ -287,7 +290,7 @@ export default function ContractModal({
       })(),
       ccCheckInDate: initialMainBooking ? safeFormat(initialMainBooking.startTime, "yyyy-MM-dd", format(new Date(), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'chunga-changa' ? format(prefilledBooking.date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")),
       ccCheckInTime: initialMainBooking ? safeFormat(initialMainBooking.startTime, "HH:mm", "14:00") : (prefilledBooking?.baseType === 'chunga-changa' ? format(prefilledBooking.date, "HH:mm") : "14:00"),
-      ccCheckOutDate: initialMainBooking ? safeFormat(initialMainBooking.endTime, "yyyy-MM-dd", format(new Date(), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'chunga-changa' ? format(addHours(prefilledBooking.date, 3), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")),
+      ccCheckOutDate: initialMainBooking ? safeFormat(initialMainBooking.endTime, "yyyy-MM-dd", format(addDays(new Date(), 1), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'chunga-changa' ? format(addHours(prefilledBooking.date, 3), "yyyy-MM-dd") : format(addDays(new Date(), 1), "yyyy-MM-dd")),
       ccCheckOutTime: initialMainBooking ? safeFormat(initialMainBooking.endTime, "HH:mm", "17:00") : (prefilledBooking?.baseType === 'chunga-changa' ? format(addHours(prefilledBooking.date, 3), "HH:mm") : "17:00"),
       
       // GB
@@ -344,6 +347,44 @@ export default function ContractModal({
   const ccIsDaily = watch('ccIsDaily');
   const ccCheckInDate = watch('ccCheckInDate');
   const ccCheckInTime = watch('ccCheckInTime');
+  const ccCheckOutDate = watch('ccCheckOutDate');
+
+  // Количество ночей — производное от дат заезда/выезда
+  const [ccNights, setCcNights] = useState<number>(() => {
+    if (initialMainBooking?.startTime && initialMainBooking?.endTime) {
+      const s = parseISO(initialMainBooking.startTime);
+      const e = parseISO(initialMainBooking.endTime);
+      const n = differenceInCalendarDays(e, s);
+      return n > 0 ? n : 1;
+    }
+    return 1;
+  });
+
+  // Занятые номера ЧЧ для выбранных дат (исключаем отменённые и текущий договор)
+  const occupiedRoomIds = useMemo<Set<string>>(() => {
+    if (!ccCheckInDate || !ccCheckOutDate) return new Set();
+    const newStart = parseISO(ccCheckInDate);
+    const newEnd = parseISO(ccCheckOutDate);
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime()) || newEnd <= newStart) return new Set();
+
+    const occupied = new Set<string>();
+    for (const contract of contracts) {
+      if (contract.status === 'cancelled') continue;
+      if (initialData && contract.id === initialData.id) continue;
+      if (contract.baseType !== 'chunga-changa') continue;
+      for (const booking of contract.bookings) {
+        if (booking.type !== 'main') continue;
+        const existStart = parseISO(booking.startTime);
+        const existEnd = parseISO(booking.endTime);
+        if (isNaN(existStart.getTime()) || isNaN(existEnd.getTime())) continue;
+        // День выезда не считается занятым: existStart < newEnd && existEnd > newStart
+        if (existStart < newEnd && existEnd > newStart) {
+          occupied.add(booking.objectId);
+        }
+      }
+    }
+    return occupied;
+  }, [ccCheckInDate, ccCheckOutDate, contracts, initialData]);
 
   const gbHasCottage = watch('gbHasCottage');
   const gbCottageId = watch('gbCottageId');
@@ -372,6 +413,65 @@ export default function ContractModal({
     gbCheckOutDate: getValues('gbCheckOutDate'),
     gbDaysCount: getValues('gbDaysCount')
   });
+
+  // Загружаем цены номеров из настроек при открытии модалки
+  useEffect(() => {
+    settingsApi.getById<Record<string, number>>(ROOM_PRICES_SETTINGS_ID).then(saved => {
+      if (saved && typeof saved === 'object') {
+        setRoomPrices({ ...getDefaultRoomPrices(), ...saved });
+      } else {
+        setRoomPrices(getDefaultRoomPrices());
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Автоподстановка стоимости: пересчитываем при смене номера или дат
+  const prevAutoPriceKey = useRef('');
+  useEffect(() => {
+    if (mode !== 'edit') return;
+    if (!ccCottageId || !ccCheckInDate || !ccCheckOutDate) return;
+
+    const pricePerNight = roomPrices[ccCottageId];
+    if (!pricePerNight) return;
+
+    const checkIn = parseISO(ccCheckInDate);
+    const checkOut = parseISO(ccCheckOutDate);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) return;
+
+    const nights = differenceInCalendarDays(checkOut, checkIn);
+    if (nights <= 0) return;
+
+    const calculatedAmount = pricePerNight * nights;
+    const key = `${ccCottageId}|${ccCheckInDate}|${ccCheckOutDate}`;
+
+    // Не перетираем, если комбинация не изменилась
+    if (prevAutoPriceKey.current === key) return;
+    prevAutoPriceKey.current = key;
+
+    setValue('totalAmount', calculatedAmount);
+  }, [ccCottageId, ccCheckInDate, ccCheckOutDate, roomPrices, mode, setValue]);
+
+  // Синхронизируем ccNights при изменении дат заезда/выезда
+  useEffect(() => {
+    if (baseType !== 'chunga-changa') return;
+    if (!ccCheckInDate || !ccCheckOutDate) return;
+    const checkIn = parseISO(ccCheckInDate);
+    const checkOut = parseISO(ccCheckOutDate);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) return;
+    const n = differenceInCalendarDays(checkOut, checkIn);
+    if (n > 0) setCcNights(n);
+  }, [ccCheckInDate, ccCheckOutDate, baseType]);
+
+  const handleCcNightsChange = (newNights: number) => {
+    if (newNights < 1 || !ccCheckInDate) return;
+    const checkIn = parseISO(ccCheckInDate);
+    if (isNaN(checkIn.getTime())) return;
+    setCcNights(newNights);
+    const checkOut = addDays(checkIn, newNights);
+    setValue('ccCheckOutDate', format(checkOut, 'yyyy-MM-dd'));
+    setValue('ccCheckOutTime', '12:00');
+  };
 
   useEffect(() => {
     if (!initialData) {
@@ -1061,11 +1161,15 @@ export default function ContractModal({
                                 >
                                   {ccObjectOptions.map(obj => {
                                     const isSelected = ccCottageId === obj.id;
+                                    const isOccupied = !isSelected && occupiedRoomIds.has(obj.id);
                                     return (
                                       <button
                                         key={obj.id}
                                         type="button"
+                                        disabled={isOccupied}
+                                        title={isOccupied ? 'Занят на выбранные даты' : undefined}
                                         onClick={() => {
+                                          if (isOccupied) return;
                                           setValue('ccCottageId', obj.id);
                                           setShowCcCottageDropdown(false);
                                         }}
@@ -1073,9 +1177,13 @@ export default function ContractModal({
                                           "rounded-lg py-2 text-xs font-bold text-center transition-colors",
                                           isSelected
                                             ? "bg-orange-500 text-white"
-                                            : isDarkMode
-                                              ? "bg-white/5 text-gray-300 hover:bg-white/10"
-                                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            : isOccupied
+                                              ? isDarkMode
+                                                ? "bg-white/[0.02] text-gray-600 cursor-not-allowed line-through"
+                                                : "bg-gray-50 text-gray-300 cursor-not-allowed line-through"
+                                              : isDarkMode
+                                                ? "bg-white/5 text-gray-300 hover:bg-white/10"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         )}
                                       >
                                         {obj.name}
@@ -1094,20 +1202,53 @@ export default function ContractModal({
             {baseType === 'chunga-changa' && (
               <section className="space-y-2">
                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Время заезда и выезда</h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Заезд</label>
-                    <div className="flex items-center gap-2">
-                      <input type="date" {...register('ccCheckInDate')} disabled={mode === 'view'} className={cn("w-32 px-4 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-                      <input type="time" {...register('ccCheckInTime')} disabled={mode === 'view'} className={cn("flex-1 px-4 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Выезд</label>
-                    <div className="flex items-center gap-2">
-                      <input type="date" {...register('ccCheckOutDate')} disabled={mode === 'view'} className={cn("w-32 px-4 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-                      <input type="time" {...register('ccCheckOutTime')} disabled={mode === 'view'} className={cn("flex-1 px-4 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
-                    </div>
+                {/* [дата заезда][время] | [дата выезда][время] | −[N ночей]+ */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input type="date" {...register('ccCheckInDate')} disabled={mode === 'view'} className={cn("w-32 px-3 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+                  <input type="time" {...register('ccCheckInTime')} disabled={mode === 'view'} className={cn("w-24 px-3 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+
+                  <div className={cn("w-px h-6 self-center", isDarkMode ? "bg-white/10" : "bg-gray-200")} />
+
+                  <input type="date" {...register('ccCheckOutDate')} disabled={mode === 'view'} className={cn("w-32 px-3 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+                  <input type="time" {...register('ccCheckOutTime')} disabled={mode === 'view'} className={cn("w-24 px-3 py-2 rounded-xl text-sm outline-none border", isDarkMode ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200")} />
+
+                  <div className={cn("w-px h-6 self-center", isDarkMode ? "bg-white/10" : "bg-gray-200")} />
+
+                  {/* Счётчик ночей */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleCcNightsChange(ccNights - 1)}
+                      disabled={mode === 'view' || ccNights <= 1}
+                      className={cn(
+                        "w-7 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors disabled:opacity-40",
+                        isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      )}
+                    >−</button>
+                    <input
+                      type="number"
+                      min={1}
+                      value={ccNights}
+                      onChange={e => {
+                        const v = parseInt(e.target.value, 10);
+                        if (!isNaN(v)) handleCcNightsChange(v);
+                      }}
+                      disabled={mode === 'view'}
+                      className={cn(
+                        "w-10 h-8 px-1 rounded-lg text-sm text-center outline-none border",
+                        isDarkMode ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
+                      )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCcNightsChange(ccNights + 1)}
+                      disabled={mode === 'view'}
+                      className={cn(
+                        "w-7 h-8 rounded-lg text-sm font-bold flex items-center justify-center transition-colors disabled:opacity-40",
+                        isDarkMode ? "bg-white/5 hover:bg-white/10 text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      )}
+                    >+</button>
+                    <span className={cn("text-xs ml-0.5", isDarkMode ? "text-gray-500" : "text-gray-400")}>ночей</span>
                   </div>
                 </div>
               </section>
