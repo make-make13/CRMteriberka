@@ -508,7 +508,12 @@ function AppShell() {
         return (
           <LeadsView
             isDarkMode={isDarkMode}
-            onClientCreated={(client) => setClients(prev => prev.some(item => item.id === client.id) ? prev : [client, ...prev])}
+            clients={clients}
+            onClientSaved={(client) => setClients(prev =>
+              prev.some(item => item.id === client.id)
+                ? prev.map(item => item.id === client.id ? client : item)
+                : [client, ...prev]
+            )}
             onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
             updatedLeadFromPrebooking={updatedLeadFromPrebooking}
           />

@@ -6,12 +6,13 @@ import { ru } from 'date-fns/locale';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
-import { leadApi } from '../../services/localApi';
+import { clientApi, leadApi } from '../../services/localApi';
 import { getErrorMessage } from '../../utils/errors';
 import { useToast } from '../../context/ToastContext';
 import EmptyState from '../common/EmptyState';
 import LeadModal from './LeadModal';
 import LeadStatusBadge from './LeadStatusBadge';
+import ClientModal from '../clients/ClientModal';
 import { cleanText, formatDateValue, formatLeadSource } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
@@ -27,7 +28,8 @@ const STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
 
 interface LeadsProps {
   isDarkMode: boolean;
-  onClientCreated?: (client: Client) => void;
+  clients: Client[];
+  onClientSaved?: (client: Client) => void;  // create + update
   onCreatePrebookingFromLead?: (lead: Lead) => void;
   updatedLeadFromPrebooking?: Lead | null;
 }
@@ -51,7 +53,7 @@ function formatDateRange(lead: Lead) {
   return startDate || endDate || 'Не указаны';
 }
 
-export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingFromLead, updatedLeadFromPrebooking }: LeadsProps) {
+export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePrebookingFromLead, updatedLeadFromPrebooking }: LeadsProps) {
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,6 +64,7 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [leadOpenError, setLeadOpenError] = useState('');
+  const [pendingClientEdit, setPendingClientEdit] = useState<Client | null>(null);
 
   const loadLeads = async () => {
     setIsLoading(true);
@@ -134,13 +137,48 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
       const result = await leadApi.createClient(id);
       setLeads(prev => prev.map(lead => lead.id === result.lead.id ? result.lead : lead));
       setEditingLead(result.lead);
-      onClientCreated?.(result.client);
+      onClientSaved?.(result.client);
       toast('Гость создан', 'success');
+      // Закрываем LeadModal, затем открываем карточку гостя (без наложения модалок)
+      setIsModalOpen(false);
+      setPendingClientEdit(result.client);
     } catch (error) {
       console.error('Error creating client from lead:', error);
       toast(getErrorMessage(error, 'Ошибка при создании гостя'), 'error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleOpenClient = async (clientId: string) => {
+    // Сначала ищем в prop (быстро), если нет — грузим с сервера (fallback)
+    let client = clients.find(c => c.id === clientId) ?? null;
+    if (!client) {
+      try {
+        const all = await clientApi.list();
+        client = all.find(c => c.id === clientId) ?? null;
+        if (client) onClientSaved?.(client); // синхронизируем parent state
+      } catch (error) {
+        console.error('Error loading clients:', error);
+      }
+    }
+    if (!client) {
+      toast('Гость не найден', 'error');
+      return;
+    }
+    // Закрываем LeadModal, затем открываем карточку гостя (без наложения модалок)
+    setIsModalOpen(false);
+    setPendingClientEdit(client);
+  };
+
+  const handleSaveClientFromLead = async (client: Client) => {
+    try {
+      const saved = await clientApi.save(client);
+      onClientSaved?.(saved);
+      setPendingClientEdit(null);
+      toast('Гость сохранён', 'success');
+    } catch (error) {
+      toast(getErrorMessage(error, 'Ошибка при сохранении гостя'), 'error');
     }
   };
 
@@ -400,12 +438,24 @@ export default function Leads({ isDarkMode, onClientCreated, onCreatePrebookingF
         isDarkMode={isDarkMode}
         lead={editingLead}
         isSaving={isSaving}
+        clients={clients}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         onCreateClient={handleCreateClient}
         onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
+        onOpenClient={handleOpenClient}
       />
+
+      {pendingClientEdit && (
+        <ClientModal
+          isDarkMode={isDarkMode}
+          initialData={pendingClientEdit}
+          mode="edit"
+          onClose={() => setPendingClientEdit(null)}
+          onSave={handleSaveClientFromLead}
+        />
+      )}
     </div>
   );
 }

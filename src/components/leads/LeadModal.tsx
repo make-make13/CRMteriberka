@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronDown, Loader2, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
+import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
 import LeadStatusBadge, { LEAD_STATUS_LABELS } from './LeadStatusBadge';
 import { formatLeadSource, getLeadOriginLabel, normalizeLeadStatus } from './leadDisplay';
 
@@ -41,8 +41,10 @@ interface LeadModalProps {
   onClose: () => void;
   onCreate: (input: LeadCreateInput) => Promise<void>;
   onUpdate: (id: string, patch: LeadUpdateInput) => Promise<void>;
+  clients?: Client[];
   onCreateClient: (id: string) => Promise<void>;
   onCreatePrebookingFromLead: (lead: Lead) => void;
+  onOpenClient?: (clientId: string) => void;
 }
 
 function textInputValue(value: unknown) {
@@ -101,8 +103,10 @@ export default function LeadModal({
   onClose,
   onCreate,
   onUpdate,
+  clients = [],
   onCreateClient,
   onCreatePrebookingFromLead,
+  onOpenClient,
 }: LeadModalProps) {
   const [form, setForm] = useState<LeadFormState>(() => getInitialState(lead));
   const [isTechOpen, setIsTechOpen] = useState(false);
@@ -173,9 +177,22 @@ export default function LeadModal({
   const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
   const canCreateClient = Boolean(lead && !lead.clientId && !isClientCreateBlockedStatus);
 
+  // Найти привязанного гостя
+  const linkedClient = lead?.clientId ? clients.find(c => c.id === lead.clientId) : null;
+  const linkedClientName = linkedClient
+    ? linkedClient.type === 'physical'
+      ? [linkedClient.lastName, linkedClient.firstName, linkedClient.middleName].filter(Boolean).join(' ').trim() || linkedClient.firstName
+      : linkedClient.organizationName
+    : null;
+
   const handleCreateClient = async () => {
     if (!lead || !canCreateClient) return;
     await onCreateClient(lead.id);
+  };
+
+  const handleOpenClient = () => {
+    if (!lead?.clientId || !onOpenClient) return;
+    onOpenClient(lead.clientId);
   };
 
   const handleCreatePrebooking = () => {
@@ -298,9 +315,25 @@ export default function LeadModal({
               {lead && (
                 <div className="flex flex-wrap items-center gap-2 md:col-span-2">
                   {lead.clientId ? (
-                    <span className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-teal-400/10 border-teal-400/20 text-teal-300' : 'bg-emerald-50 text-emerald-700')}>
-                      Гость создан
-                    </span>
+                    <>
+                      <span className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-teal-400/10 border-teal-400/20 text-teal-300' : 'bg-emerald-50 text-emerald-700')}>
+                        Гость создан
+                      </span>
+                      {onOpenClient && (
+                        <button
+                          type="button"
+                          onClick={handleOpenClient}
+                          className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50')}
+                        >
+                          Открыть гостя
+                        </button>
+                      )}
+                      {linkedClientName && (
+                        <span className={cn('text-xs font-medium', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+                          {linkedClientName}
+                        </span>
+                      )}
+                    </>
                   ) : canCreateClient ? (
                     <button
                       type="button"
