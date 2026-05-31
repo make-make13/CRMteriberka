@@ -2,9 +2,10 @@ import dotenv from 'dotenv';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'node:path';
+import fs from 'node:fs';
 import nodemailer from 'nodemailer';
 import { fileURLToPath } from 'node:url';
-import { BookingConflictError, localDb, maskIntegrationSettings } from './server/localDatabase';
+import { BookingConflictError, localDb, localPaths, maskIntegrationSettings } from './server/localDatabase';
 import { backupService } from './server/backupService';
 import { authService } from './server/authService';
 import { syncSupabaseLeads, testSupabaseConnection } from './server/supabaseLeadSync';
@@ -20,6 +21,16 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/** Версия приложения из package.json — единственный источник правды. */
+const APP_VERSION: string = (() => {
+  try {
+    const raw = fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8');
+    return (JSON.parse(raw) as { version?: string }).version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 function asErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
@@ -129,6 +140,16 @@ async function startServer() {
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
+  });
+
+  /** Информация о версии и окружении. Не требует авторизации. */
+  app.get('/api/app-info', (_req, res) => {
+    res.json({
+      version: APP_VERSION,
+      mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+      dataDir: localPaths.dataDir,
+      dbPath:  localPaths.dbPath,
+    });
   });
 
   // Экспериментальный DOCX-генератор договора БМ.

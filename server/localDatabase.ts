@@ -6,6 +6,12 @@ import type { Database as DatabaseConnection } from 'better-sqlite3';
 const require = createRequire(import.meta.url);
 const BetterSqlite3 = require('better-sqlite3');
 
+// Версия приложения — записывается в schema_migrations.app_version при применении миграции.
+const _pkgJson = (() => {
+  try { return require('../package.json') as { version?: string }; } catch { return {}; }
+})();
+const _APP_VERSION: string = typeof _pkgJson.version === 'string' ? _pkgJson.version : '0.0.0';
+
 // ── Integration Settings types ──────────────────────────────────────────────
 
 /** Полная запись настроек (хранится в SQLite, секреты не покидают сервер) */
@@ -237,10 +243,25 @@ interface LeadDbRow {
   last_error: string | null;
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+// ── Data directory resolution ──────────────────────────────────────────────
+// Приоритет путей (от наивысшего к наименьшему):
+//   1. CRM_DB_PATH   — явный путь к файлу БД
+//   2. CRM_DATA_DIR  — корневая директория данных (БД = CRM_DATA_DIR/crm.sqlite)
+//   3. По умолчанию  — <cwd>/data/  (dev-режим и текущее расположение)
+//
+// Директория бэкапов всегда = DATA_DIR/backups/, независимо от CRM_DB_PATH.
+// Не переносить существующую БД автоматически — только читать нужный путь.
+
+const DATA_DIR = process.env.CRM_DATA_DIR
+  ? path.resolve(process.env.CRM_DATA_DIR)
+  : path.resolve(process.cwd(), 'data');
+
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 const TEMPLATE_BACKUP_DIR = path.join(BACKUP_DIR, 'templates');
-const DB_PATH = path.join(DATA_DIR, 'crm.sqlite');
+
+const DB_PATH = process.env.CRM_DB_PATH
+  ? path.resolve(process.env.CRM_DB_PATH)
+  : path.join(DATA_DIR, 'crm.sqlite');
 const STABLE_PDFME_INVOICE_TEMPLATE_ID = 'invoice_pdfme';
 const LEGACY_PDFME_INVOICE_TEMPLATE_RE = /^invoice_pdfme_v(\d+)$/;
 
@@ -318,12 +339,18 @@ export class LocalDatabase {
   constructor() {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    // Если CRM_DB_PATH указывает в другую директорию — создаём и её.
+    const dbDir = path.dirname(DB_PATH);
+    if (dbDir !== DATA_DIR) fs.mkdirSync(dbDir, { recursive: true });
+    // Запомнить до открытия: нужно ли делать backup перед миграциями.
+    const dbExistedBeforeOpen = fs.existsSync(DB_PATH);
     this.db = new BetterSqlite3(DB_PATH) as DatabaseConnection;
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.initSchema();
     this.migratePdfmeInvoiceTemplateId();
     this.migrateLeadAiFields();
+    this.runNewMigrations(dbExistedBeforeOpen);
   }
 
   private initSchema() {
@@ -483,6 +510,12 @@ export class LocalDatabase {
 
       CREATE INDEX IF NOT EXISTS idx_leads_email
         ON leads(email);
+
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        id          TEXT PRIMARY KEY,
+        applied_at  TEXT NOT NULL,
+        app_version TEXT
+      );
     `);
   }
 
@@ -551,6 +584,80 @@ export class LocalDatabase {
       if (!existing.includes(col.name)) {
         this.db.exec(`ALTER TABLE leads ADD COLUMN ${col.name} ${col.def}`);
       }
+    }
+  }
+
+  // ── Schema versioning helpers (Task 4) ────────────────────────────────────
+
+  /** Проверяет, была ли уже применена миграция с данным id. */
+  private hasMigration(id: string): boolean {
+    const row = this.db.prepare('SELECT 1 FROM schema_migrations WHERE id = ?').get(id);
+    return row !== undefined;
+  }
+
+  /** Фиксирует применение миграции в schema_migrations. */
+  private markMigrationApplied(id: string): void {
+    this.db.prepare(
+      'INSERT OR IGNORE INTO schema_migrations (id, applied_at, app_version) VALUES (?, ?, ?)'
+    ).run(id, nowIso(), _APP_VERSION);
+  }
+
+  /**
+   * Создаёт резервную копию БД через VACUUM INTO перед структурными миграциями.
+   * Путь: data/backups/before-migration-YYYY-MM-DD-HH-mm-ss/crm.sqlite
+   * Бросает ошибку, если backup не удался — миграция не запускается.
+   */
+  private backupBeforeMigrations(): void {
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const dir = path.join(BACKUP_DIR, `before-migration-${ts}`);
+    const dest = path.join(dir, 'crm.sqlite');
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      // VACUUM INTO — онлайн-резервная копия, работает при открытой БД (SQLite 3.27+)
+      const destForSql = dest.replace(/\\/g, '/').replace(/'/g, "''");
+      this.db.exec(`VACUUM INTO '${destForSql}'`);
+      console.log(`[DB] Pre-migration backup created: ${dest}`);
+    } catch (err) {
+      throw new Error(
+        `Не удалось создать резервную копию базы данных перед миграцией.\n` +
+        `Путь: ${dest}\n` +
+        `Ошибка: ${err instanceof Error ? err.message : String(err)}\n` +
+        `Миграция остановлена для безопасности данных.`
+      );
+    }
+  }
+
+  /**
+   * Запускает новые версионированные миграции (Task 4/5).
+   * Идемпотентны: каждая применяется не более одного раза (запись в schema_migrations).
+   * Если есть ожидающие миграции И база существовала до запуска — сначала создаётся backup.
+   *
+   * Как добавить новую миграцию:
+   *   1. Добавьте объект в массив migrations с уникальным id (нпр. 'add_bookings_notes_v1').
+   *   2. В run() выполните SQL-изменение.
+   *   3. Порядок в массиве важен — новые добавляйте в конец.
+   */
+  private runNewMigrations(dbExistedBeforeOpen: boolean): void {
+    type Migration = { id: string; run: () => void };
+
+    // ─── Список версионированных миграций ──────────────────────────────────
+    // Новые миграции добавляйте СЮДА в конец списка:
+    const migrations: Migration[] = [
+      // { id: 'example_v1', run: () => { this.db.exec('ALTER TABLE foo ADD COLUMN bar TEXT'); } },
+    ];
+    // ───────────────────────────────────────────────────────────────────────
+
+    const pending = migrations.filter(m => !this.hasMigration(m.id));
+    if (pending.length === 0) return;
+
+    if (dbExistedBeforeOpen) {
+      this.backupBeforeMigrations();
+    }
+
+    for (const m of pending) {
+      m.run();
+      this.markMigrationApplied(m.id);
+      console.log(`[DB] Migration applied: ${m.id}`);
     }
   }
 

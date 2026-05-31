@@ -442,6 +442,17 @@ export interface AiBackendTestResult {
   error?: string;
 }
 
+export interface AppInfo {
+  version: string;
+  mode: 'production' | 'development';
+  dataDir: string | null;
+  dbPath: string | null;
+}
+
+export const appInfoApi = {
+  get: () => apiRequest<AppInfo>('/api/app-info'),
+};
+
 export const integrationSettingsApi = {
   get: () => apiRequest<IntegrationSettingsMasked>('/api/integration-settings'),
   save: (input: IntegrationSettingsInput) => apiRequest<IntegrationSettingsMasked>('/api/integration-settings', {
