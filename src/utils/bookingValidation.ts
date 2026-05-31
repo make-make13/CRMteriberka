@@ -87,7 +87,7 @@ export function validateBookingPeriod(input: BookingPeriodInput): BookingPeriodR
 
     const nights = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     if (nights < 1) {
-      return { ok: false, error: 'Минимальное время бронирования коттеджа - 1 сутки.' };
+      return { ok: false, error: 'Минимальное время бронирования номера — 1 сутки.' };
     }
 
     return {

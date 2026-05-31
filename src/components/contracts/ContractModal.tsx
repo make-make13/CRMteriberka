@@ -119,11 +119,11 @@ const getHistoryStatusClass = (status: ContractStatus) => {
 };
 
 const getHistoryBaseLabel = (baseType: BaseType) => (
-  baseType === 'chunga-changa' ? 'Большая Медведица' : 'Старый объект / неактивный объект'
+  baseType === 'chunga-changa' ? 'Большая Медведица' : 'Архив'
 );
 
 const getHistoryObjectLabel = (objectId?: string) => {
-  if (!objectId) return 'Без объекта';
+  if (!objectId) return 'Без номера';
   if (objectId === 'gb-bath') return 'Баня';
   if (objectId === 'gb-furako') return 'Фурако';
   if (objectId.startsWith('cc-')) return `Номер №${objectId.replace('cc-', '')}`;
