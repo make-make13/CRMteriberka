@@ -218,6 +218,7 @@ export const emailSettingsApi = {
  * Параллельно действующему PDFMe — основная кнопка генерации не затрагивается.
  */
 export const bmDocxApi = {
+  /** Скачать DOCX/PDF через старый code-генератор (прежнее поведение). */
   async download(
     contractId: string,
     mode: 'print' | 'signed',
@@ -238,6 +239,39 @@ export const bmDocxApi = {
       throw new Error(message);
     }
     return response.blob();
+  },
+
+  /**
+   * Скачать PDF/DOCX договора БМ с указанием engine.
+   * Возвращает blob + значение заголовка X-BM-DOCX-Engine
+   * ('template' | 'code' | 'code-fallback').
+   *
+   * engine='template-fallback' — рекомендуется для основных кнопок UI:
+   *   пробует активный DOCX-шаблон, при отсутствии/ошибке — резервный генератор.
+   */
+  async downloadBmContract(
+    contractId: string,
+    mode: 'print' | 'signed',
+    output: 'docx' | 'pdf',
+    engine: 'template' | 'code' | 'template-fallback',
+  ): Promise<{ blob: Blob; engineUsed: string | null }> {
+    const url = `/api/bm-docx/contract/${encodeURIComponent(contractId)}?mode=${mode}&output=${output}&engine=${engine}`;
+    const response = await fetch(url, {
+      headers: {
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+    });
+    if (!response.ok) {
+      let message = `Ошибка запроса ${response.status}`;
+      try {
+        const data = await response.json();
+        if (data?.error) message = data.error;
+      } catch { /* not JSON */ }
+      throw new Error(message);
+    }
+    const blob = await response.blob();
+    const engineUsed = response.headers.get('X-BM-DOCX-Engine');
+    return { blob, engineUsed };
   },
 };
 

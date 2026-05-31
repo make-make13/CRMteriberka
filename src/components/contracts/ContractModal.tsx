@@ -11,7 +11,7 @@ import { CC_OBJECTS, GB_OBJECTS, GB_SERVICES } from '../../constants';
 import { formatVisibleContractNumber, getNextContractNumberValue, resolveContractNumberCategory, type ContractNumberCategory } from '../../utils/contractNumbers';
 import DocumentPreviewModal, { type DocumentPreviewMode } from '../common/DocumentPreviewModal';
 import { emailService } from '../../services/emailService';
-import { emailSettingsApi } from '../../services/localApi';
+import { emailSettingsApi, bmDocxApi } from '../../services/localApi';
 import { buildClientContractHistory } from '../../utils/clientHistory';
 import { prepareContractDataFromContract } from '../../utils/contractDocumentData';
 import { phoneMatchesSearch } from '../../utils/phoneSearch';
@@ -602,21 +602,34 @@ export default function ContractModal({
       toast('Выберите гостя', 'error');
       return;
     }
-    
+
     setIsGenerating(true);
     setShowGenerateDropdown(false);
     try {
       const data = getValues();
       const contract = createContractObject(data);
-      
-      const contractData = prepareContractDataFromContract(contract, selectedClient);
       const fileNames = {
         print: `Договор_на_печать_${contract.number}`,
         send: `Пакет_документов_${contract.number}`,
       };
 
-      const { generatePdfmeContractBlob } = await import('../../utils/pdfmeDocumentGenerator');
-      const pdfBlob = await generatePdfmeContractBlob(contractData, type);
+      let pdfBlob: Blob;
+
+      if (!initialData?.id) {
+        // Новый договор ещё не сохранён — шаблону нужен ID в БД
+        toast('Сначала сохраните договор, затем сформируйте документ.', 'info');
+        return;
+      }
+
+      // Договор сохранён — используем активный DOCX-шаблон БМ с резервным генератором
+      const bmMode = type === 'send' ? 'signed' : 'print';
+      const { blob, engineUsed } = await bmDocxApi.downloadBmContract(
+        String(initialData.id), bmMode, 'pdf', 'template-fallback',
+      );
+      pdfBlob = blob;
+      if (engineUsed === 'code-fallback') {
+        toast('Активный DOCX-шаблон недоступен — использован резервный генератор.', 'info');
+      }
 
       setPreviewMode(type);
       setPreviewPdfBlob(pdfBlob);

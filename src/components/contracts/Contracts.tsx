@@ -269,8 +269,24 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
 
     setQuickGeneratingId(`${contract.id}:${type}`);
     try {
-      const { generatePdfmeContractBlob } = await import('../../utils/pdfmeDocumentGenerator');
-      const pdfBlob = await generatePdfmeContractBlob(prepareContractDataFromContract(contract, client), type);
+      let pdfBlob: Blob;
+
+      if (contract.baseType === 'chunga-changa') {
+        // БМ-договор: активный DOCX-шаблон с резервным кодогенератором
+        const bmMode = type === 'send' ? 'signed' : 'print';
+        const { blob, engineUsed } = await bmDocxApi.downloadBmContract(
+          String(contract.id), bmMode, 'pdf', 'template-fallback',
+        );
+        pdfBlob = blob;
+        if (engineUsed === 'code-fallback') {
+          toast('Активный DOCX-шаблон недоступен — использован резервный генератор.', 'info');
+        }
+      } else {
+        // Не-БМ договор: прежняя PDFMe-генерация
+        const { generatePdfmeContractBlob } = await import('../../utils/pdfmeDocumentGenerator');
+        pdfBlob = await generatePdfmeContractBlob(prepareContractDataFromContract(contract, client), type);
+      }
+
       setPreviewMode(type);
       setPreviewPdfBlob(pdfBlob);
       setPreviewFileName(type === 'send' ? `Пакет_документов_${contract.number}` : `Договор_на_печать_${contract.number}`);
