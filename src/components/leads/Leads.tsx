@@ -21,12 +21,8 @@ function cn(...inputs: ClassValue[]) {
 const STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
   { id: 'all', label: 'Все' },
   { id: 'new', label: 'Новые' },
-  { id: 'in_progress', label: 'В работе' },
-  { id: 'client_created', label: 'Гость создан' },
-  { id: 'prebooking_created', label: 'Предбронь' },
-  { id: 'contract_created', label: 'Договор' },
-  { id: 'rejected', label: 'Отказ' },
-  { id: 'duplicate', label: 'Дубль' },
+  { id: 'contract_created', label: 'Подтверждена' },
+  { id: 'rejected', label: 'Отклонена' },
 ];
 
 interface LeadsProps {

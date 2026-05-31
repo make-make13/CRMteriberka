@@ -13,12 +13,8 @@ function cn(...inputs: ClassValue[]) {
 
 const STATUS_OPTIONS: LeadStatus[] = [
   'new',
-  'in_progress',
-  'client_created',
-  'prebooking_created',
   'contract_created',
   'rejected',
-  'duplicate',
 ];
 
 interface LeadFormState {
@@ -176,10 +172,6 @@ export default function LeadModal({
 
   const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
   const canCreateClient = Boolean(lead && !lead.clientId && !isClientCreateBlockedStatus);
-  const hasCreatedContract = form.status === 'contract_created';
-  const hasPrebooking = Boolean((lead?.prebookingId || lead?.contractId) && !hasCreatedContract);
-  const isPrebookingBlockedStatus = ['rejected', 'duplicate'].includes(form.status);
-  const canCreatePrebooking = Boolean(lead && lead.clientId && !hasPrebooking && !isPrebookingBlockedStatus);
 
   const handleCreateClient = async () => {
     if (!lead || !canCreateClient) return;
@@ -187,8 +179,7 @@ export default function LeadModal({
   };
 
   const handleCreatePrebooking = () => {
-    if (!lead || !canCreatePrebooking) return;
-    onCreatePrebookingFromLead(lead);
+    onCreatePrebookingFromLead(lead!);
   };
 
   const inputClass = cn(
@@ -289,16 +280,18 @@ export default function LeadModal({
               <label className="space-y-1.5">
                 <span className={labelClass}>Статус</span>
                 <select className={inputClass} value={form.status} onChange={event => setField('status', event.target.value as LeadStatus)}>
-                  {STATUS_OPTIONS.map(status => (
-                    <option key={status} value={status}>{LEAD_STATUS_LABELS[status]}</option>
+                  {STATUS_OPTIONS.map(s => (
+                    <option key={s} value={s}>{LEAD_STATUS_LABELS[s]}</option>
                   ))}
                 </select>
               </label>
               <div className="flex items-end gap-2">
-                <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('in_progress')} className={cn('rounded-lg px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-white text-gray-700 hover:bg-gray-100')}>
-                  В работу
-                </button>
-                <button type="button" disabled={isSaving} onClick={() => handleQuickStatus('rejected')} className={cn("rounded-lg px-3 py-1.5 text-sm font-bold transition-colors border", isDarkMode ? "bg-[#F3B2BF]/15 border-[#F3B2BF]/30 text-[#F3B2BF] hover:bg-[#F3B2BF]/25" : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20")}>
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => handleQuickStatus('rejected')}
+                  className={cn("rounded-lg px-3 py-1.5 text-sm font-bold transition-colors border", isDarkMode ? "bg-[#F3B2BF]/15 border-[#F3B2BF]/30 text-[#F3B2BF] hover:bg-[#F3B2BF]/25" : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20")}
+                >
                   Отклонить
                 </button>
               </div>
@@ -313,31 +306,11 @@ export default function LeadModal({
                       type="button"
                       disabled={isSaving}
                       onClick={handleCreateClient}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#D98E2B] px-3 py-1.5 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#D98E2B] px-4 py-1.5 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSaving && <Loader2 size={15} className="animate-spin" />}
                       Создать гостя
                     </button>
-                  ) : null}
-                  {hasCreatedContract ? (
-                    <span className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-[#8CAFBE]/15 border-[#8CAFBE]/30 text-[#8CAFBE]' : 'bg-violet-50 text-violet-700')}>
-                      Договор создан
-                    </span>
-                  ) : hasPrebooking ? (
-                    <span className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-[#FFE08A]/10 border-[#FFE08A]/20 text-[#FFE08A]' : 'bg-cyan-50 text-cyan-700')}>
-                      Предбронь создана
-                    </span>
-                  ) : canCreatePrebooking ? (
-                    <button
-                      type="button"
-                      disabled={isSaving}
-                      onClick={handleCreatePrebooking}
-                      className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'bg-[#FFE08A]/15 border-[#FFE08A]/30 text-[#FFE08A] hover:bg-[#FFE08A]/25' : 'bg-cyan-50 text-cyan-800 hover:bg-cyan-100')}
-                    >
-                      Создать предбронь
-                    </button>
-                  ) : !lead.clientId && !isPrebookingBlockedStatus ? (
-                    <span className={cn("text-sm font-medium", isDarkMode ? "text-[#B4CDD2]/60" : "text-gray-500")}>Сначала создайте гостя</span>
                   ) : null}
                 </div>
               )}

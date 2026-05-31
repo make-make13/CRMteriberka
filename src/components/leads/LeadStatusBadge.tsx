@@ -10,10 +10,10 @@ function cn(...inputs: ClassValue[]) {
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   new: 'Новая',
   in_progress: 'В работе',
-  client_created: 'Гость создан',
-  prebooking_created: 'Предбронь',
-  contract_created: 'Договор',
-  rejected: 'Отказ',
+  client_created: 'В работе',
+  prebooking_created: 'В работе',
+  contract_created: 'Подтверждена',
+  rejected: 'Отклонена',
   duplicate: 'Дубль',
 };
 

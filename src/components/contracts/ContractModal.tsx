@@ -149,15 +149,15 @@ const getStatusFromPayment = (prepayment: number, totalAmount: number): Contract
   return 'partial_paid';
 };
 
-export default function ContractModal({ 
-  isOpen, 
-  isDarkMode, 
-  onClose, 
-  onSave, 
-  initialData, 
-  clients, 
+export default function ContractModal({
+  isOpen,
+  isDarkMode,
+  onClose,
+  onSave,
+  initialData,
+  clients,
   settings,
-  contracts, 
+  contracts,
   prefilledBooking,
   initialMode = 'edit',
   canDeleteContract = false,
@@ -274,7 +274,7 @@ export default function ContractModal({
       prepayment: initialData?.prepayment || 0,
       guestsCount: initialData?.guestsCount || 0,
       comment: initialData?.comment || '',
-      
+
       // CC
       ccCottageId: initialMainBooking?.objectId || (prefilledBooking?.baseType === 'chunga-changa' ? prefilledBooking.objectId : ''),
       ccIsDaily: (() => {
