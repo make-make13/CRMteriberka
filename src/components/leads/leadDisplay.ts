@@ -7,13 +7,20 @@ type LeadLike = Partial<Lead> & {
 export const UNKNOWN_TEXT = 'Не указано';
 
 export const SOURCE_LABELS: Record<string, string> = {
-  'bolshaya-medveditsa-landing': 'Сайт',
-  'сайт': 'Сайт',
-  local: 'Локально',
-  'локально': 'Локально',
-  'api-smoke': 'API',
-  'api smoke': 'API',
-  api: 'API',
+  // Сайт Большой Медведицы — основной источник заявок из Supabase
+  'bolshaya-medveditsa-landing': 'Сайт БМ',
+  'bolshaya-medveditsa':         'Сайт БМ',
+  'bm-landing':                  'Сайт БМ',
+  'bm':                          'Сайт БМ',
+  'сайт':                        'Сайт',
+  'website':                     'Сайт',
+  // Локально созданные заявки
+  local:       'Локально',
+  'локально':  'Локально',
+  // Технические/тестовые источники
+  'api-smoke': 'API (тест)',
+  'api smoke': 'API (тест)',
+  api:         'API',
 };
 
 export function cleanText(value: unknown, fallback = UNKNOWN_TEXT) {

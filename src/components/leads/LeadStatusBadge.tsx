@@ -8,19 +8,19 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
-  new: 'Новая',
-  in_progress: 'В работе',
-  client_created: 'В работе',
-  prebooking_created: 'В работе',
-  contract_created: 'Подтверждена',
-  rejected: 'Отклонена',
-  duplicate: 'Дубль',
+  new:               'Новая',
+  in_progress:       'В работе',
+  client_created:    'Гость создан',   // гость создан из заявки → архив
+  prebooking_created:'В работе',
+  contract_created:  'Подтверждена',
+  rejected:          'Отклонена',
+  duplicate:         'Дубль',
 };
 
 const statusClass: Record<LeadStatus, string> = {
   new:                'bg-blue-500/10 text-blue-400',
   in_progress:        'bg-amber-500/10 text-amber-400',
-  client_created:     'bg-green-500/10 text-green-500',
+  client_created:     'bg-teal-500/10 text-teal-400',   // отличается от contract_created
   prebooking_created: 'bg-sky-500/10 text-sky-400',
   contract_created:   'bg-green-500/10 text-green-500',
   rejected:           'bg-red-500/10 text-red-500',
@@ -28,13 +28,13 @@ const statusClass: Record<LeadStatus, string> = {
 };
 
 const statusIcon: Record<LeadStatus, typeof CircleDot> = {
-  new: CircleDot,
-  in_progress: Clock3,
-  client_created: UserCheck,
-  prebooking_created: CheckCircle2,
-  contract_created: FileText,
-  rejected: XCircle,
-  duplicate: CircleDot,
+  new:               CircleDot,
+  in_progress:       Clock3,
+  client_created:    UserCheck,     // иконка "человек с галкой"
+  prebooking_created:CheckCircle2,
+  contract_created:  FileText,
+  rejected:          XCircle,
+  duplicate:         CircleDot,
 };
 
 interface LeadStatusBadgeProps {
