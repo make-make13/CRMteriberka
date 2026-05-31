@@ -19,11 +19,17 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
+// Заявка считается архивной, если из неё уже создан гость
+// или она вручную переведена в статус "Подтверждена" (contract_created)
+function isLeadArchived(lead: Lead): boolean {
+  return !!lead.clientId || lead.status === 'contract_created';
+}
+
+// Фильтры статуса для активного списка (без архивных статусов)
+const ACTIVE_STATUS_FILTERS: Array<{ id: LeadStatus | 'all'; label: string }> = [
   { id: 'all', label: 'Все' },
   { id: 'new', label: 'Новые' },
-  { id: 'contract_created', label: 'Подтверждена' },
-  { id: 'rejected', label: 'Отклонена' },
+  { id: 'rejected', label: 'Отклонённые' },
 ];
 
 interface LeadsProps {
@@ -59,6 +65,7 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'active' | 'archive'>('active');
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,17 +95,26 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
     setEditingLead(prev => prev?.id === updatedLeadFromPrebooking.id ? updatedLeadFromPrebooking : prev);
   }, [updatedLeadFromPrebooking]);
 
+  const activeCount = useMemo(() => leads.filter(l => !isLeadArchived(l)).length, [leads]);
+  const archiveCount = useMemo(() => leads.filter(l => isLeadArchived(l)).length, [leads]);
+
   const filteredLeads = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return leads.filter(lead => {
-      const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
+      // Фильтрация по вкладке (активные / архив)
+      if (activeTab === 'active' && isLeadArchived(lead)) return false;
+      if (activeTab === 'archive' && !isLeadArchived(lead)) return false;
+      // Фильтр по статусу (только в активных)
+      const matchesStatus = activeTab === 'archive'
+        || statusFilter === 'all'
+        || lead.status === statusFilter;
       const matchesSearch = !query
         || (lead.guestName || '').toLowerCase().includes(query)
         || (lead.phone || '').toLowerCase().includes(query)
         || (lead.email || '').toLowerCase().includes(query);
       return matchesStatus && matchesSearch;
     });
-  }, [leads, searchQuery, statusFilter]);
+  }, [leads, searchQuery, statusFilter, activeTab]);
 
   const handleCreate = async (input: LeadCreateInput) => {
     setIsSaving(true);
@@ -207,6 +223,12 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
     }
   };
 
+  const handleTabChange = (tab: 'active' | 'archive') => {
+    setActiveTab(tab);
+    setStatusFilter('all');
+    setSearchQuery('');
+  };
+
   const openNewLead = () => {
     setLeadOpenError('');
     setEditingLead(null);
@@ -263,6 +285,36 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
         </div>
       </div>
 
+      {/* Вкладки: Активные / Архив */}
+      <div className={cn('flex items-center gap-1 rounded-xl p-1 self-start', isDarkMode ? 'bg-[#161616] border border-[#232323]' : 'bg-gray-100')}>
+        {([
+          { id: 'active', label: 'Активные', count: activeCount },
+          { id: 'archive', label: 'Архив', count: archiveCount },
+        ] as const).map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => handleTabChange(tab.id)}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-bold transition-colors',
+              activeTab === tab.id
+                ? (isDarkMode ? 'bg-[#232323] text-[#F4F1EA]' : 'bg-white text-gray-900 shadow-sm')
+                : (isDarkMode ? 'text-[#8F9894] hover:text-[#F4F1EA]' : 'text-gray-500 hover:text-gray-800')
+            )}
+          >
+            {tab.label}
+            <span className={cn(
+              'rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none',
+              activeTab === tab.id
+                ? (isDarkMode ? 'bg-[#F59E0B]/20 text-[#F59E0B]' : 'bg-orange-100 text-orange-600')
+                : (isDarkMode ? 'bg-white/5 text-[#8F9894]' : 'bg-gray-200 text-gray-500')
+            )}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* Поиск + фильтры */}
       <div className="flex flex-col gap-3">
         <div className={cn(
@@ -280,27 +332,30 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
             )}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {STATUS_FILTERS.map(item => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setStatusFilter(item.id)}
-              className={cn(
-                'rounded-xl px-3 py-1.5 text-xs font-bold transition-colors',
-                statusFilter === item.id
-                  ? (isDarkMode
-                    ? 'bg-[#F59E0B] text-[#050505] shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                    : 'bg-orange-500 text-white shadow-sm')
-                  : (isDarkMode
-                    ? 'bg-[#161616] border border-[#232323] text-[#8F9894] hover:bg-[#1A1A1A] hover:text-[#F4F1EA]'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        {/* Фильтры статуса — только для активной вкладки */}
+        {activeTab === 'active' && (
+          <div className="flex flex-wrap items-center gap-2">
+            {ACTIVE_STATUS_FILTERS.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setStatusFilter(item.id)}
+                className={cn(
+                  'rounded-xl px-3 py-1.5 text-xs font-bold transition-colors',
+                  statusFilter === item.id
+                    ? (isDarkMode
+                      ? 'bg-[#F59E0B] text-[#050505] shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                      : 'bg-orange-500 text-white shadow-sm')
+                    : (isDarkMode
+                      ? 'bg-[#161616] border border-[#232323] text-[#8F9894] hover:bg-[#1A1A1A] hover:text-[#F4F1EA]'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Таблица */}
@@ -324,9 +379,13 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
           <EmptyState
             isDarkMode={isDarkMode}
             icon={<Inbox size={32} />}
-            title="Заявок пока нет"
-            description="Заявок пока нет. Позже здесь будут отображаться обращения с сайта."
-            action={leads.length === 0 ? (
+            title={activeTab === 'archive' ? 'Архив пуст' : 'Активных заявок нет'}
+            description={
+              activeTab === 'archive'
+                ? 'Заявки с созданным гостем или подтверждённые появятся здесь.'
+                : 'Новые заявки с сайта появятся здесь автоматически.'
+            }
+            action={activeTab === 'active' && leads.filter(l => !isLeadArchived(l)).length === 0 ? (
               <button
                 type="button"
                 onClick={openNewLead}
