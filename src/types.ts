@@ -171,6 +171,12 @@ export interface Lead {
   contractId?: string;
   prebookingId?: string;
   managerNote?: string;
+  // AI-concierge fields (заполняются AI-бэкендом, CRM только читает)
+  channel?: string;                    // канал: 'telegram' | 'whatsapp' | 'widget' | 'web-form'
+  externalConversationId?: string;     // ID диалога в AI-бэкенде
+  aiSummary?: string;                  // краткое резюме от AI
+  transcriptJson?: string;             // JSON транскрипта диалога
+  guestContact?: string;               // контакт гостя (tg handle, username и т.п.)
   createdAt: string;
   updatedAt: string;
   supabaseCreatedAt?: string;
@@ -215,6 +221,12 @@ export interface LeadCreateInput {
   contractId?: string;
   prebookingId?: string;
   managerNote?: string;
+  // AI-concierge fields
+  channel?: string;
+  externalConversationId?: string;
+  aiSummary?: string;
+  transcriptJson?: string;
+  guestContact?: string;
   supabaseCreatedAt?: string;
   pulledToCrmAt?: string;
   convertedAt?: string;

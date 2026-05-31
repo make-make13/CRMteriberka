@@ -51,6 +51,15 @@ create table if not exists leads (
   referrer      text,
   user_agent    text,
 
+  -- AI-конциерж (заполняются AI-бэкендом перед/вместо формы сайта)
+  -- CRM забирает эти поля при синхронизации и хранит локально.
+  -- Подробности: docs/AI-concierge-architecture.md
+  channel              text,        -- канал: 'telegram' | 'whatsapp' | 'widget' | 'web-form'
+  external_conversation_id text,    -- ID диалога в AI-бэкенде
+  ai_summary           text,        -- краткое резюме диалога, сгенерированное AI
+  transcript_json      text,        -- JSON транскрипта диалога (может быть большим)
+  guest_contact        text,        -- контакт гостя из AI (tg @handle, username и т.п.)
+
   -- Поля синхронизации с CRM
   -- CRM читает строки где pulled_to_crm = false
   -- После загрузки CRM проставляет pulled_to_crm = true
@@ -110,3 +119,16 @@ $$;
 create trigger leads_updated_at
   before update on leads
   for each row execute function update_updated_at();
+
+-- ============================================================
+-- Миграция: добавить AI-поля в уже существующую таблицу leads
+-- Безопасно запускать повторно (IF NOT EXISTS).
+-- Нужно выполнить ОДИН РАЗ в SQL Editor Supabase если таблица
+-- уже существовала до этих изменений.
+-- ============================================================
+
+alter table leads add column if not exists channel              text;
+alter table leads add column if not exists external_conversation_id text;
+alter table leads add column if not exists ai_summary           text;
+alter table leads add column if not exists transcript_json      text;
+alter table leads add column if not exists guest_contact        text;

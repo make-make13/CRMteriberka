@@ -82,6 +82,12 @@ export interface LeadRecord {
   contractId?: string;
   prebookingId?: string;
   managerNote?: string;
+  // AI-concierge fields
+  channel?: string;
+  externalConversationId?: string;
+  aiSummary?: string;
+  transcriptJson?: string;
+  guestContact?: string;
   createdAt: string;
   updatedAt: string;
   supabaseCreatedAt?: string;
@@ -126,6 +132,12 @@ export interface SupabaseLeadRow {
   page_url?: string | null;
   referrer?: string | null;
   user_agent?: string | null;
+  // AI-concierge fields (опциональны — заполняет AI-бэкенд)
+  channel?: string | null;
+  external_conversation_id?: string | null;
+  ai_summary?: string | null;
+  transcript_json?: string | null;
+  guest_contact?: string | null;
 }
 
 type JsonObject = Record<string, unknown>;
@@ -152,6 +164,12 @@ interface LeadDbRow {
   contract_id: string | null;
   prebooking_id: string | null;
   manager_note: string | null;
+  // AI-concierge fields
+  channel: string | null;
+  external_conversation_id: string | null;
+  ai_summary: string | null;
+  transcript_json: string | null;
+  guest_contact: string | null;
   created_at: string;
   updated_at: string;
   supabase_created_at: string | null;
@@ -246,6 +264,7 @@ export class LocalDatabase {
     this.db.pragma('foreign_keys = ON');
     this.initSchema();
     this.migratePdfmeInvoiceTemplateId();
+    this.migrateLeadAiFields();
   }
 
   private initSchema() {
@@ -377,6 +396,12 @@ export class LocalDatabase {
         contract_id TEXT,
         prebooking_id TEXT,
         manager_note TEXT,
+        -- AI-concierge fields (заполняются AI-бэкендом)
+        channel TEXT,
+        external_conversation_id TEXT,
+        ai_summary TEXT,
+        transcript_json TEXT,
+        guest_contact TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         supabase_created_at TEXT,
@@ -447,6 +472,27 @@ export class LocalDatabase {
     });
 
     tx();
+  }
+
+  /**
+   * Добавляет AI-поля в таблицу leads для существующих баз данных.
+   * Безопасно: проверяет наличие колонок через PRAGMA перед ALTER TABLE.
+   */
+  private migrateLeadAiFields() {
+    const existing = (this.db.prepare('PRAGMA table_info(leads)').all() as { name: string }[])
+      .map(r => r.name);
+    const toAdd = [
+      { name: 'channel',                  def: 'TEXT' },
+      { name: 'external_conversation_id', def: 'TEXT' },
+      { name: 'ai_summary',               def: 'TEXT' },
+      { name: 'transcript_json',          def: 'TEXT' },
+      { name: 'guest_contact',            def: 'TEXT' },
+    ];
+    for (const col of toAdd) {
+      if (!existing.includes(col.name)) {
+        this.db.exec(`ALTER TABLE leads ADD COLUMN ${col.name} ${col.def}`);
+      }
+    }
   }
 
   listClients<T>() {
@@ -763,6 +809,11 @@ export class LocalDatabase {
       message: cleanOptionalString(row.message),
       utmJson: Object.keys(cleanUtm).length ? JSON.stringify(cleanUtm) : undefined,
       rawJson: JSON.stringify(row),
+      channel: cleanOptionalString(row.channel),
+      externalConversationId: cleanOptionalString(row.external_conversation_id),
+      aiSummary: cleanOptionalString(row.ai_summary),
+      transcriptJson: cleanOptionalString(row.transcript_json),
+      guestContact: cleanOptionalString(row.guest_contact),
       createdAt,
       updatedAt,
       supabaseCreatedAt: cleanOptionalString(row.created_at),
@@ -1131,6 +1182,11 @@ export class LocalDatabase {
       contractId: row.contract_id || undefined,
       prebookingId: row.prebooking_id || undefined,
       managerNote: row.manager_note || undefined,
+      channel: row.channel || undefined,
+      externalConversationId: row.external_conversation_id || undefined,
+      aiSummary: row.ai_summary || undefined,
+      transcriptJson: row.transcript_json || undefined,
+      guestContact: row.guest_contact || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       supabaseCreatedAt: row.supabase_created_at || undefined,
@@ -1162,12 +1218,14 @@ export class LocalDatabase {
         id, supabase_id, source, status, sync_status, guest_name, phone, email,
         desired_start_date, desired_end_date, desired_time, guests_count, object_type, object_id,
         message, utm_json, raw_json, client_id, contract_id, prebooking_id, manager_note,
+        channel, external_conversation_id, ai_summary, transcript_json, guest_contact,
         created_at, updated_at, supabase_created_at, pulled_to_crm_at, converted_at, last_error
       )
       VALUES (
         @id, @supabase_id, @source, @status, @sync_status, @guest_name, @phone, @email,
         @desired_start_date, @desired_end_date, @desired_time, @guests_count, @object_type, @object_id,
         @message, @utm_json, @raw_json, @client_id, @contract_id, @prebooking_id, @manager_note,
+        @channel, @external_conversation_id, @ai_summary, @transcript_json, @guest_contact,
         @created_at, @updated_at, @supabase_created_at, @pulled_to_crm_at, @converted_at, @last_error
       )
       ON CONFLICT(id) DO UPDATE SET
@@ -1191,6 +1249,11 @@ export class LocalDatabase {
         contract_id = excluded.contract_id,
         prebooking_id = excluded.prebooking_id,
         manager_note = excluded.manager_note,
+        channel = excluded.channel,
+        external_conversation_id = excluded.external_conversation_id,
+        ai_summary = excluded.ai_summary,
+        transcript_json = excluded.transcript_json,
+        guest_contact = excluded.guest_contact,
         updated_at = excluded.updated_at,
         supabase_created_at = excluded.supabase_created_at,
         pulled_to_crm_at = excluded.pulled_to_crm_at,
@@ -1218,6 +1281,11 @@ export class LocalDatabase {
       contract_id: lead.contractId || null,
       prebooking_id: lead.prebookingId || null,
       manager_note: lead.managerNote || null,
+      channel: lead.channel || null,
+      external_conversation_id: lead.externalConversationId || null,
+      ai_summary: lead.aiSummary || null,
+      transcript_json: lead.transcriptJson || null,
+      guest_contact: lead.guestContact || null,
       created_at: lead.createdAt,
       updated_at: lead.updatedAt,
       supabase_created_at: lead.supabaseCreatedAt || null,
