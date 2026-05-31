@@ -21,6 +21,28 @@ export const SOURCE_LABELS: Record<string, string> = {
   'api-smoke': 'API (тест)',
   'api smoke': 'API (тест)',
   api:         'API',
+  // ИИ-консьерж — внешний backend на домашнем сервере
+  // Заявки попадают в CRM через Supabase (pull-синхронизация)
+  telegram_ai: 'ИИ / Telegram',
+  vk_ai:       'ИИ / VK',
+  webchat_ai:  'ИИ / Сайт-чат',
+};
+
+/** Источники, порождённые внешним ИИ-консьержем */
+const AI_SOURCES = new Set(['telegram_ai', 'vk_ai', 'webchat_ai']);
+
+/** true если заявка пришла от ИИ-консьержа */
+export function isAiSource(source: unknown): boolean {
+  return typeof source === 'string' && AI_SOURCES.has(source.trim().toLowerCase());
+}
+
+/** Человекочитаемое название канала ИИ */
+export const CHANNEL_LABELS: Record<string, string> = {
+  telegram:  'Telegram',
+  vk:        'ВКонтакте',
+  webchat:   'Сайт-чат',
+  'web-form': 'Форма сайта',
+  widget:    'Виджет',
 };
 
 export function cleanText(value: unknown, fallback = UNKNOWN_TEXT) {

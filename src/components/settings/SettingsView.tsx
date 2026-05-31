@@ -4,7 +4,7 @@
  */
 
 import React, { Suspense, useState, useEffect } from 'react';
-import { Save, Building2, FileText, Percent, Phone, MapPin, Check, Copy, ChevronDown, ChevronUp, Edit3, Database, Trash2, Loader2 } from 'lucide-react';
+import { Save, Building2, FileText, Percent, Phone, MapPin, Check, Copy, ChevronDown, ChevronUp, Edit3, Database, Trash2, Loader2, Bot } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
@@ -573,6 +573,43 @@ export default function SettingsView({
                 ))}
               </div>
             )}
+          </section>
+
+          {/* AI Concierge Info */}
+          <section className={cn(
+            "p-6 rounded-3xl border",
+            isDarkMode ? "bg-[#111111] border-white/5" : "bg-white border-gray-200 shadow-sm"
+          )}>
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400">
+                <Bot size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">ИИ-консьерж</h3>
+                <p className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+                  Внешний backend — не внутри CRM
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
+                  isDarkMode ? 'bg-[#232323] text-[#8F9894]' : 'bg-gray-100 text-gray-500'
+                )}>
+                  Не подключён
+                </span>
+                <span className={cn('text-sm', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+                  Статус ИИ-консьержа
+                </span>
+              </div>
+              <ul className={cn('space-y-1.5 text-sm leading-relaxed', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+                <li>• ИИ-консьерж работает как отдельный backend на домашнем сервере</li>
+                <li>• CRM получает AI-заявки автоматически через Supabase при нажатии «Проверить заявки»</li>
+                <li>• Данные диалога (резюме, история, контакт) отображаются в карточке заявки</li>
+                <li>• Поддерживаемые каналы: Telegram, ВКонтакте, сайт-чат</li>
+              </ul>
+            </div>
           </section>
         </div>
       ) : activeTab === 'email' ? (

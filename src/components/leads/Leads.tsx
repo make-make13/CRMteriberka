@@ -13,7 +13,7 @@ import EmptyState from '../common/EmptyState';
 import LeadModal from './LeadModal';
 import LeadStatusBadge from './LeadStatusBadge';
 import ClientModal from '../clients/ClientModal';
-import { cleanText, formatDateValue, formatLeadSource } from './leadDisplay';
+import { cleanText, formatDateValue, formatLeadSource, isAiSource } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -463,9 +463,21 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={cn('text-sm', isDarkMode ? 'text-[#8F9894]' : 'text-gray-600')}>
-                        {formatLeadSource(lead.source)}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={cn('text-sm', isDarkMode ? 'text-[#8F9894]' : 'text-gray-600')}>
+                          {formatLeadSource(lead.source)}
+                        </span>
+                        {isAiSource(lead.source) && (
+                          <span className={cn(
+                            'inline-flex w-fit items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                            isDarkMode
+                              ? 'bg-violet-500/15 text-violet-300'
+                              : 'bg-violet-100 text-violet-600'
+                          )}>
+                            ИИ
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <LeadStatusBadge status={lead.status} />

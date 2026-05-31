@@ -5,7 +5,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
 import LeadStatusBadge, { LEAD_STATUS_LABELS } from './LeadStatusBadge';
-import { formatLeadSource, getLeadOriginLabel, normalizeLeadStatus } from './leadDisplay';
+import { CHANNEL_LABELS, formatLeadSource, getLeadOriginLabel, isAiSource, normalizeLeadStatus } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -76,6 +76,157 @@ function formatTechnicalValue(value: unknown) {
     return String(value);
   }
 }
+
+// ── AI-консьерж ─────────────────────────────────────────────────────────────
+
+interface AiMessage {
+  role?: string;
+  text?: string;
+  content?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+function formatChannel(channel: string | undefined): string {
+  if (!channel) return '—';
+  return CHANNEL_LABELS[channel.toLowerCase()] ?? channel;
+}
+
+function parseTranscript(raw: string | undefined): AiMessage[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as AiMessage[];
+  } catch { /* ignore */ }
+  return null;
+}
+
+function AiConciergeBlock({ lead, isDarkMode, cn: cls }: {
+  lead: Lead;
+  isDarkMode: boolean;
+  cn: (...inputs: ClassValue[]) => string;
+}) {
+  const [transcriptOpen, setTranscriptOpen] = React.useState(false);
+
+  const hasAiData = isAiSource(lead.source)
+    || lead.channel || lead.aiSummary
+    || lead.externalConversationId || lead.guestContact
+    || lead.transcriptJson;
+
+  if (!hasAiData) return null;
+
+  const messages = parseTranscript(lead.transcriptJson);
+  const rawTranscript = lead.transcriptJson;
+
+  const blockClass = cls(
+    'rounded-xl border p-3',
+    isDarkMode
+      ? 'border-violet-500/20 bg-violet-500/[0.06]'
+      : 'border-violet-200 bg-violet-50'
+  );
+  const labelCls = cls(
+    'text-[11px] font-bold uppercase tracking-wide',
+    isDarkMode ? 'text-violet-300/70' : 'text-violet-600/70'
+  );
+  const titleCls = cls(
+    'text-sm font-bold',
+    isDarkMode ? 'text-violet-200' : 'text-violet-700'
+  );
+  const valueCls = cls(
+    'text-sm',
+    isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800'
+  );
+
+  return (
+    <section className={blockClass}>
+      <h3 className={titleCls}>ИИ-консьерж</h3>
+      <div className="mt-3 grid gap-2.5">
+
+        {lead.channel && (
+          <div className="grid gap-0.5">
+            <span className={labelCls}>Канал</span>
+            <span className={valueCls}>{formatChannel(lead.channel)}</span>
+          </div>
+        )}
+
+        {lead.guestContact && (
+          <div className="grid gap-0.5">
+            <span className={labelCls}>Контакт гостя</span>
+            <span className={cls(valueCls, 'font-mono text-xs')}>{lead.guestContact}</span>
+          </div>
+        )}
+
+        {lead.aiSummary && (
+          <div className="grid gap-0.5">
+            <span className={labelCls}>Резюме</span>
+            <p className={cls(valueCls, 'leading-relaxed whitespace-pre-wrap')}>{lead.aiSummary}</p>
+          </div>
+        )}
+
+        {lead.externalConversationId && (
+          <div className="grid gap-0.5">
+            <span className={labelCls}>ID диалога</span>
+            <span className={cls(valueCls, 'font-mono text-xs break-all')}>{lead.externalConversationId}</span>
+          </div>
+        )}
+
+        {rawTranscript && (
+          <div className="grid gap-1">
+            <button
+              type="button"
+              onClick={() => setTranscriptOpen(prev => !prev)}
+              className={cls(
+                'flex items-center gap-1 text-left text-[11px] font-bold uppercase tracking-wide',
+                isDarkMode ? 'text-violet-300/70 hover:text-violet-300' : 'text-violet-600/70 hover:text-violet-700'
+              )}
+            >
+              <ChevronDown size={13} className={cls('transition-transform shrink-0', transcriptOpen && 'rotate-180')} />
+              История переписки{messages ? ` (${messages.length} сообщ.)` : ''}
+            </button>
+            {transcriptOpen && (
+              <div className={cls(
+                'mt-1 rounded-lg border text-xs overflow-auto max-h-64',
+                isDarkMode ? 'border-[#3D423E] bg-[#1A1C1B]' : 'border-gray-200 bg-white'
+              )}>
+                {messages ? (
+                  <div className="divide-y divide-[#3D423E]/40">
+                    {messages.map((msg, i) => {
+                      const role = String(msg.role || msg.from || '').toLowerCase();
+                      const text = String(msg.text ?? msg.content ?? msg.message ?? JSON.stringify(msg));
+                      const isUser = role === 'user' || role === 'guest' || role === 'human';
+                      return (
+                        <div key={i} className={cls(
+                          'px-3 py-2',
+                          isUser
+                            ? (isDarkMode ? 'bg-white/[0.04]' : 'bg-gray-50')
+                            : ''
+                        )}>
+                          <span className={cls(
+                            'font-bold mr-2',
+                            isDarkMode ? (isUser ? 'text-[#B4CDD2]' : 'text-violet-300') : (isUser ? 'text-gray-600' : 'text-violet-600')
+                          )}>
+                            {isUser ? 'Гость:' : 'ИИ:'}
+                          </span>
+                          <span className={isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800'}>{text}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <pre className={cls('p-3 whitespace-pre-wrap break-words', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-700')}>
+                    {rawTranscript}
+                  </pre>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ── Форма ────────────────────────────────────────────────────────────────────
 
 function getInitialState(lead: Lead | null): LeadFormState {
   return {
@@ -290,6 +441,10 @@ export default function LeadModal({
               <textarea className={cn(inputClass, 'min-h-[64px] resize-none')} value={form.message} onChange={event => setField('message', event.target.value)} />
             </label>
           </section>
+
+          {lead && (
+            <AiConciergeBlock lead={lead} isDarkMode={isDarkMode} cn={cn} />
+          )}
 
           <section className={sectionClass}>
             <h3 className={sectionTitleClass}>Работа с заявкой</h3>
