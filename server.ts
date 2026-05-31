@@ -11,6 +11,7 @@ import { syncSupabaseLeads } from './server/supabaseLeadSync';
 import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
 import { registerBmDocxRoutes } from './server/bmDocxRouter';
+import { registerBmDocxTemplateRoutes } from './server/bmDocxTemplateRouter';
 import type { Client } from './src/types';
 
 dotenv.config({ path: '.env.local' });
@@ -123,6 +124,11 @@ async function startServer() {
   // Параллельно действующему PDFMe — основная кнопка генерации не меняется.
   // Маршруты: GET /api/bm-docx/contract/:contractId{?mode,output}, /info.
   registerBmDocxRoutes(app, requireAuth);
+
+  // Хранилище визуальных DOCX-шаблонов договора БМ (template POC).
+  // Маршруты: /api/docx-templates/bm/:mode/{status,download,upload,test,activate}.
+  // UI-кнопка и endpoint /api/bm-docx/* не затронуты.
+  registerBmDocxTemplateRoutes(app, requireAuth);
 
   app.post('/api/auth/login', (req, res) => {
     try {

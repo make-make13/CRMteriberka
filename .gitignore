@@ -24,6 +24,9 @@ tmp/
 scratch/
 templates/docx/*.docx
 
+# DOCX template storage — runtime .docx files (dirs tracked via .gitkeep)
+storage/docx-templates/**/*.docx
+
 tools/rclone/
 template_out.json
 user_requested_schema*.json
