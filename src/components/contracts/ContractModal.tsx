@@ -627,15 +627,12 @@ export default function ContractModal({
           toast('Сначала сохраните договор, затем сформируйте документ.', 'info');
           return;
         }
-        // Сохранённый БМ-договор: активный DOCX-шаблон с резервным кодогенератором
+        // Сохранённый БМ-договор: active DOCX-шаблон → fallback на code generator.
         const bmMode = type === 'send' ? 'signed' : 'print';
-        const { blob, engineUsed } = await bmDocxApi.downloadBmContract(
+        const { blob } = await bmDocxApi.downloadBmContract(
           String(initialData.id), bmMode, 'pdf', 'template-fallback',
         );
         pdfBlob = blob;
-        if (engineUsed === 'code-fallback') {
-          toast('Активный DOCX-шаблон недоступен — использован резервный генератор.', 'info');
-        }
       }
 
       setPreviewMode(type);

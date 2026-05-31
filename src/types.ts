@@ -53,6 +53,7 @@ export interface PhysicalClient {
   passportNumber: string;
   passportIssuedBy: string;
   passportIssueDate: string;
+  passportCode?: string;
   registrationAddress: string;
   additionalInfo?: string;
   isBlacklisted: boolean;
@@ -326,6 +327,7 @@ export interface ContractData {
     passport: string;
     passportDate: string;
     passportIssuedBy: string;
+    passportCode?: string;
     address: string;
     phone: string;
     email: string;

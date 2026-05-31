@@ -309,6 +309,7 @@ export function buildPdfmeInput(contractData: ContractData, org: Partial<Organiz
     client_passport_date: formatDate(contractData.client.passportDate),
     client_passport_date_short: formatDateNumeric(contractData.client.passportDate),
     client_passport_by: contractData.client.passportIssuedBy.trim(),
+    client_passport_code: (contractData.client.passportCode || '').trim(),
     client_address: contractData.client.address.trim(),
     client_phone: contractData.client.phone.trim(),
     client_email: contractData.client.email.trim(),

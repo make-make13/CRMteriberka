@@ -40,7 +40,7 @@
  * НЕ заменяет generateBmContractDocx() / bmDocxBuilder.ts.
  * UI-кнопка и endpoint /api/bm-docx/contract/:id не затронуты.
  */
-import type express from 'express';
+import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

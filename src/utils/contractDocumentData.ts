@@ -96,6 +96,7 @@ export function prepareContractDataFromContract(contract: Contract, client: Clie
       passport: client.type === 'physical' ? `${client.passportSeries} ${client.passportNumber}` : client.inn,
       passportDate: client.type === 'physical' ? client.passportIssueDate : '',
       passportIssuedBy: client.type === 'physical' ? client.passportIssuedBy : '',
+      passportCode: client.type === 'physical' ? (client.passportCode || '') : '',
       address: client.type === 'physical' ? client.registrationAddress : client.legalAddress,
       phone: client.phone,
       email: client.email || '',

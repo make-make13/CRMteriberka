@@ -37,6 +37,7 @@ interface ClientFormValues {
   passportNumber?: string;
   passportIssuedBy?: string;
   passportIssueDate?: string;
+  passportCode?: string;
   registrationAddress?: string;
   organizationName?: string;
   inn?: string;
@@ -176,6 +177,7 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
         passportNumber: data.passportNumber || '',
         passportIssuedBy: data.passportIssuedBy || '',
         passportIssueDate: data.passportIssueDate || '',
+        passportCode: data.passportCode || '',
         registrationAddress: data.registrationAddress || '',
       } as PhysicalClient;
     } else {
@@ -429,17 +431,32 @@ export default function ClientModal({ isDarkMode, onClose, onSave, initialData, 
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Кем выдан</label>
-                  <input 
-                    {...register('passportIssuedBy')}
-                    disabled={isViewMode}
-                    className={cn(
-                      "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
-                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
-                      isViewMode && "opacity-70 cursor-default"
-                    )}
-                  />
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Кем выдан</label>
+                    <input
+                      {...register('passportIssuedBy')}
+                      disabled={isViewMode}
+                      className={cn(
+                        "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isViewMode && "opacity-70 cursor-default"
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Код подразделения</label>
+                    <input
+                      {...register('passportCode')}
+                      placeholder="000-000"
+                      disabled={isViewMode}
+                      className={cn(
+                        "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
+                        isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] placeholder:text-[#B4CDD2]/40 focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-orange-500",
+                        isViewMode && "opacity-70 cursor-default"
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
 

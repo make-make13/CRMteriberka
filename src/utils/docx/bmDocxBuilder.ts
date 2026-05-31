@@ -60,9 +60,9 @@ function makeGuestShortName(fullName: string): string {
 
 function normalizeRu(input: string): string {
   let s = input;
-  // Non-breaking hyphen в "бутик-отел*", чтобы LibreOffice не вставлял soft-hyphen
-  // при переносе строки (источник артефакта "бутик￾отеля" в PDF-text-extract).
-  s = s.replace(/бутик-отел/g, 'бутик‑отел');
+  // NOTE: ранее здесь был replace бутик-отел → бутик‑отел (U+2011, non-breaking hyphen),
+  // но LibreOffice при DOCX→PDF конвертации отображал U+2011 как ￾ (U+FFFE) в text-layer PDF.
+  // Оставляем обычный ASCII дефис — Word/LibreOffice сам обработает перенос при необходимости.
 
   // Точечное исправление опечатки "лцами" → "лицами" — встречалась в §14.6.
   s = s.replace(/лцами/g, 'лицами');
@@ -95,6 +95,11 @@ function normalizeRu(input: string): string {
     [new RegExp(NB + 'понесенных' + NA, 'g'), 'понесённых'],
     [new RegExp(NB + 'внесенная' + NA, 'g'), 'внесённая'],
     [new RegExp(NB + 'внесенной' + NA, 'g'), 'внесённой'],
+    // учет-формы
+    [new RegExp(NB + 'учета' + NA, 'g'), 'учёта'],
+    [new RegExp(NB + 'учете' + NA, 'g'), 'учёте'],
+    // расчет-формы (падежи, не покрытые выше)
+    [new RegExp(NB + 'расчетов' + NA, 'g'), 'расчётов'],
   ];
   for (const [re, rep] of yoMap) s = s.replace(re, rep);
   return s;
@@ -230,8 +235,8 @@ function buildExecutorRequisitesCell(): TableCell {
 }
 
 function buildClientRequisitesCell(vars: BmDocxVariables): TableCell {
+  // ФИО не дублируем — оно уже есть в заголовке колонки (buildClientTitleCell).
   const rows: Array<[string, string]> = [
-    ['Ф.И.О.', vars.client_name],
     ['Дата рождения', vars.client_dob],
     ['Тип документа', vars.client_passport_type],
     ['Серия и номер', vars.client_passport],
@@ -258,54 +263,89 @@ function buildClientRequisitesCell(vars: BmDocxVariables): TableCell {
 }
 
 // ----- Подписи (row 3) -----
+//
+// Визуальное выравнивание подписей:
+//
+//   print-режим:  обе колонки → отступ 1440 twips (≈ 1 дюйм) для живой подписи → линия → должность
+//   signed-режим: левая → печать (85×85 px) → подпись (90×36 px) → линия → должность
+//                 правая → отступ = высота печати + подписи (в twips) → линия → должность
+//
+// Расчёт отступа в правой колонке для signed-режима:
+//   Печать 85 px × 15 twp/px = 1275 twp + spacing.after 80 = 1355 twp
+//   Подпись 36 px × 15 twp/px =  540 twp + spacing.after 60 =  600 twp
+//   Итого выше линии:                                          1955 twp
+//
+// 1 px (в docx.js ImageRun.transformation) ≈ 15 twips при 96 dpi.
 
-function buildExecutorSignatureCell(opts: BmDocxBuildOptions): TableCell {
-  const lines: Paragraph[] = [];
+const STAMP_PX  = { width: 85,  height: 85  } as const;
+const SIG_PX    = { width: 90,  height: 36  } as const;
+const AFTER_STAMP = 80;   // twips spacing after stamp paragraph
+const AFTER_SIG   = 60;   // twips spacing after signature paragraph
 
-  if (opts.withSignature && opts.signaturePath && fs.existsSync(opts.signaturePath)) {
-    const sigBuf = fs.readFileSync(opts.signaturePath);
-    lines.push(new Paragraph({
-      spacing: { after: 0 },
-      children: [new ImageRun({
-        data: sigBuf,
-        transformation: { width: 110, height: 45 },
-        type: 'png',
-      } as any)],
-    }));
-  } else {
-    // Зарезервированное место, чтобы линия подписи была примерно на одинаковой
-    // высоте в обеих ячейках при print-режиме.
-    lines.push(p('', { spaceAfter: 200 }));
-  }
+// Общая высота изображений (twips) для расчёта отступа в правой колонке.
+const IMAGES_TOTAL_TWP =
+  STAMP_PX.height * 15 + AFTER_STAMP + SIG_PX.height * 15 + AFTER_SIG; // ≈ 1955
 
-  if (opts.withStamp && opts.stampPath && fs.existsSync(opts.stampPath)) {
-    const stampBuf = fs.readFileSync(opts.stampPath);
-    lines.push(new Paragraph({
-      spacing: { after: 60 },
-      children: [new ImageRun({
-        data: stampBuf,
-        transformation: { width: 110, height: 110 },
-        type: 'png',
-      } as any)],
-    }));
-  }
+// Отступ для места живой подписи (print-режим) ≈ 1 дюйм.
+const HAND_SIG_AREA = 1440; // twips
 
-  lines.push(p('_______________________   /Е. А. Сташ/', { size: FONT_SIZE_SMALL, spaceAfter: 0 }));
-  lines.push(p('Генеральный директор', { size: FONT_SIZE_SMALL }));
-  return cell(lines, 50);
+function sigCell(children: Paragraph[], width: number): TableCell {
+  return new TableCell({
+    width: { size: width, type: WidthType.PERCENTAGE },
+    margins: { top: 160, bottom: 80, left: 120, right: 120 },
+    borders: NO_BORDER as any,
+    children,
+  });
 }
 
-function buildClientSignatureCell(vars: BmDocxVariables): TableCell {
-  return cell([
-    // Резервируем визуальный отступ примерно равный месту под печать в signed-режиме,
-    // чтобы линии подписей были на одной высоте.
-    p('', { spaceAfter: 200 }),
-    p(`_______________________   /${makeGuestShortName(vars.client_name)}/`, { size: FONT_SIZE_SMALL, spaceAfter: 0 }),
-    p('Гость', { size: FONT_SIZE_SMALL }),
+function buildExecutorSignatureCell(opts: BmDocxBuildOptions): TableCell {
+  const isSigned = opts.withStamp || opts.withSignature;
+  const lines: Paragraph[] = [];
+
+  if (isSigned) {
+    // Signed: печать (сверху) → подпись (снизу, ближе к линии) → линия → должность
+    if (opts.withStamp && opts.stampPath && fs.existsSync(opts.stampPath)) {
+      const stampBuf = fs.readFileSync(opts.stampPath);
+      lines.push(new Paragraph({
+        spacing: { before: 0, after: AFTER_STAMP },
+        children: [new ImageRun({ data: stampBuf, transformation: STAMP_PX, type: 'png' } as any)],
+      }));
+    }
+    if (opts.withSignature && opts.signaturePath && fs.existsSync(opts.signaturePath)) {
+      const sigBuf = fs.readFileSync(opts.signaturePath);
+      lines.push(new Paragraph({
+        spacing: { before: 0, after: AFTER_SIG },
+        children: [new ImageRun({ data: sigBuf, transformation: SIG_PX, type: 'png' } as any)],
+      }));
+    }
+  } else {
+    // Print: место для живой подписи руководителя
+    lines.push(new Paragraph({ spacing: { before: 0, after: HAND_SIG_AREA }, children: [] }));
+  }
+
+  lines.push(p('_______________________   /Е. А. Сташ/', { size: FONT_SIZE_SMALL, spaceAfter: 40 }));
+  lines.push(p('Генеральный директор', { size: FONT_SIZE_SMALL, spaceAfter: 0 }));
+  return sigCell(lines, 50);
+}
+
+function buildClientSignatureCell(vars: BmDocxVariables, isSigned: boolean): TableCell {
+  // Отступ выровнен с левой колонкой:
+  //   signed → spacer ≈ высоте изображений (печать + подпись)
+  //   print  → spacer ≈ 1 дюйму для живой подписи гостя
+  const spacerAfter = isSigned ? IMAGES_TOTAL_TWP : HAND_SIG_AREA;
+  // client_short_name готовится в buildBmDocxVariables как «И. О. Фамилия».
+  // Для template-генерации: если vars.client_short_name = '{client_short_name}',
+  // то именно этот placeholder попадёт в DOCX → docxtemplater заменит его корректно.
+  const guestSig = vars.client_short_name || makeGuestShortName(vars.client_name) || vars.client_name;
+  return sigCell([
+    new Paragraph({ spacing: { before: 0, after: spacerAfter }, children: [] }),
+    p(`_______________________   /${guestSig}/`, { size: FONT_SIZE_SMALL, spaceAfter: 40 }),
+    p('Гость', { size: FONT_SIZE_SMALL, spaceAfter: 0 }),
   ], 50);
 }
 
 function buildRequisitesTable(vars: BmDocxVariables, opts: BmDocxBuildOptions): Table {
+  const isSigned = opts.withStamp || opts.withSignature;
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: NO_BORDER as any,
@@ -319,10 +359,11 @@ function buildRequisitesTable(vars: BmDocxVariables, opts: BmDocxBuildOptions): 
       new TableRow({
         children: [buildExecutorRequisitesCell(), buildClientRequisitesCell(vars)],
       }),
-      // Row 3: подписи (не разрывать!)
+      // Row 3: подписи — cantSplit, минимальная высота для print-режима (1.5 дюйма)
       new TableRow({
         cantSplit: true,
-        children: [buildExecutorSignatureCell(opts), buildClientSignatureCell(vars)],
+        height: { value: 2160, rule: HeightRule.AT_LEAST },
+        children: [buildExecutorSignatureCell(opts), buildClientSignatureCell(vars, isSigned)],
       }),
     ],
   });

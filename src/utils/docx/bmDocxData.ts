@@ -96,7 +96,7 @@ export function buildBmDocxVariables(
     client_passport: String(c.client_passport ?? ''),
     client_passport_date: String(c.client_passport_date ?? ''),
     client_passport_by: String(c.client_passport_by ?? ''),
-    client_passport_code: '',
+    client_passport_code: String(contractData.client.passportCode || ''),
     client_address: String(c.client_address ?? ''),
     client_phone: String(c.client_phone ?? ''),
     client_email: String(c.client_email ?? ''),
