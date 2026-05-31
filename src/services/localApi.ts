@@ -241,6 +241,116 @@ export const bmDocxApi = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// BM DOCX Template Storage API
+// (visual template management — does NOT replace generateBmContractDocx())
+// ---------------------------------------------------------------------------
+
+export interface BmTemplateFileInfo {
+  exists: boolean;
+  sizeBytes: number;
+  mtime: string;
+}
+
+export interface BmTemplateStatus {
+  mode: 'print' | 'signed';
+  active: BmTemplateFileInfo | null;
+  draft: BmTemplateFileInfo | null;
+  archive: Array<{ name: string; sizeBytes: number; mtime: string }>;
+  requiredPlaceholders: string[];
+}
+
+export interface BmTemplateValidation {
+  valid: boolean;
+  errors: string[];
+  foundPlaceholders: string[];
+  missingPlaceholders: string[];
+}
+
+export interface BmTemplateUploadResult {
+  ok: boolean;
+  mode: string;
+  sizeBytes: number;
+  validation: BmTemplateValidation;
+  message: string;
+  error?: string;
+}
+
+export interface BmTemplateTestResult {
+  ok: boolean;
+  mode: string;
+  which: 'draft' | 'active';
+  contractNumber: string;
+  pages: number;
+  docxBytes: number;
+  pdfBytes: number;
+  generatedAt: string;
+  error?: string;
+}
+
+export interface BmTemplateActivateResult {
+  ok: boolean;
+  mode: string;
+  activatedPath: string;
+  archivedPath: string | null;
+}
+
+/** Скачивает ресурс как Blob (с Bearer-токеном авторизации). */
+async function apiRequestBlob(url: string, options?: RequestInit): Promise<Blob> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(options?.headers || {}),
+    },
+  });
+  if (!response.ok) {
+    let message = `Ошибка запроса ${response.status}`;
+    try {
+      const data = await response.json();
+      if (data?.error) message = data.error;
+    } catch { /* not JSON */ }
+    throw new Error(message);
+  }
+  return response.blob();
+}
+
+export const bmDocxTemplateApi = {
+  /** Статус шаблона: active/draft/archive. */
+  getStatus(mode: 'print' | 'signed'): Promise<BmTemplateStatus> {
+    return apiRequest(`/api/docx-templates/bm/${mode}/status`);
+  },
+
+  /** Скачать активный шаблон как Blob. */
+  downloadActive(mode: 'print' | 'signed'): Promise<Blob> {
+    return apiRequestBlob(`/api/docx-templates/bm/${mode}/download`);
+  },
+
+  /** Загрузить .docx как черновик (raw binary). */
+  uploadDraft(mode: 'print' | 'signed', buffer: ArrayBuffer): Promise<BmTemplateUploadResult> {
+    return apiRequest(`/api/docx-templates/bm/${mode}/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: buffer,
+    });
+  },
+
+  /** Тест-генерация: JSON-отчёт (страницы, договор, байты). */
+  testJson(mode: 'print' | 'signed'): Promise<BmTemplateTestResult> {
+    return apiRequest(`/api/docx-templates/bm/${mode}/test?output=json`, { method: 'POST' });
+  },
+
+  /** Тест-генерация: PDF-файл как Blob. */
+  testPdf(mode: 'print' | 'signed'): Promise<Blob> {
+    return apiRequestBlob(`/api/docx-templates/bm/${mode}/test?output=pdf`, { method: 'POST' });
+  },
+
+  /** Активировать черновик → active, старый active → archive. */
+  activate(mode: 'print' | 'signed'): Promise<BmTemplateActivateResult> {
+    return apiRequest(`/api/docx-templates/bm/${mode}/activate`, { method: 'POST' });
+  },
+};
+
 export const maintenanceApi = {
   createBackup: () => apiRequest<{ success: true; path: string }>('/api/backups', {
     method: 'POST',

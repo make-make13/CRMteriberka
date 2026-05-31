@@ -1,3 +1,4 @@
+import express from 'express';
 /**
  * Backend-хранилище и управление визуальными DOCX-шаблонами договора БМ.
  *
@@ -117,9 +118,10 @@ export const REQUIRED_PLACEHOLDERS = [
  * 3. Docxtemplater рендерит шаблон без синтаксических ошибок.
  * 4. Все обязательные {placeholder} присутствуют в XML.
  *
- * NOTE: поиск плейсхолдеров ведётся в сыром XML-тексте word/document.xml.
- * При ручном редактировании в Word тег может быть разбит на несколько <w:r>,
- * тогда валидация сообщит об ошибке. Рекомендация: вставлять теги целиком.
+ * NOTE: Word может разбивать тег вида {contract_header} на несколько <w:r> runs,
+ * поэтому поиск по сырому XML-тексту ненадёжен. Вместо этого плейсхолдеры
+ * собираются через nullGetter docxtemplater — он сам обходит все runs и передаёт
+ * имя тега в part.value. Это работает независимо от того, разбит тег или нет.
  */
 export async function validateDocxBuffer(buffer: Buffer): Promise<ValidationResult> {
   const errors: string[] = [];
@@ -127,9 +129,8 @@ export async function validateDocxBuffer(buffer: Buffer): Promise<ValidationResu
   const missingPlaceholders: string[] = [];
 
   // 1. ZIP-корректность
-  let zip: PizZip;
   try {
-    zip = new PizZip(buffer);
+    new PizZip(buffer);
   } catch {
     return {
       valid: false,
@@ -140,8 +141,8 @@ export async function validateDocxBuffer(buffer: Buffer): Promise<ValidationResu
   }
 
   // 2. word/document.xml
-  const docXmlFile = zip.file('word/document.xml');
-  if (!docXmlFile) {
+  const zipForCheck = new PizZip(buffer);
+  if (!zipForCheck.file('word/document.xml')) {
     return {
       valid: false,
       errors: ['Невалидный DOCX: отсутствует word/document.xml'],
@@ -150,30 +151,46 @@ export async function validateDocxBuffer(buffer: Buffer): Promise<ValidationResu
     };
   }
 
-  // 3. Синтаксис тегов: рендерим с nullGetter='' — выбрасывает только при
-  //    реальных синтаксических ошибках (непарные фигурные скобки и т.п.).
-  //    doc.compile() в docxtemplater v3 помечен deprecated — не используем.
+  // 3. Синтаксис тегов + сбор найденных плейсхолдеров.
+  //    nullGetter вызывается для каждого {тега}, не найденного в data.
+  //    При render({}) data пустой, поэтому nullGetter сработает для каждого тега —
+  //    это позволяет собрать полный список без ложных ошибок о «пропущенных» данных.
+  //    Word-шаблоны с {тегом}, разбитым на несколько <w:r>, обрабатываются корректно:
+  //    docxtemplater склеивает runs внутри абзаца перед вызовом nullGetter.
+  const foundTagNames = new Set<string>();
+  let syntaxOk = true;
+
   try {
     const testDoc = new Docxtemplater(new PizZip(buffer), {
       paragraphLoop: true,
       linebreaks: true,
-      nullGetter: () => '',
+      nullGetter: (part: any) => {
+        // part.module присутствует у loop/condition-тегов; нас интересуют только plain-теги
+        if (typeof part?.value === 'string' && part.value) {
+          foundTagNames.add(part.value);
+        }
+        return '';
+      },
     });
     testDoc.render({});
   } catch (e: any) {
+    syntaxOk = false;
     const msg = e?.properties?.errors?.map((x: any) => x?.message).join('; ')
       || e?.message || String(e);
     errors.push(`Ошибка синтаксиса docxtemplater: ${msg}`);
   }
 
-  // 4. Обязательные плейсхолдеры
-  const docXml = docXmlFile.asText();
-  for (const tag of REQUIRED_PLACEHOLDERS) {
-    if (docXml.includes(`{${tag}}`)) {
-      foundPlaceholders.push(tag);
-    } else {
-      missingPlaceholders.push(tag);
-      errors.push(`Отсутствует обязательный плейсхолдер: {${tag}}`);
+  // 4. Обязательные плейсхолдеры — проверяем по тегам, собранным docxtemplater.
+  //    Если синтаксис сломан, docxtemplater мог прерваться до обхода всех тегов,
+  //    поэтому пропускаем проверку плейсхолдеров — причина уже указана в ошибке.
+  if (syntaxOk) {
+    for (const tag of REQUIRED_PLACEHOLDERS) {
+      if (foundTagNames.has(tag)) {
+        foundPlaceholders.push(tag);
+      } else {
+        missingPlaceholders.push(tag);
+        errors.push(`Отсутствует обязательный плейсхолдер: {${tag}}`);
+      }
     }
   }
 
@@ -486,7 +503,7 @@ export function registerBmDocxTemplateRoutes(
   });
 
   // ── POST /upload ───────────────────────────────────────────────────────────
-  const rawBody = (express as any).raw({
+  const rawBody = express.raw({
     type: [
       'application/octet-stream',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

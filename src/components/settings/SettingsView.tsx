@@ -13,6 +13,7 @@ import { Settings, Organization, TemplateMeta } from '../../types';
 import EmailSettingsTab from './EmailSettingsTab';
 import BackupSettingsTab from './BackupSettingsTab';
 import ManagersSettingsTab from './ManagersSettingsTab';
+import BmDocxTemplatesTab from './BmDocxTemplatesTab';
 import { TEMPLATE_VARIABLES } from '../../utils/templateVariables';
 import { PDFME_TEMPLATE_DEFINITIONS, type PdfmeTemplateDefinition } from '../../utils/pdfmeTemplateIds';
 import { useToast } from '../../context/ToastContext';
@@ -510,6 +511,9 @@ export default function SettingsView({
               })}
             </div>
           </section>
+
+          {/* BM DOCX Template Storage */}
+          <BmDocxTemplatesTab isDarkMode={isDarkMode} />
 
           {/* Variables Reference */}
           <section className={cn(

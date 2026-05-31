@@ -96,6 +96,20 @@ async function main() {
   console.log(`  Real storage:    ${REAL_STORAGE_ACTIVE}`);
   console.log(`  (тест работает только с scratch, реальный storage не трогает)`);
 
+  // ── Сброс scratch перед запуском (идемпотентность) ─────────────────────────
+  // Удаляем только SCRATCH_STORAGE_ROOT — никогда не трогаем storage/docx-templates.
+  // Двойная защита: явная проверка пути до удаления.
+  if (fs.existsSync(SCRATCH_STORAGE_ROOT)) {
+    const scratchPath = path.resolve(SCRATCH_STORAGE_ROOT);
+    const realStoragePath = path.resolve(ROOT, 'storage', 'docx-templates');
+    if (scratchPath === realStoragePath || scratchPath.startsWith(realStoragePath + path.sep)) {
+      console.error('[ABORT] SCRATCH_STORAGE_ROOT указывает на реальный storage — удаление запрещено!');
+      process.exit(1);
+    }
+    fs.rmSync(SCRATCH_STORAGE_ROOT, { recursive: true, force: true });
+    console.log(`  [reset] scratch очищен: ${SCRATCH_STORAGE_ROOT}`);
+  }
+
   // Снапшот реального storage до теста
   const realActivesBefore = fs.existsSync(REAL_STORAGE_ACTIVE)
     ? fs.readdirSync(REAL_STORAGE_ACTIVE).filter(f => f.endsWith('.docx'))
