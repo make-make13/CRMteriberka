@@ -1,4 +1,3 @@
-import express from 'express';
 /**
  * Backend-хранилище и управление визуальными DOCX-шаблонами договора БМ.
  *
@@ -53,6 +52,7 @@ import { localDb } from './localDatabase';
 import type { Contract, Client, Organization } from '../src/types';
 import { prepareContractDataFromContract } from '../src/utils/contractDocumentData';
 import { generateBmContractFromTemplate } from '../src/utils/docx/bmTemplateContractGenerator';
+import { docxToPdf } from '../src/utils/docx/docxToPdf';
 
 // ---------------------------------------------------------------------------
 // Корень проекта
@@ -366,12 +366,12 @@ export function createBmTemplateStorage(storageRoot: string) {
     const contractData = prepareContractDataFromContract(contract, client);
 
     try {
+      // Рендерим шаблон один раз → DOCX (быстро, без LibreOffice)
       const docxBuffer = await generateBmContractFromTemplate(contractData, org, {
         output: 'docx', templatePath,
       });
-      const pdfBuffer = await generateBmContractFromTemplate(contractData, org, {
-        output: 'pdf', templatePath,
-      });
+      // Конвертируем DOCX → PDF один раз (один запуск LibreOffice вместо двух)
+      const pdfBuffer = await docxToPdf(docxBuffer);
       const pdfDoc = await PDFDocument.load(pdfBuffer);
 
       return {

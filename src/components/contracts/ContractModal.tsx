@@ -615,20 +615,27 @@ export default function ContractModal({
 
       let pdfBlob: Blob;
 
-      if (!initialData?.id) {
-        // Новый договор ещё не сохранён — шаблону нужен ID в БД
-        toast('Сначала сохраните договор, затем сформируйте документ.', 'info');
-        return;
-      }
-
-      // Договор сохранён — используем активный DOCX-шаблон БМ с резервным генератором
-      const bmMode = type === 'send' ? 'signed' : 'print';
-      const { blob, engineUsed } = await bmDocxApi.downloadBmContract(
-        String(initialData.id), bmMode, 'pdf', 'template-fallback',
-      );
-      pdfBlob = blob;
-      if (engineUsed === 'code-fallback') {
-        toast('Активный DOCX-шаблон недоступен — использован резервный генератор.', 'info');
+      if (isLegacyGbContract) {
+        // GB-договор (golubaya-bukhta) — старая PDFMe-генерация
+        const contractData = prepareContractDataFromContract(contract, selectedClient);
+        const { generatePdfmeContractBlob } = await import('../../utils/pdfmeDocumentGenerator');
+        pdfBlob = await generatePdfmeContractBlob(contractData, type);
+      } else {
+        // БМ-договор (chunga-changa)
+        if (!initialData?.id) {
+          // Новый, ещё не сохранённый — шаблону нужен ID в БД
+          toast('Сначала сохраните договор, затем сформируйте документ.', 'info');
+          return;
+        }
+        // Сохранённый БМ-договор: активный DOCX-шаблон с резервным кодогенератором
+        const bmMode = type === 'send' ? 'signed' : 'print';
+        const { blob, engineUsed } = await bmDocxApi.downloadBmContract(
+          String(initialData.id), bmMode, 'pdf', 'template-fallback',
+        );
+        pdfBlob = blob;
+        if (engineUsed === 'code-fallback') {
+          toast('Активный DOCX-шаблон недоступен — использован резервный генератор.', 'info');
+        }
       }
 
       setPreviewMode(type);

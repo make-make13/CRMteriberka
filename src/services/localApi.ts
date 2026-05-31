@@ -256,11 +256,24 @@ export const bmDocxApi = {
     engine: 'template' | 'code' | 'template-fallback',
   ): Promise<{ blob: Blob; engineUsed: string | null }> {
     const url = `/api/bm-docx/contract/${encodeURIComponent(contractId)}?mode=${mode}&output=${output}&engine=${engine}`;
-    const response = await fetch(url, {
-      headers: {
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      },
-    });
+    // 45 секунд — достаточно для холодного старта LibreOffice + конвертации.
+    // При зависании LibreOffice fetch не отклонился бы никогда без этого таймаута.
+    const signal = AbortSignal.timeout(45_000);
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        signal,
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+      });
+    } catch (err) {
+      // AbortSignal.timeout выбрасывает DOMException { name: 'TimeoutError' }
+      if (err instanceof DOMException && err.name === 'TimeoutError') {
+        throw new Error('Генерация заняла слишком долго. Возможно, LibreOffice недоступен — повторите позже.');
+      }
+      throw err;
+    }
     if (!response.ok) {
       let message = `Ошибка запроса ${response.status}`;
       try {
