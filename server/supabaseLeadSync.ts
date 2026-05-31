@@ -1,5 +1,20 @@
 import { localDb, type SupabaseLeadRow } from './localDatabase';
 
+/**
+ * Supabase конфиг берётся в порядке приоритета:
+ *  1. Настройки интеграций из SQLite (раздел «Интеграции» в CRM)
+ *  2. Переменные окружения из .env.local (fallback для dev-режима)
+ */
+function getSupabaseConfig() {
+  const stored = localDb.getIntegrationSettingsFull();
+  return {
+    url:            stored.supabaseUrl          || process.env.SUPABASE_URL,
+    serviceRoleKey: stored.supabaseServiceKey   || process.env.SUPABASE_SERVICE_ROLE_KEY,
+    table:          stored.supabaseTable        || process.env.SUPABASE_LEADS_TABLE || 'leads',
+    limit:          stored.supabaseSyncLimit    || Number(process.env.SUPABASE_LEAD_SYNC_LIMIT || 50) || 50,
+  };
+}
+
 export interface SupabaseLeadSyncResult {
   ok: true;
   fetched: number;
@@ -9,13 +24,16 @@ export interface SupabaseLeadSyncResult {
   errors: string[];
 }
 
-const NOT_CONFIGURED_MESSAGE = 'Supabase не настроен. Добавьте SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в .env.local';
+const NOT_CONFIGURED_MESSAGE =
+  'Supabase не настроен. Укажите URL и Service Role Key в Настройки → Интеграции, ' +
+  'или добавьте SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в .env.local';
 
 function requireConfig() {
-  const url = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
-  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-  const table = String(process.env.SUPABASE_LEADS_TABLE || 'leads').trim();
-  const limit = Math.max(1, Math.min(500, Number(process.env.SUPABASE_LEAD_SYNC_LIMIT || 50) || 50));
+  const raw = getSupabaseConfig();
+  const url = String(raw.url || '').trim().replace(/\/+$/, '');
+  const serviceRoleKey = String(raw.serviceRoleKey || '').trim();
+  const table = String(raw.table || 'leads').trim();
+  const limit = Math.max(1, Math.min(500, Number(raw.limit) || 50));
 
   if (!url || !serviceRoleKey) {
     throw new Error(NOT_CONFIGURED_MESSAGE);
@@ -26,6 +44,31 @@ function requireConfig() {
   }
 
   return { url, serviceRoleKey, table, limit };
+}
+
+/** Проверить подключение к Supabase (не требует наличия строк) */
+export async function testSupabaseConnection(): Promise<{ ok: true; rowCount: number } | { ok: false; error: string }> {
+  try {
+    const config = requireConfig();
+    const response = await fetch(
+      `${config.url}/rest/v1/${config.table}?limit=1&select=id`,
+      {
+        method: 'GET',
+        headers: {
+          apikey: config.serviceRoleKey,
+          authorization: `Bearer ${config.serviceRoleKey}`,
+        },
+      },
+    );
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      return { ok: false, error: `HTTP ${response.status}: ${text.slice(0, 200)}` };
+    }
+    const rows = await response.json() as unknown[];
+    return { ok: true, rowCount: Array.isArray(rows) ? rows.length : 0 };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 function buildRestUrl(baseUrl: string, table: string, query: Record<string, string>) {

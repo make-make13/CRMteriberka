@@ -25,6 +25,21 @@ const convertAsync = promisify(libreofficeConvert.convert) as (
   filter: string | undefined,
 ) => Promise<Buffer>;
 
+// ── Override из настроек CRM ────────────────────────────────────────────────
+// Сервер вызывает setLibreOfficePath() при старте и при сохранении настроек.
+// Это позволяет хранить путь в SQLite без правки .env.local.
+
+let _settingsOverridePath: string | undefined;
+
+/**
+ * Устанавливает путь к LibreOffice из настроек CRM (приоритет над env).
+ * Пустая строка = сбросить override (использовать LIBREOFFICE_PATH / автопоиск).
+ */
+export function setLibreOfficePath(value: string | undefined): void {
+  _settingsOverridePath = value?.trim() || undefined;
+  _cachedSofficePath = undefined; // сбрасываем кэш
+}
+
 // ── Поиск soffice ──────────────────────────────────────────────────────────
 
 const WINDOWS_STANDARD_PATHS = [
@@ -71,6 +86,16 @@ export function findSofficePath(): string {
   if (_cachedSofficePath !== undefined) {
     if (_cachedSofficePath === null) throw new Error(LIBREOFFICE_NOT_FOUND_MESSAGE);
     return _cachedSofficePath;
+  }
+
+  // 0. Путь из настроек CRM (Настройки → Интеграции → LibreOffice)
+  if (_settingsOverridePath) {
+    const resolved = resolveEnvPath(_settingsOverridePath);
+    if (resolved) {
+      _cachedSofficePath = resolved;
+      return resolved;
+    }
+    console.warn(`[docxToPdf] settings libreOfficePath="${_settingsOverridePath}" не существует. Ищем дальше.`);
   }
 
   // 1. LIBREOFFICE_PATH из .env.local

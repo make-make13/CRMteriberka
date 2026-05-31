@@ -4,7 +4,7 @@
  */
 
 import React, { Suspense, useState, useEffect } from 'react';
-import { Save, Building2, FileText, Percent, Phone, MapPin, Check, Copy, ChevronDown, ChevronUp, Edit3, Database, Trash2, Loader2, Bot } from 'lucide-react';
+import { Save, Building2, FileText, Percent, Phone, MapPin, Check, Copy, ChevronDown, ChevronUp, Edit3, Database, Trash2, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
@@ -14,6 +14,7 @@ import EmailSettingsTab from './EmailSettingsTab';
 import BackupSettingsTab from './BackupSettingsTab';
 import ManagersSettingsTab from './ManagersSettingsTab';
 import BmDocxTemplatesTab from './BmDocxTemplatesTab';
+import IntegrationsSettingsTab from './IntegrationsSettingsTab';
 import RoomPricesCard from './RoomPricesCard';
 import { TEMPLATE_VARIABLES } from '../../utils/templateVariables';
 import { PDFME_TEMPLATE_DEFINITIONS, type PdfmeTemplateDefinition } from '../../utils/pdfmeTemplateIds';
@@ -34,7 +35,7 @@ interface SettingsViewProps {
   canManageManagers?: boolean;
 }
 
-type SettingsTab = 'general' | 'templates' | 'email' | 'backups' | 'managers';
+type SettingsTab = 'general' | 'integrations' | 'templates' | 'email' | 'backups' | 'managers';
 
 const importPdfmeTemplateEditorModal = () => import('./PdfmeTemplateEditorModal');
 let pdfmeTemplateEditorModalPreload: ReturnType<typeof importPdfmeTemplateEditorModal> | null = null;
@@ -163,6 +164,7 @@ export default function SettingsView({
   useEffect(() => {
     const allowed =
       activeTab === 'general' ||
+      activeTab === 'integrations' ||
       (activeTab === 'templates' && canManageTemplates) ||
       (activeTab === 'email' && canManageEmail) ||
       (activeTab === 'backups' && canManageBackups) ||
@@ -230,83 +232,12 @@ export default function SettingsView({
   const VARIABLES = TEMPLATE_VARIABLES;
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-8">
+    <div className="max-w-5xl mx-auto flex flex-col gap-6">
+      {/* Строка 1: заголовок + кнопка сохранения */}
       <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-5">
-          <h2 className="text-2xl font-bold">Настройки</h2>
-          <div className="flex flex-nowrap p-1 bg-black/20 rounded-xl">
-            <motion.button
-              onClick={() => setActiveTab('general')}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                activeTab === 'general' 
-                  ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
-                  : "text-gray-500 hover:text-gray-300"
-              )}
-            >
-              Общие
-            </motion.button>
-            {canManageTemplates && (
-              <motion.button
-                onClick={() => setActiveTab('templates')}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                  activeTab === 'templates'
-                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
-                    : "text-gray-500 hover:text-gray-300"
-                )}
-              >
-                Шаблоны документов
-              </motion.button>
-            )}
-            {canManageEmail && (
-              <motion.button
-                onClick={() => setActiveTab('email')}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                  activeTab === 'email'
-                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
-                    : "text-gray-500 hover:text-gray-300"
-                )}
-              >
-                Email
-              </motion.button>
-            )}
-            {canManageBackups && (
-              <motion.button
-                onClick={() => setActiveTab('backups')}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                  activeTab === 'backups'
-                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
-                    : "text-gray-500 hover:text-gray-300"
-                )}
-              >
-                Резервные копии
-              </motion.button>
-            )}
-            {canManageManagers && (
-              <motion.button
-                onClick={() => setActiveTab('managers')}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                  activeTab === 'managers'
-                    ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
-                    : "text-gray-500 hover:text-gray-300"
-                )}
-              >
-                Менеджеры
-              </motion.button>
-            )}
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold">Настройки</h2>
         {activeTab === 'general' && (
-          <motion.button 
+          <motion.button
             onClick={handleSubmitGeneral(onSaveGeneral)}
             disabled={!isGeneralDirty}
             whileTap={{ scale: 0.95 }}
@@ -317,6 +248,90 @@ export default function SettingsView({
           >
             <Save size={15} />
             Сохранить изменения
+          </motion.button>
+        )}
+      </div>
+
+      {/* Строка 2: вкладки */}
+      <div className="flex flex-wrap gap-1 p-1 bg-black/20 rounded-xl self-start">
+        <motion.button
+          onClick={() => setActiveTab('general')}
+          whileTap={{ scale: 0.95 }}
+          className={cn(
+            "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+            activeTab === 'general'
+              ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+              : "text-gray-500 hover:text-gray-300"
+          )}
+        >
+          Общие
+        </motion.button>
+        <motion.button
+          onClick={() => setActiveTab('integrations')}
+          whileTap={{ scale: 0.95 }}
+          className={cn(
+            "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+            activeTab === 'integrations'
+              ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+              : "text-gray-500 hover:text-gray-300"
+          )}
+        >
+          Интеграции
+        </motion.button>
+        {canManageTemplates && (
+          <motion.button
+            onClick={() => setActiveTab('templates')}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+              activeTab === 'templates'
+                ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+                : "text-gray-500 hover:text-gray-300"
+            )}
+          >
+            Шаблоны документов
+          </motion.button>
+        )}
+        {canManageEmail && (
+          <motion.button
+            onClick={() => setActiveTab('email')}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+              activeTab === 'email'
+                ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+                : "text-gray-500 hover:text-gray-300"
+            )}
+          >
+            Email
+          </motion.button>
+        )}
+        {canManageBackups && (
+          <motion.button
+            onClick={() => setActiveTab('backups')}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+              activeTab === 'backups'
+                ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+                : "text-gray-500 hover:text-gray-300"
+            )}
+          >
+            Резервные копии
+          </motion.button>
+        )}
+        {canManageManagers && (
+          <motion.button
+            onClick={() => setActiveTab('managers')}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+              activeTab === 'managers'
+                ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+                : "text-gray-500 hover:text-gray-300"
+            )}
+          >
+            Менеджеры
           </motion.button>
         )}
       </div>
@@ -575,43 +590,9 @@ export default function SettingsView({
             )}
           </section>
 
-          {/* AI Concierge Info */}
-          <section className={cn(
-            "p-6 rounded-3xl border",
-            isDarkMode ? "bg-[#111111] border-white/5" : "bg-white border-gray-200 shadow-sm"
-          )}>
-            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400">
-                <Bot size={20} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">ИИ-консьерж</h3>
-                <p className={cn('text-xs mt-0.5', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
-                  Внешний backend — не внутри CRM
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <span className={cn(
-                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
-                  isDarkMode ? 'bg-[#232323] text-[#8F9894]' : 'bg-gray-100 text-gray-500'
-                )}>
-                  Не подключён
-                </span>
-                <span className={cn('text-sm', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
-                  Статус ИИ-консьержа
-                </span>
-              </div>
-              <ul className={cn('space-y-1.5 text-sm leading-relaxed', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
-                <li>• ИИ-консьерж работает как отдельный backend на домашнем сервере</li>
-                <li>• CRM получает AI-заявки автоматически через Supabase при нажатии «Проверить заявки»</li>
-                <li>• Данные диалога (резюме, история, контакт) отображаются в карточке заявки</li>
-                <li>• Поддерживаемые каналы: Telegram, ВКонтакте, сайт-чат</li>
-              </ul>
-            </div>
-          </section>
         </div>
+      ) : activeTab === 'integrations' ? (
+        <IntegrationsSettingsTab isDarkMode={isDarkMode} />
       ) : activeTab === 'email' ? (
         <EmailSettingsTab isDarkMode={isDarkMode} />
       ) : activeTab === 'backups' ? (

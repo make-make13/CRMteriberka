@@ -6,6 +6,65 @@ import type { Database as DatabaseConnection } from 'better-sqlite3';
 const require = createRequire(import.meta.url);
 const BetterSqlite3 = require('better-sqlite3');
 
+// ── Integration Settings types ──────────────────────────────────────────────
+
+/** Полная запись настроек (хранится в SQLite, секреты не покидают сервер) */
+export interface IntegrationSettingsStored {
+  supabaseUrl?: string;
+  supabaseServiceKey?: string;
+  supabaseTable?: string;
+  supabaseSyncLimit?: number;
+  libreOfficePath?: string;
+  aiBackendUrl?: string;
+  aiBackendKey?: string;
+}
+
+/** Входные данные для сохранения (пустой секрет = оставить прежнее) */
+export interface IntegrationSettingsInput {
+  supabaseUrl?: string;
+  supabaseServiceKey?: string;
+  supabaseTable?: string;
+  supabaseSyncLimit?: number;
+  libreOfficePath?: string;
+  aiBackendUrl?: string;
+  aiBackendKey?: string;
+}
+
+/** Маскированный вид для frontend (секреты заменены маской) */
+export interface IntegrationSettingsMasked {
+  supabaseUrl: string;
+  supabaseTable: string;
+  supabaseSyncLimit: number;
+  supabaseServiceKeyMask: string;
+  supabaseServiceKeyHas: boolean;
+  libreOfficePath: string;
+  aiBackendUrl: string;
+  aiBackendKeyMask: string;
+  aiBackendKeyHas: boolean;
+}
+
+/** Маскирует секреты: показывает только последние 4 символа */
+export function maskIntegrationSettings(s: IntegrationSettingsStored): IntegrationSettingsMasked {
+  const maskSecret = (v: string | undefined) => {
+    if (!v) return '';
+    if (v.length <= 4) return '••••';
+    return '••••••••' + v.slice(-4);
+  };
+  return {
+    supabaseUrl:            s.supabaseUrl            || '',
+    supabaseTable:          s.supabaseTable          || 'leads',
+    supabaseSyncLimit:      s.supabaseSyncLimit      || 50,
+    supabaseServiceKeyMask: maskSecret(s.supabaseServiceKey),
+    supabaseServiceKeyHas:  Boolean(s.supabaseServiceKey),
+    libreOfficePath:        s.libreOfficePath        || '',
+    aiBackendUrl:           s.aiBackendUrl           || '',
+    aiBackendKeyMask:       maskSecret(s.aiBackendKey),
+    aiBackendKeyHas:        Boolean(s.aiBackendKey),
+  };
+}
+
+// ── Database records ─────────────────────────────────────────────────────────
+
 export interface BookingRecord {
   id: string;
   contractId: string;
@@ -986,6 +1045,35 @@ export class LocalDatabase {
   saveSettings<T extends object>(settings: T, id = 'general') {
     this.upsertJson('settings', id, settings);
     return settings;
+  }
+
+  // ── Integration Settings ────────────────────────────────────────────────────
+  // Хранятся в таблице settings под id = 'integrations'.
+  // Секреты (service keys) хранятся полностью на сервере,
+  // но во frontend никогда не отдаются открытым текстом.
+
+  private static readonly INTEGRATIONS_ID = 'integrations';
+
+  /** Внутренний: возвращает полный объект настроек (включая секреты). */
+  getIntegrationSettingsFull(): IntegrationSettingsStored {
+    return this.getSettings<IntegrationSettingsStored>(LocalDatabase.INTEGRATIONS_ID) || {};
+  }
+
+  /** Сохранить настройки интеграций. Секреты: пустая строка = оставить прежнее значение. */
+  saveIntegrationSettings(input: IntegrationSettingsInput): IntegrationSettingsMasked {
+    const current = this.getIntegrationSettingsFull();
+    const next: IntegrationSettingsStored = {
+      supabaseUrl:        ('supabaseUrl'        in input ? input.supabaseUrl?.trim()        : current.supabaseUrl)        ?? '',
+      supabaseTable:      ('supabaseTable'      in input ? input.supabaseTable?.trim()      : current.supabaseTable)      || 'leads',
+      supabaseSyncLimit:  ('supabaseSyncLimit'  in input ? Number(input.supabaseSyncLimit)  : current.supabaseSyncLimit)  || 50,
+      libreOfficePath:    ('libreOfficePath'    in input ? input.libreOfficePath?.trim()    : current.libreOfficePath)    ?? '',
+      aiBackendUrl:       ('aiBackendUrl'       in input ? input.aiBackendUrl?.trim()       : current.aiBackendUrl)       ?? '',
+      // Секреты: заменяем только если в input передана непустая строка
+      supabaseServiceKey: (input.supabaseServiceKey?.trim())  || current.supabaseServiceKey  || '',
+      aiBackendKey:       (input.aiBackendKey?.trim())        || current.aiBackendKey        || '',
+    };
+    this.saveSettings(next, LocalDatabase.INTEGRATIONS_ID);
+    return maskIntegrationSettings(next);
   }
 
   listOrganizations<T>() {

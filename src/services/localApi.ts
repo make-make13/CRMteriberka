@@ -398,6 +398,74 @@ export const bmDocxTemplateApi = {
   },
 };
 
+// ── Integration Settings ──────────────────────────────────────────────────
+
+export interface IntegrationSettingsMasked {
+  supabaseUrl: string;
+  supabaseTable: string;
+  supabaseSyncLimit: number;
+  supabaseServiceKeyMask: string;
+  supabaseServiceKeyHas: boolean;
+  libreOfficePath: string;
+  aiBackendUrl: string;
+  aiBackendKeyMask: string;
+  aiBackendKeyHas: boolean;
+}
+
+export interface IntegrationSettingsInput {
+  supabaseUrl?: string;
+  supabaseServiceKey?: string;   // пустая строка = оставить прежнее
+  supabaseTable?: string;
+  supabaseSyncLimit?: number;
+  libreOfficePath?: string;
+  aiBackendUrl?: string;
+  aiBackendKey?: string;         // пустая строка = оставить прежнее
+}
+
+export interface SupabaseTestResult {
+  ok: boolean;
+  rowCount?: number;
+  error?: string;
+}
+
+export interface LibreOfficeTestResult {
+  ok: boolean;
+  path?: string;
+  version?: string;
+  error?: string;
+}
+
+export interface AiBackendTestResult {
+  ok: boolean;
+  status: 'online' | 'offline' | 'error' | 'not_configured';
+  httpStatus?: number;
+  error?: string;
+}
+
+export const integrationSettingsApi = {
+  get: () => apiRequest<IntegrationSettingsMasked>('/api/integration-settings'),
+  save: (input: IntegrationSettingsInput) => apiRequest<IntegrationSettingsMasked>('/api/integration-settings', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  }),
+  testSupabase: () => apiRequest<SupabaseTestResult>('/api/integration-settings/test-supabase', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  detectLibreOffice: () => apiRequest<{ detected: string }>('/api/integration-settings/detect-libreoffice', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  testLibreOffice: () => apiRequest<LibreOfficeTestResult>('/api/integration-settings/test-libreoffice', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  testAiBackend: () => apiRequest<AiBackendTestResult>('/api/integration-settings/test-ai-backend', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+};
+
 export const maintenanceApi = {
   createBackup: () => apiRequest<{ success: true; path: string }>('/api/backups', {
     method: 'POST',

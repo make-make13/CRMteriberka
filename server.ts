@@ -4,10 +4,11 @@ import { createServer as createViteServer } from 'vite';
 import path from 'node:path';
 import nodemailer from 'nodemailer';
 import { fileURLToPath } from 'node:url';
-import { BookingConflictError, localDb } from './server/localDatabase';
+import { BookingConflictError, localDb, maskIntegrationSettings } from './server/localDatabase';
 import { backupService } from './server/backupService';
 import { authService } from './server/authService';
-import { syncSupabaseLeads } from './server/supabaseLeadSync';
+import { syncSupabaseLeads, testSupabaseConnection } from './server/supabaseLeadSync';
+import { findSofficePath, setLibreOfficePath, resetSofficePathCache } from './src/utils/docx/docxToPdf';
 import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
 import { registerBmDocxRoutes } from './server/bmDocxRouter';
@@ -110,7 +111,17 @@ function getSmtpConfig(body: any) {
   };
 }
 
+/** Применить LibreOffice-путь из настроек CRM при старте */
+function applyStoredLibreOfficePath() {
+  const stored = localDb.getIntegrationSettingsFull();
+  if (stored.libreOfficePath?.trim()) {
+    setLibreOfficePath(stored.libreOfficePath.trim());
+  }
+}
+
 async function startServer() {
+  // Применяем хранимый путь до первого запроса
+  applyStoredLibreOfficePath();
   const app = express();
   const PORT = Number(process.env.PORT || 3002);
 
@@ -129,6 +140,101 @@ async function startServer() {
   // Маршруты: /api/docx-templates/bm/:mode/{status,download,upload,test,activate}.
   // UI-кнопка и endpoint /api/bm-docx/* не затронуты.
   registerBmDocxTemplateRoutes(app, requireAuth);
+
+  // ── Integration Settings ──────────────────────────────────────────────────
+  // GET  — маскированные настройки (секреты не раскрываются)
+  // PUT  — сохранить; пустой секрет = оставить прежнее
+  // POST /test-supabase        — проверить подключение Supabase
+  // POST /detect-libreoffice   — автопоиск soffice.exe
+  // POST /test-libreoffice     — проверить LibreOffice
+  // POST /test-ai-backend      — проверить AI backend URL
+
+  app.get('/api/integration-settings', requireAuth, (_req, res) => {
+    const full = localDb.getIntegrationSettingsFull();
+    res.json(maskIntegrationSettings(full));
+  });
+
+  app.put('/api/integration-settings', requireAdmin, (req, res) => {
+    try {
+      const masked = localDb.saveIntegrationSettings(req.body || {});
+      // Обновляем LibreOffice override без перезапуска
+      const full = localDb.getIntegrationSettingsFull();
+      setLibreOfficePath(full.libreOfficePath);
+      res.json(masked);
+    } catch (error) {
+      res.status(400).json({ error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/integration-settings/test-supabase', requireAuth, async (_req, res) => {
+    try {
+      const result = await testSupabaseConnection();
+      res.json(result);
+    } catch (error) {
+      res.json({ ok: false, error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/integration-settings/detect-libreoffice', requireAuth, (_req, res) => {
+    try {
+      resetSofficePathCache();
+      const full = localDb.getIntegrationSettingsFull();
+      // Временно убираем override чтобы автопоиск сработал
+      setLibreOfficePath(undefined);
+      let detected = '';
+      try {
+        detected = findSofficePath();
+      } catch { /* не найден */ }
+      // Восстанавливаем сохранённый путь
+      setLibreOfficePath(full.libreOfficePath);
+      res.json({ detected });
+    } catch (error) {
+      res.json({ detected: '', error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/integration-settings/test-libreoffice', requireAuth, async (_req, res) => {
+    const { execFile } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const execFileAsync = promisify(execFile);
+    try {
+      const sofficePath = (() => {
+        try { return findSofficePath(); } catch { return null; }
+      })();
+      if (!sofficePath || sofficePath === 'soffice') {
+        // Проверяем soffice в PATH
+        await execFileAsync('soffice', ['--version'], { timeout: 8000 });
+        res.json({ ok: true, path: 'soffice (PATH)', version: '' });
+        return;
+      }
+      const { stdout } = await execFileAsync(sofficePath, ['--version'], { timeout: 8000 });
+      res.json({ ok: true, path: sofficePath, version: stdout.trim() });
+    } catch (error) {
+      res.json({ ok: false, error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/integration-settings/test-ai-backend', requireAuth, async (_req, res) => {
+    const full = localDb.getIntegrationSettingsFull();
+    const url = full.aiBackendUrl?.trim();
+    if (!url) {
+      res.json({ ok: false, status: 'not_configured', error: 'URL не задан' });
+      return;
+    }
+    try {
+      const pingUrl = url.replace(/\/+$/, '') + '/health';
+      const response = await fetch(pingUrl, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000),
+        headers: full.aiBackendKey ? { Authorization: `Bearer ${full.aiBackendKey}` } : {},
+      });
+      res.json({ ok: response.ok, status: response.ok ? 'online' : 'error', httpStatus: response.status });
+    } catch (error) {
+      const msg = asErrorMessage(error);
+      const isTimeout = msg.includes('TimeoutError') || msg.includes('ETIMEDOUT') || msg.includes('ECONNREFUSED');
+      res.json({ ok: false, status: 'offline', error: isTimeout ? 'Сервер недоступен' : msg });
+    }
+  });
 
   app.post('/api/auth/login', (req, res) => {
     try {
