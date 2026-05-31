@@ -9,6 +9,20 @@
 import type { ContractData, Organization } from '../../types';
 import { buildPdfmeContractInput } from '../pdfmeDocumentGenerator';
 
+/** "Фамилия Имя Отчество" → "И. О. Фамилия" (формат подписи §15). */
+function makeShortName(fullName: string): string {
+  const cleaned = String(fullName || '').trim().replace(/\s+/g, ' ');
+  if (!cleaned) return '';
+  const parts = cleaned.split(' ');
+  if (parts.length === 1) return cleaned;
+  const [last, first, middle] = parts;
+  const initials = [first?.[0], middle?.[0]]
+    .filter(Boolean)
+    .map(l => `${l}.`)
+    .join(' ');
+  return initials ? `${initials} ${last}` : last;
+}
+
 export interface BmDocxVariables {
   // Договор
   contract_number: string;
@@ -46,6 +60,8 @@ export interface BmDocxVariables {
   prepayment_words: string;
   balance: string;
   balance_words: string;
+  // Подпись гостя в §15 (формат "И. О. Фамилия" — для строки подписи)
+  client_short_name: string;
   // Исполнитель
   exec_name: string;
   exec_director: string;
@@ -102,6 +118,8 @@ export function buildBmDocxVariables(
     prepayment_words: String(c.prepayment_words ?? ''),
     balance: String(c.balance ?? ''),
     balance_words: String(c.balance_words ?? ''),
+
+    client_short_name: makeShortName(String(c.client_name ?? '')),
 
     exec_name: String(c.exec_name ?? ''),
     exec_director: String(c.exec_director ?? ''),
