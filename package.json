@@ -16,6 +16,7 @@
     "electron:dev": "npm run build && npm run build:server && npm run build:electron && electron .",
     "electron:start": "electron .",
     "electron:pack": "npm run build && npm run build:server && npm run build:electron && electron-builder --dir",
+    "rebuild:dev": "npm rebuild better-sqlite3",
     "test:audit-fixes": "node scripts/checkEncoding.mjs && tsx scripts/auditFixesTest.ts",
     "test:legacy-import-analysis": "tsx scripts/legacyImportAnalysisTest.ts",
     "test:legacy-import-plan": "tsx scripts/legacyImportPlanTest.ts && tsx scripts/legacyImportApplyTest.ts",

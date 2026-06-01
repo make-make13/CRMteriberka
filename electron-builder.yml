@@ -14,18 +14,25 @@ directories:
   output: release
   buildResources: assets/app-icon
 
-# ── Packing / native modules ──────────────────────────────────────────────────
-# npmRebuild: false — не пересобирать native модули.
-# better-sqlite3 скомпилирован для системного Node.js (ABI 127).
-# Backend запускается через spawn('node', ...) — тот же ABI → совместимо.
-# Когда перейдём на process.execPath + ELECTRON_RUN_AS_NODE (ABI 135),
-# нужно будет поставить npmRebuild: true и добавить electron-rebuild.
+# ── Native modules ────────────────────────────────────────────────────────────
+# npmRebuild: false — НЕ запускать electron-builder встроенный rebuild.
+# Вместо него используем afterPack-хук (scripts/afterPack.cjs), который
+# явно вызывает prebuild-install для Electron runtime ТОЛЬКО в output-директории.
+# Это гарантирует:
+#   - source node_modules/better-sqlite3 остаётся под ABI 127 (dev)
+#   - packaged node_modules/better-sqlite3 пересобирается под ABI 135 (Electron 36)
 npmRebuild: false
 
+# ── afterPack хук ─────────────────────────────────────────────────────────────
+# Вызывается после копирования файлов в output, перед финальной упаковкой.
+# Пересобирает better-sqlite3 под Electron ABI в output-директории.
+afterPack: scripts/afterPack.cjs
+
+# ── asar ─────────────────────────────────────────────────────────────────────
 # asar: false — не упаковывать в .asar архив.
-# Необходимо, т.к. backend запускается через spawn('node', serverEntry):
-# системный Node.js не умеет читать файлы из .asar.
-# При переходе на ELECTRON_RUN_AS_NODE можно включить asar + asarUnpack.
+# Упрощает диагностику и не требует asarUnpack для better-sqlite3.
+# В будущем можно включить asar + asarUnpack: ['node_modules/better-sqlite3/**/*'],
+# т.к. с ELECTRON_RUN_AS_NODE asar-пути работают.
 asar: false
 
 # ── Файлы приложения ──────────────────────────────────────────────────────────
@@ -43,6 +50,7 @@ files:
   # Манифест (нужен electron-builder'у и для version lookup)
   - package.json
   # Native addon: better-sqlite3 (нельзя бандлить)
+  # afterPack пересобирает .node под Electron ABI
   - node_modules/better-sqlite3/**/*
   # Зависимость better-sqlite3: находит .node файл по пути
   - node_modules/bindings/**/*
@@ -50,7 +58,7 @@ files:
   - node_modules/file-uri-to-path/**/*
   # Исключаем sourcemaps (не нужны пользователю, экономят ~1 MB)
   - "!**/*.map"
-  # Исключаем любые TypeScript-исходники если вдруг попадут
+  # Исключаем TypeScript-исходники
   - "!**/*.ts"
   - "!**/*.tsx"
 

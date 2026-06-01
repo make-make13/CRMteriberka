@@ -1,6 +1,10 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
+// vite импортируется условно внутри startServer() — только в dev-режиме.
+// Top-level import запрещён: в CJS-бандле он превращается в require('vite')
+// в начале файла, до проверки NODE_ENV, и рушит packaged Electron app.
+// type-only import нужен IDE для типов — erase at runtime.
+import type { createServer as createViteServerType } from 'vite';
 import path from 'node:path';
 import fs from 'node:fs';
 import nodemailer from 'nodemailer';
@@ -720,6 +724,11 @@ async function startServer() {
   });
 
   if (process.env.NODE_ENV !== 'production') {
+    // Динамический import — выполняется только в dev-режиме.
+    // В production (NODE_ENV=production, packaged Electron app) этот блок
+    // не выполняется, поэтому vite не нужен и не должен быть в node_modules.
+    const { createServer: createViteServer } =
+      await import('vite') as { createServer: typeof createViteServerType };
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',

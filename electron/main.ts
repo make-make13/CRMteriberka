@@ -3,12 +3,18 @@
  *
  * Архитектура (Вариант A из docs/electron-plan.md):
  *   1. Находим свободный порт (начиная с 3002).
- *   2. Запускаем backend через spawn('node', ['dist-server/server.cjs']).
- *      Используем системный Node.js — для dev-режима это правильно,
- *      поскольку better-sqlite3 скомпилирован под системный ABI.
+ *   2. Запускаем backend (dist-server/server.cjs):
+ *        dev  (app.isPackaged=false): spawn('node', ...) — системный Node.js
+ *        pack (app.isPackaged=true):  spawn(process.execPath, ...) + ELECTRON_RUN_AS_NODE=1
  *   3. Ждём GET /api/health → 200.
  *   4. Открываем BrowserWindow на http://localhost:<port>.
  *   5. При закрытии окна — убиваем backend process.
+ *
+ * ABI-ситуация:
+ *   - system Node v22 → ABI 127 (используется в dev)
+ *   - Electron 36    → ABI 135 (используется в packaged)
+ *   - better-sqlite3 собирается под нужный ABI через afterPack-хук
+ *     (см. scripts/afterPack.cjs и electron-builder.yml).
  */
 
 import { app, BrowserWindow, dialog } from 'electron';
@@ -58,7 +64,17 @@ function startBackend(port: number): Promise<void> {
       return;
     }
 
-    const userData = app.getPath('userData');
+    const isPackaged = app.isPackaged;
+    const userData   = app.getPath('userData');
+    const distPath   = getDistPath();
+
+    // ── Выбор рантайма ──────────────────────────────────────────────────────
+    //   dev  (isPackaged=false): системный Node.js — ABI совпадает с тем,
+    //        под который скомпилирован better-sqlite3 при npm install.
+    //   pack (isPackaged=true):  Electron runtime через process.execPath
+    //        + ELECTRON_RUN_AS_NODE=1. better-sqlite3 при этом собран
+    //        под Electron ABI в afterPack-хуке (scripts/afterPack.cjs).
+    const backendExecutable = isPackaged ? process.execPath : 'node';
 
     const env: NodeJS.ProcessEnv = {
       ...process.env,
@@ -66,29 +82,26 @@ function startBackend(port: number): Promise<void> {
       PORT:                         String(port),
       CRM_DATA_DIR:                 userData,
       BM_DOCX_TEMPLATE_STORAGE_ROOT: path.join(userData, 'storage', 'docx-templates'),
-      CRM_DIST_DIR:                 getDistPath(),
+      CRM_DIST_DIR:                 distPath,
+      // В packaged-режиме Electron binary запускается как Node.js
+      ...(isPackaged ? { ELECTRON_RUN_AS_NODE: '1' } : {}),
     };
 
-    // Выбор рантайма для backend-процесса:
-    //   dev  (app.isPackaged=false): spawn('node', ...) — системный Node.js,
-    //        ABI совпадает с тем, под который скомпилирован better-sqlite3.
-    //   pack (app.isPackaged=true):  spawn(process.execPath, ...) c флагом
-    //        ELECTRON_RUN_AS_NODE=1 — Electron работает как Node.js-рантайм.
-    //        В этом режиме нужно, чтобы better-sqlite3 был пересобран под
-    //        Electron ABI (electron-rebuild). Пока используем --dir сборку
-    //        только для разработки, поэтому packaged-путь тоже проходит
-    //        через системный node (он должен быть установлен).
-    // TODO: когда перейдём к релизному дистрибутиву, включить:
-    //   const nodeBin = app.isPackaged ? process.execPath : 'node';
-    //   if (app.isPackaged) env.ELECTRON_RUN_AS_NODE = '1';
-    // + запустить electron-rebuild перед сборкой.
-    const nodeBin = 'node';
-    console.log(`[electron] Backend runtime: ${nodeBin}, packaged: ${app.isPackaged}`);
+    // ── Диагностический лог ─────────────────────────────────────────────────
+    console.log('[electron] ════ Backend startup ════');
+    console.log(`[electron]   packaged:            ${isPackaged}`);
+    console.log(`[electron]   backendExecutable:   ${backendExecutable}`);
+    console.log(`[electron]   serverEntry:         ${serverEntry}`);
+    console.log(`[electron]   ELECTRON_RUN_AS_NODE: ${env.ELECTRON_RUN_AS_NODE ?? '(not set — dev mode)'}`);
+    console.log(`[electron]   port:                ${port}`);
+    console.log(`[electron]   dataDir:             ${userData}`);
+    console.log('[electron] ══════════════════════════');
 
-    backendProcess = spawn(nodeBin, [serverEntry], {
+    backendProcess = spawn(backendExecutable, [serverEntry], {
       env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      cwd: PROJECT_ROOT,
+      stdio:       ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,   // не показывать консольное окно на Windows
+      cwd:         PROJECT_ROOT,
     });
 
     backendProcess.stdout?.on('data', (chunk: Buffer) => {
@@ -104,7 +117,10 @@ function startBackend(port: number): Promise<void> {
     });
 
     backendProcess.on('error', (err) => {
-      reject(new Error(`Не удалось запустить node: ${err.message}\n\nУбедитесь, что Node.js установлен и доступен в PATH.`));
+      const hint = isPackaged
+        ? `Ошибка запуска Electron runtime:\n${err.message}`
+        : `Не удалось запустить node: ${err.message}\n\nУбедитесь, что Node.js установлен и доступен в PATH.`;
+      reject(new Error(hint));
     });
   });
 }
@@ -149,10 +165,9 @@ async function createWindow(port: number): Promise<void> {
 }
 
 // ── Импорт findFreePort / waitForHealth ──────────────────────────────────────
-// Импортируем динамически, чтобы не тянуть в блок до app.whenReady()
 
-import { findFreePort }   from './findFreePort';
-import { waitForHealth }  from './waitForHealth';
+import { findFreePort }  from './findFreePort';
+import { waitForHealth } from './waitForHealth';
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
