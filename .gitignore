@@ -41,3 +41,7 @@ user_requested_schema*.json
 
 # Manual database backups
 manual-backups/
+
+# Icon pack source (временный архив — содержимое скопировано в assets/app-icon/)
+bolshaya_medveditsa_crm_icon_pack.zip
+bolshaya_medveditsa_crm_icon_pack/

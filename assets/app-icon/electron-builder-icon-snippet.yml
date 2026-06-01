@@ -1,0 +1,7 @@
+appId: ru.teriberka.big-medveditsa-crm
+productName: Большая Медведица CRM
+win:
+  icon: assets/app-icon/icon.ico
+nsis:
+  shortcutName: Большая Медведица CRM
+  artifactName: Большая-Медведица-CRM-Setup-${version}.${ext}
