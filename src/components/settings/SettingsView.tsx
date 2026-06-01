@@ -15,6 +15,7 @@ import BackupSettingsTab from './BackupSettingsTab';
 import ManagersSettingsTab from './ManagersSettingsTab';
 import BmDocxTemplatesTab from './BmDocxTemplatesTab';
 import IntegrationsSettingsTab from './IntegrationsSettingsTab';
+import SystemStatusTab from './SystemStatusTab';
 import RoomPricesCard from './RoomPricesCard';
 import { TEMPLATE_VARIABLES } from '../../utils/templateVariables';
 import { PDFME_TEMPLATE_DEFINITIONS, type PdfmeTemplateDefinition } from '../../utils/pdfmeTemplateIds';
@@ -35,7 +36,7 @@ interface SettingsViewProps {
   canManageManagers?: boolean;
 }
 
-type SettingsTab = 'general' | 'integrations' | 'templates' | 'email' | 'backups' | 'managers';
+type SettingsTab = 'general' | 'integrations' | 'system' | 'templates' | 'email' | 'backups' | 'managers';
 
 const importPdfmeTemplateEditorModal = () => import('./PdfmeTemplateEditorModal');
 let pdfmeTemplateEditorModalPreload: ReturnType<typeof importPdfmeTemplateEditorModal> | null = null;
@@ -165,6 +166,7 @@ export default function SettingsView({
     const allowed =
       activeTab === 'general' ||
       activeTab === 'integrations' ||
+      activeTab === 'system' ||
       (activeTab === 'templates' && canManageTemplates) ||
       (activeTab === 'email' && canManageEmail) ||
       (activeTab === 'backups' && canManageBackups) ||
@@ -277,6 +279,18 @@ export default function SettingsView({
           )}
         >
           Интеграции
+        </motion.button>
+        <motion.button
+          onClick={() => setActiveTab('system')}
+          whileTap={{ scale: 0.95 }}
+          className={cn(
+            "whitespace-nowrap px-4 py-2 rounded-lg text-sm font-bold transition-all",
+            activeTab === 'system'
+              ? (isDarkMode ? "bg-[#6E6964]/30 text-[#F4F1EA] ring-1 ring-[#B4CDD2]/20" : "bg-white text-black shadow-sm")
+              : "text-gray-500 hover:text-gray-300"
+          )}
+        >
+          Система
         </motion.button>
         {canManageTemplates && (
           <motion.button
@@ -593,6 +607,8 @@ export default function SettingsView({
         </div>
       ) : activeTab === 'integrations' ? (
         <IntegrationsSettingsTab isDarkMode={isDarkMode} />
+      ) : activeTab === 'system' ? (
+        <SystemStatusTab isDarkMode={isDarkMode} />
       ) : activeTab === 'email' ? (
         <EmailSettingsTab isDarkMode={isDarkMode} />
       ) : activeTab === 'backups' ? (
