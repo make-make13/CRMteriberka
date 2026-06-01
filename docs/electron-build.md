@@ -273,3 +273,35 @@ release/
 ## Git-статус
 
 Файлы директории `release/` исключены из git через `.gitignore`.
+
+---
+
+## RC 0.1.0 installer hardening notes
+
+Перед silent install или reinstall закройте установленную CRM и убедитесь, что не
+запущены процессы `Большая Медведица CRM.exe`, Setup.exe или uninstaller. NSIS-шаблон
+electron-builder при обновлении пытается закрыть процессы из install dir, затем запускает
+старый uninstaller с `/S /KEEP_APP_DATA --updated`; пользовательские данные в
+`%APPDATA%\Большая Медведица CRM` при этом должны сохраняться.
+
+Рекомендуемый порядок проверки:
+
+```powershell
+Get-CimInstance Win32_Process |
+  Where-Object { $_.ExecutablePath -like "$env:LOCALAPPDATA\Programs\bolshaya-medveditsa-crm\*" }
+
+.\release\Большая-Медведица-CRM-Setup-0.1.0.exe /S
+```
+
+Если reinstall ждёт закрытия приложения, сначала закройте CRM вручную и повторите
+установку. Во время таких проверок не удаляйте `%APPDATA%\Большая Медведица CRM`.
+
+Electron wrapper ждёт packaged backend на `/api/health` до 60 секунд. Это убирает
+ложный startup timeout на холодном запуске, когда инициализация SQLite/native modules
+занимает больше прежнего лимита 20 секунд, но backend затем отвечает корректно.
+
+Known RC limitation: silent Setup.exe reinstall still hangs after copying files when the
+CRM is already closed. The hung process must be stopped by PID; do not delete AppData.
+After a hung silent run, verify install dir, registry uninstall key, and userData before
+using the installed copy for smoke tests. Use `win-unpacked` as the source of truth for
+code smoke checks until the installer hang is fixed.

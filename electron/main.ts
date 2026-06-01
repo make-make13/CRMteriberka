@@ -29,6 +29,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 let backendProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
 let appPort = 3002;
+const BACKEND_HEALTH_TIMEOUT_MS = 60_000;
 
 // ── Пути ─────────────────────────────────────────────────────────────────────
 
@@ -181,8 +182,8 @@ async function main(): Promise<void> {
     await startBackend(appPort);
 
     // 3. Ждём health check
-    console.log(`[electron] Waiting for backend on http://localhost:${appPort}/api/health`);
-    await waitForHealth(appPort, 20_000);
+    console.log(`[electron] Waiting for backend on http://localhost:${appPort}/api/health (timeout ${BACKEND_HEALTH_TIMEOUT_MS / 1000}s)`);
+    await waitForHealth(appPort, BACKEND_HEALTH_TIMEOUT_MS);
     console.log('[electron] Backend ready');
 
     // 4. Открываем окно

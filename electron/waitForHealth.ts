@@ -1,8 +1,8 @@
 import http from 'http';
 
 /**
- * Ждёт, пока backend ответит 200 на GET /api/health.
- * Отклоняет Promise, если сервер не поднялся за timeoutMs.
+ * Wait until backend returns HTTP 200 for GET /api/health.
+ * Rejects when the server is not ready before timeoutMs.
  */
 export function waitForHealth(
   port: number,
@@ -11,10 +11,28 @@ export function waitForHealth(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const deadline = Date.now() + timeoutMs;
+    let settled = false;
+
+    function finish(error?: Error): void {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    }
 
     function check(): void {
+      if (settled) {
+        return;
+      }
+
       if (Date.now() > deadline) {
-        reject(new Error(`Backend не ответил на /api/health за ${timeoutMs / 1000} сек.`));
+        finish(new Error(`Backend did not respond to /api/health within ${timeoutMs / 1000} sec.`));
         return;
       }
 
@@ -23,7 +41,7 @@ export function waitForHealth(
         (res) => {
           if (res.statusCode === 200) {
             res.resume(); // drain
-            resolve();
+            finish();
           } else {
             res.resume();
             setTimeout(check, intervalMs);

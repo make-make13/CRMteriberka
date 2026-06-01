@@ -156,3 +156,20 @@ npm run electron:pack
 - Рабочая база проекта `data/crm.sqlite` повреждена или изменена установщиком.
 - PDF генерация полностью сломана.
 - Установленная программа требует системный Node.js для packaged backend.
+
+---
+
+## RC 0.1.0 installer hardening
+
+- Перед reinstall закрыть установленную CRM и убедиться, что нет процессов
+  `Большая Медведица CRM.exe`, Setup.exe и uninstaller.
+- Silent install/reinstall проверять через Setup.exe с `/S`; если процесс ждёт
+  закрытия приложения, закрыть CRM вручную и повторить проверку.
+- Не удалять `%APPDATA%\Большая Медведица CRM`; userData должен сохраняться при
+  обновлении и reinstall.
+- После запуска installed или `win-unpacked` убедиться, что Electron не пишет
+  ложный startup timeout, а `/api/health` отвечает на выбранном порту.
+- При занятом 3002 packaged app должен выбрать следующий свободный порт.
+- Known RC blocker: current silent Setup.exe reinstall can hang after copying files even
+  when CRM is closed. If this happens, stop only the Setup.exe PID, verify no CRM/backend
+  process remains, and do not delete `%APPDATA%\Большая Медведица CRM`.

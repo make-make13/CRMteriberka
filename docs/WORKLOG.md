@@ -1,5 +1,43 @@
 # WORKLOG
 
+### 2026-06-01 14:41:38 +03:00 — Installer hardening for RC 0.1.0
+
+Files changed:
+- `electron/main.ts`
+- `electron/waitForHealth.ts`
+- `scripts/electronWaitForHealthTest.ts`
+- `docs/electron-build.md`
+- `docs/release-checklist.md`
+- `docs/WORKLOG.md`
+
+Completed:
+- Reviewed NSIS/electron-builder installer behavior for current user install, reinstall, app-closing, `/KEEP_APP_DATA`, and AppData preservation.
+- Confirmed there were no running installed CRM, Setup.exe, or uninstaller processes before code changes.
+- Hardened `waitForHealth` against late retry callbacks after resolve/reject.
+- Increased Electron packaged backend health wait from 20 seconds to 60 seconds to avoid the observed false cold-start timeout while preserving port fallback behavior.
+- Added a targeted `waitForHealth` script test for HTTP 200 success and timeout rejection.
+
+Checks run:
+- `npx tsx scripts/electronWaitForHealthTest.ts`
+- `npx tsx scripts/electronFindFreePortTest.ts`
+- `npm run build`
+- `npm run build:server`
+- `npm run build:electron`
+- `npm run electron:pack`
+- `npm run electron:installer`
+- `release/win-unpacked/Большая Медведица CRM.exe` smoke with port 3002 occupied; packaged backend selected 3003, health/app-info/login/auto-sync worked, startup timeout log was absent.
+- Silent Setup.exe reinstall `/S` with CRM closed and 5 minute watchdog; reproduced hang after files were copied.
+
+Next recommended step:
+- Fix the remaining silent Setup.exe hang; until then, use `win-unpacked` for code smoke checks and treat silent reinstall as an RC blocker.
+
+Risks / TODO:
+- Do not delete `%APPDATA%\Большая Медведица CRM` while investigating installer hangs.
+- If reinstall waits or hangs, stop only the Setup.exe PID after confirming it is stuck.
+- Full build, pack, and win-unpacked smoke passed after the startup wait fix.
+- `npm run electron:installer` eventually built a new Setup.exe and blockmap, but silent reinstall still hung after copying files with CRM closed.
+- A one-click NSIS experiment did not fix the silent hang and was reverted; keep the installer hang as an RC blocker/follow-up.
+
 ### 2026-06-01 13:31:04 +03:00 — RC 0.1.0 readiness docs and installer build
 
 Files changed:
