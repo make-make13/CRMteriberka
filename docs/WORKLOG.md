@@ -1,5 +1,32 @@
 # WORKLOG
 
+### 2026-06-01 12:40:43 +03:00 — First-run readiness polish
+
+Files changed:
+- `docs/first-run.md`
+- `docs/local-install.md`
+- `src/components/settings/SystemStatusTab.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Read `docs/codex-handoff.md` and confirmed installer/Electron constraints.
+- Reviewed current first-run checks in `SystemStatusTab`, `IntegrationsSettingsTab`, `localApi`, and backend endpoints for app info, integration settings, Supabase test, LibreOffice test, and auto-sync status.
+- Added Russian first-run documentation for Setup.exe install, AppData data location, Supabase, LibreOffice, auto-sync, system status, backups, troubleshooting, and explicitly not-yet-implemented items.
+- Linked `docs/first-run.md` from `docs/local-install.md`.
+- Added a compact non-modal "Первый запуск" checklist to `Настройки → Система`.
+- Did not change CRM business logic, contracts, DOCX/PDF generation, templates, Supabase schema, installer behavior, auto-update, code signing, or working database.
+
+Checks run:
+- `npm run build`
+- Browser check on `http://127.0.0.1:3002`: login, open `Настройки → Система`, confirm first-run checklist is visible, console errors empty.
+
+Next recommended step:
+- Review the first-run wording and decide whether to keep the checklist in `Система` only or also add a short hint in `Интеграции`.
+
+Risks / TODO:
+- `npm run build` still reports pre-existing large PDFMe chunk warnings.
+- Local dev server start attempt found port 3002 already in use, so UI verification used the existing running server.
+
 ### 2026-05-28 — Chessboard UI refinements
 
 #### Session 1: Layout and spacing improvements

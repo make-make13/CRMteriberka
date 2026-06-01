@@ -346,6 +346,33 @@ export default function SystemStatusTab({ isDarkMode }: SystemStatusTabProps) {
         </div>
       </section>
 
+      {/* ── Первый запуск ── */}
+      <section className={cn(
+        'rounded-2xl border p-4',
+        isDarkMode ? 'bg-[#111111] border-white/5' : 'bg-white border-gray-200 shadow-sm',
+      )}>
+        <div className="flex items-start gap-3">
+          <div className={cn(
+            'w-8 h-8 rounded-xl flex items-center justify-center shrink-0',
+            isDarkMode ? 'bg-[#8CAFBE]/10' : 'bg-blue-50',
+          )}>
+            <Info size={15} className={isDarkMode ? 'text-[#B4CDD2]' : 'text-blue-500'} />
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-sm">Первый запуск</p>
+            <ol className={cn(
+              'mt-2 grid gap-1 text-xs leading-snug list-decimal list-inside',
+              isDarkMode ? 'text-[#8F9894]' : 'text-gray-500',
+            )}>
+              <li>Проверьте LibreOffice.</li>
+              <li>Настройте Supabase.</li>
+              <li>При необходимости включите автопроверку заявок.</li>
+              <li>Сделайте резервную копию после настройки.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
       {/* ── Карточки интеграций ── */}
       <div className="grid grid-cols-3 gap-4">
 
