@@ -40,7 +40,9 @@ function getDistPath(): string {
 }
 
 function getPreloadPath(): string {
-  return path.join(__dirname, 'preload.js');
+  // tsup компилирует preload.ts → dist-electron/preload.cjs (не .js),
+  // поскольку root package.json имеет "type":"module".
+  return path.join(__dirname, 'preload.cjs');
 }
 
 // ── Backend ──────────────────────────────────────────────────────────────────
@@ -67,9 +69,23 @@ function startBackend(port: number): Promise<void> {
       CRM_DIST_DIR:                 getDistPath(),
     };
 
-    // Используем системный node (в dev-режиме совпадает с ABI better-sqlite3).
-    // В production-сборке электрон-билдер перекомпилирует native модули.
-    backendProcess = spawn('node', [serverEntry], {
+    // Выбор рантайма для backend-процесса:
+    //   dev  (app.isPackaged=false): spawn('node', ...) — системный Node.js,
+    //        ABI совпадает с тем, под который скомпилирован better-sqlite3.
+    //   pack (app.isPackaged=true):  spawn(process.execPath, ...) c флагом
+    //        ELECTRON_RUN_AS_NODE=1 — Electron работает как Node.js-рантайм.
+    //        В этом режиме нужно, чтобы better-sqlite3 был пересобран под
+    //        Electron ABI (electron-rebuild). Пока используем --dir сборку
+    //        только для разработки, поэтому packaged-путь тоже проходит
+    //        через системный node (он должен быть установлен).
+    // TODO: когда перейдём к релизному дистрибутиву, включить:
+    //   const nodeBin = app.isPackaged ? process.execPath : 'node';
+    //   if (app.isPackaged) env.ELECTRON_RUN_AS_NODE = '1';
+    // + запустить electron-rebuild перед сборкой.
+    const nodeBin = 'node';
+    console.log(`[electron] Backend runtime: ${nodeBin}, packaged: ${app.isPackaged}`);
+
+    backendProcess = spawn(nodeBin, [serverEntry], {
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
       cwd: PROJECT_ROOT,

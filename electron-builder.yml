@@ -1,0 +1,71 @@
+##
+## electron-builder — конфиг сборки CRM «Большая Медведица»
+##
+## Текущая цель: unpacked Windows desktop build (--dir).
+## NSIS-установщик и auto-update — в плане, не сейчас.
+##
+
+appId: ru.teriberka.big-medveditsa-crm
+productName: "Большая Медведица CRM"
+copyright: "© 2025 Большая Медведица"
+
+# ── Директории ────────────────────────────────────────────────────────────────
+directories:
+  output: release
+  buildResources: assets/app-icon
+
+# ── Packing / native modules ──────────────────────────────────────────────────
+# npmRebuild: false — не пересобирать native модули.
+# better-sqlite3 скомпилирован для системного Node.js (ABI 127).
+# Backend запускается через spawn('node', ...) — тот же ABI → совместимо.
+# Когда перейдём на process.execPath + ELECTRON_RUN_AS_NODE (ABI 135),
+# нужно будет поставить npmRebuild: true и добавить electron-rebuild.
+npmRebuild: false
+
+# asar: false — не упаковывать в .asar архив.
+# Необходимо, т.к. backend запускается через spawn('node', serverEntry):
+# системный Node.js не умеет читать файлы из .asar.
+# При переходе на ELECTRON_RUN_AS_NODE можно включить asar + asarUnpack.
+asar: false
+
+# ── Файлы приложения ──────────────────────────────────────────────────────────
+# Включаем только то, что нужно в runtime.
+# Всё остальное (React, Express, etc.) уже в бандлах dist/ и dist-server/.
+files:
+  # Frontend (Vite build)
+  - dist/**/*
+  # Backend CJS bundle
+  - dist-server/**/*
+  # Electron main + preload
+  - dist-electron/**/*
+  # Иконки
+  - assets/app-icon/**/*
+  # Манифест (нужен electron-builder'у и для version lookup)
+  - package.json
+  # Native addon: better-sqlite3 (нельзя бандлить)
+  - node_modules/better-sqlite3/**/*
+  # Зависимость better-sqlite3: находит .node файл по пути
+  - node_modules/bindings/**/*
+  # Зависимость bindings
+  - node_modules/file-uri-to-path/**/*
+  # Исключаем sourcemaps (не нужны пользователю, экономят ~1 MB)
+  - "!**/*.map"
+  # Исключаем любые TypeScript-исходники если вдруг попадут
+  - "!**/*.ts"
+  - "!**/*.tsx"
+
+# ── Windows ───────────────────────────────────────────────────────────────────
+win:
+  target:
+    - target: dir       # unpacked build — без установщика
+      arch: [x64]
+  icon: assets/app-icon/icon.ico
+
+# ── NSIS (будущий установщик) ─────────────────────────────────────────────────
+# Раскомментировать когда будем делать Setup.exe:
+# nsis:
+#   oneClick: false
+#   allowToChangeInstallationDirectory: true
+#   createDesktopShortcut: true
+#   createStartMenuShortcut: true
+#   shortcutName: "Большая Медведица CRM"
