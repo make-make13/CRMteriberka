@@ -11,7 +11,14 @@ const SCHEDULED_BACKUP_DIR = path.join(localPaths.backupDir, 'scheduled');
 const TEMPLATE_BACKUP_DIR = path.join(localPaths.backupDir, 'templates');
 const BACKUP_SETTINGS_ID = 'backup';
 const BACKUP_STATUS_ID = 'backup_status';
-const LOCAL_RCLONE_PATH = path.resolve(process.cwd(), 'tools', 'rclone', 'rclone.exe');
+// RCLONE_PATH   — полный путь к rclone.exe
+// RCLONE_DIR    — папка с rclone.exe (добавляем rclone.exe в конце)
+// fallback      — tools/rclone/rclone.exe рядом с process.cwd()
+const LOCAL_RCLONE_PATH = (() => {
+  if (process.env.RCLONE_PATH) return path.resolve(process.env.RCLONE_PATH);
+  if (process.env.RCLONE_DIR)  return path.join(path.resolve(process.env.RCLONE_DIR), 'rclone.exe');
+  return path.resolve(process.cwd(), 'tools', 'rclone', 'rclone.exe');
+})();
 const MIN_RETENTION = 1;
 const MAX_RETENTION = 365;
 

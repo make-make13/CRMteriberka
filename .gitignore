@@ -45,3 +45,8 @@ manual-backups/
 # Icon pack source (временный архив — содержимое скопировано в assets/app-icon/)
 bolshaya_medveditsa_crm_icon_pack.zip
 bolshaya_medveditsa_crm_icon_pack/
+
+# Electron build artifacts
+dist-server/
+dist-electron/
+release/

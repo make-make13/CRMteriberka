@@ -22,14 +22,23 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/** Версия приложения из package.json — единственный источник правды. */
+/** Версия приложения из package.json — единственный источник правды.
+ *  В tsx (__dirname = корень проекта) и в CJS-бандле tsup (__dirname = dist-server/)
+ *  ищем package.json в текущей или родительской директории.
+ */
 const APP_VERSION: string = (() => {
-  try {
-    const raw = fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8');
-    return (JSON.parse(raw) as { version?: string }).version ?? '0.0.0';
-  } catch {
-    return '0.0.0';
+  const candidates = [
+    path.join(__dirname, 'package.json'),
+    path.join(__dirname, '..', 'package.json'),
+  ];
+  for (const p of candidates) {
+    try {
+      const raw = fs.readFileSync(p, 'utf-8');
+      const v = (JSON.parse(raw) as { version?: string }).version;
+      if (v) return v;
+    } catch { /* continue */ }
   }
+  return '0.0.0';
 })();
 
 function asErrorMessage(error: unknown) {
@@ -717,7 +726,11 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    // CRM_DIST_DIR позволяет Electron-оболочке указать папку с frontend.
+    // Fallback: dist/ рядом с process.cwd() (npm run start / start-crm.cmd).
+    const distPath = process.env.CRM_DIST_DIR
+      ? path.resolve(process.env.CRM_DIST_DIR)
+      : path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
