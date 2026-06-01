@@ -181,6 +181,72 @@ prebuild-install --runtime=electron --target=36.9.5 --arch=x64 --platform=win32
 
 ---
 
+## NSIS installer draft
+
+### Сборка installer
+
+```cmd
+set ELECTRON_CACHE=D:\Temp\electron-cache
+npm run electron:installer
+```
+
+или Windows-скрипт с кэшем:
+
+```cmd
+npm run electron:installer:win
+```
+
+**Что делает `electron:installer`:**
+1. `npm run build` — Vite
+2. `npm run build:server` — tsup
+3. `npm run build:electron` — tsup
+4. `electron-builder --win nsis` — сборка NSIS установщика
+5. `afterPack` хук — better-sqlite3 ABI 135 в output
+
+### Где лежит установщик
+
+```
+release/
+  Большая-Медведица-CRM-Setup-0.1.0.exe   ← ~155 MB
+  Большая-Медведица-CRM-Setup-0.1.0.exe.blockmap
+  latest.yml                               ← auto-update metadata (будущее)
+```
+
+### Что устанавливается
+
+- **Install dir:** `%LOCALAPPDATA%\Programs\bolshaya-medveditsa-crm\`
+- **Ярлык рабочего стола:** `Большая Медведица CRM.lnk`
+- **Ярлык меню Пуск:** `Большая Медведица CRM.lnk`
+- **Данные CRM:** `%APPDATA%\Большая Медведица CRM\` (не в install dir!)
+- **Деинсталлятор:** через «Установка и удаление программ»
+
+### Проверенные сценарии
+
+| Проверка | Результат |
+|---|---|
+| Installer запускается | ✓ |
+| Silent install `/S` | ✓ (exit 0) |
+| Ярлык рабочего стола | ✓ |
+| Ярлык меню Пуск | ✓ |
+| `/api/health → {"ok":true}` | ✓ |
+| `/api/app-info version/mode/dataDir` | ✓ |
+| Login Make/3552 | ✓ |
+| Backend умирает при закрытии | ✓ |
+| data/crm.sqlite не тронута | ✓ |
+
+### Draft installer — что не реализовано
+
+| Функция | Статус | Описание |
+|---|---|---|
+| Auto-update | Не сейчас | electron-updater, RELEASES.yml |
+| Code signing | Не сейчас | Сертификат подписи кода |
+| LibreOffice bundled | Не сейчас | Bundled LibreOffice + install check |
+| Перенос базы | Не сейчас | Миграция data/crm.sqlite → AppData |
+| Rollback | Не сейчас | NSIS rollback on install fail |
+| Брендированный UI | Не сейчас | Кастомные изображения для установщика |
+
+---
+
 ## Что ещё не реализовано
 
 | Функция                  | Статус        | Описание                                    |

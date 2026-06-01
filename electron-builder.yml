@@ -1,8 +1,9 @@
 ##
 ## electron-builder — конфиг сборки CRM «Большая Медведица»
 ##
-## Текущая цель: unpacked Windows desktop build (--dir).
-## NSIS-установщик и auto-update — в плане, не сейчас.
+## Цели:
+##   electron:pack      → --dir  (unpacked, для тестов и разработки)
+##   electron:installer → --win nsis  (Setup.exe, draft installer)
 ##
 
 appId: ru.teriberka.big-medveditsa-crm
@@ -16,64 +17,51 @@ directories:
 
 # ── Native modules ────────────────────────────────────────────────────────────
 # npmRebuild: false — НЕ запускать electron-builder встроенный rebuild.
-# Вместо него используем afterPack-хук (scripts/afterPack.cjs), который
-# явно вызывает prebuild-install для Electron runtime ТОЛЬКО в output-директории.
-# Это гарантирует:
-#   - source node_modules/better-sqlite3 остаётся под ABI 127 (dev)
-#   - packaged node_modules/better-sqlite3 пересобирается под ABI 135 (Electron 36)
+# Вместо него используем afterPack-хук (scripts/afterPack.cjs).
 npmRebuild: false
 
 # ── afterPack хук ─────────────────────────────────────────────────────────────
-# Вызывается после копирования файлов в output, перед финальной упаковкой.
 # Пересобирает better-sqlite3 под Electron ABI в output-директории.
+# Работает для обоих таргетов: --dir и --win nsis.
 afterPack: scripts/afterPack.cjs
 
 # ── asar ─────────────────────────────────────────────────────────────────────
-# asar: false — не упаковывать в .asar архив.
-# Упрощает диагностику и не требует asarUnpack для better-sqlite3.
-# В будущем можно включить asar + asarUnpack: ['node_modules/better-sqlite3/**/*'],
-# т.к. с ELECTRON_RUN_AS_NODE asar-пути работают.
 asar: false
 
 # ── Файлы приложения ──────────────────────────────────────────────────────────
-# Включаем только то, что нужно в runtime.
-# Всё остальное (React, Express, etc.) уже в бандлах dist/ и dist-server/.
 files:
-  # Frontend (Vite build)
   - dist/**/*
-  # Backend CJS bundle
   - dist-server/**/*
-  # Electron main + preload
   - dist-electron/**/*
-  # Иконки
   - assets/app-icon/**/*
-  # Манифест (нужен electron-builder'у и для version lookup)
   - package.json
-  # Native addon: better-sqlite3 (нельзя бандлить)
-  # afterPack пересобирает .node под Electron ABI
   - node_modules/better-sqlite3/**/*
-  # Зависимость better-sqlite3: находит .node файл по пути
   - node_modules/bindings/**/*
-  # Зависимость bindings
   - node_modules/file-uri-to-path/**/*
-  # Исключаем sourcemaps (не нужны пользователю, экономят ~1 MB)
   - "!**/*.map"
-  # Исключаем TypeScript-исходники
   - "!**/*.ts"
   - "!**/*.tsx"
 
 # ── Windows ───────────────────────────────────────────────────────────────────
 win:
   target:
-    - target: dir       # unpacked build — без установщика
+    - target: dir         # unpacked build (electron:pack)
+      arch: [x64]
+    - target: nsis        # Setup.exe installer (electron:installer)
       arch: [x64]
   icon: assets/app-icon/icon.ico
 
-# ── NSIS (будущий установщик) ─────────────────────────────────────────────────
-# Раскомментировать когда будем делать Setup.exe:
-# nsis:
-#   oneClick: false
-#   allowToChangeInstallationDirectory: true
-#   createDesktopShortcut: true
-#   createStartMenuShortcut: true
-#   shortcutName: "Большая Медведица CRM"
+# ── NSIS installer ────────────────────────────────────────────────────────────
+nsis:
+  # Показывать диалог установки (не silent one-click)
+  oneClick: false
+  # Установка для текущего пользователя (без прав администратора)
+  perMachine: false
+  # Показывать выбор директории установки
+  allowToChangeInstallationDirectory: true
+  # Ярлыки
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "Большая Медведица CRM"
+  # Имя файла установщика
+  artifactName: "Большая-Медведица-CRM-Setup-${version}.${ext}"

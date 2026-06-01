@@ -1,5 +1,5 @@
 {
-  "name": "react-example",
+  "name": "bolshaya-medveditsa-crm",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -16,6 +16,8 @@
     "electron:dev": "npm run build && npm run build:server && npm run build:electron && electron .",
     "electron:start": "electron .",
     "electron:pack": "npm run build && npm run build:server && npm run build:electron && electron-builder --dir",
+    "electron:installer": "npm run build && npm run build:server && npm run build:electron && electron-builder --win nsis",
+    "electron:installer:win": "set ELECTRON_CACHE=D:\\Temp\\electron-cache&& npm run electron:installer",
     "rebuild:dev": "npm rebuild better-sqlite3",
     "test:audit-fixes": "node scripts/checkEncoding.mjs && tsx scripts/auditFixesTest.ts",
     "test:legacy-import-analysis": "tsx scripts/legacyImportAnalysisTest.ts",
