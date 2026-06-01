@@ -1,5 +1,44 @@
 # WORKLOG
 
+### 2026-06-01 13:31:04 +03:00 — RC 0.1.0 readiness docs and installer build
+
+Files changed:
+- `electron/findFreePort.ts`
+- `scripts/electronFindFreePortTest.ts`
+- `docs/release-checklist.md`
+- `docs/release-notes-0.1.0.md`
+- `docs/electron-build.md`
+- `docs/WORKLOG.md`
+
+Completed:
+- Committed and pushed first-run readiness as `eb7d340 Add first-run readiness guide`.
+- Ran installer build with Electron cache workaround.
+- Confirmed fresh `release/Большая-Медведица-CRM-Setup-0.1.0.exe`, `.blockmap`, `latest.yml`, and `release/win-unpacked/`.
+- Added Russian release checklist for build, installer, CRM smoke checks, blockers, and non-blockers.
+- Added Russian release notes for version `0.1.0`.
+- Linked release docs from `docs/electron-build.md` and clarified installer draft/RC limitations.
+- Found and fixed an Electron wrapper RC blocker: `findFreePort()` checked only `127.0.0.1`, so packaged app could choose port 3002 while another backend was listening on `0.0.0.0`; health check then falsely passed against the existing server while the packaged backend crashed with `EADDRINUSE`.
+- Added a targeted regression script for the port selection behavior.
+
+Checks run:
+- `npm run electron:installer`
+- Artifact inspection in `release/`
+- `release/latest.yml` inspection
+- `npx tsx scripts/electronFindFreePortTest.ts` (red before fix, green after fix)
+- `release/win-unpacked/Большая Медведица CRM.exe` smoke with port 3002 occupied by existing backend.
+- Packaged backend selected port 3003, `/api/health` returned `{"ok":true}`, `/api/app-info` returned `version: 0.1.0`, `mode: production`, AppData `dataDir`, login `Make/3552` returned 200, and `/api/leads/auto-sync/status` returned disabled auto-sync.
+- Project `data/crm.sqlite` size and timestamp were unchanged during win-unpacked smoke.
+
+Next recommended step:
+- Run final build/pack smoke checks and, when port 3002 is free, test installed app launch from shortcut.
+
+Risks / TODO:
+- The first installer attempt exceeded the shell timeout while electron-builder kept running; reran cleanly after deleting only generated release artifacts.
+- Silent reinstall via Setup.exe hung for more than 5 minutes after files were updated; installer process was stopped manually. Track this as installer/silent reinstall polish issue.
+- First installed-app smoke after the hung reinstall showed incomplete installed dependencies (`merge-descriptors` missing), likely because the hung install was interrupted. Code verification used fresh `win-unpacked` instead.
+- During win-unpacked smoke Electron main still logged a 20s startup timeout, although the packaged backend API became reachable and passed health/app-info/login/auto-sync checks on port 3003. Consider increasing or hardening startup wait in a separate follow-up.
+- Current release docs are uncommitted; do not commit without explicit confirmation.
+
 ### 2026-06-01 12:40:43 +03:00 — First-run readiness polish
 
 Files changed:

@@ -3,6 +3,11 @@
 Документ описывает команды сборки Electron-оболочки,
 структуру директорий и что ещё предстоит реализовать.
 
+Связанные документы:
+- [Первый запуск после установки](first-run.md)
+- [Release checklist 0.1.0](release-checklist.md)
+- [Release notes 0.1.0](release-notes-0.1.0.md)
+
 ---
 
 ## Команды
@@ -182,6 +187,10 @@ prebuild-install --runtime=electron --target=36.9.5 --arch=x64 --platform=win32
 ---
 
 ## NSIS installer draft
+
+Текущий installer — draft/RC для проверки установки у менеджера. Он собирает
+рабочий Setup.exe, но пока намеренно не включает code signing, auto-update,
+установку LibreOffice галочкой и перенос существующей рабочей базы.
 
 ### Сборка installer
 

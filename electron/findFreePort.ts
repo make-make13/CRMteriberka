@@ -16,7 +16,7 @@ export function findFreePort(startPort = 3002, maxPort = 3020): Promise<number> 
         server.close(() => resolve(port));
       });
       server.once('error', () => tryPort(port + 1));
-      server.listen(port, '127.0.0.1');
+      server.listen(port, '0.0.0.0');
     }
     tryPort(startPort);
   });
