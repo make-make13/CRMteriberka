@@ -20,6 +20,8 @@ export interface IntegrationSettingsStored {
   supabaseServiceKey?: string;
   supabaseTable?: string;
   supabaseSyncLimit?: number;
+  supabaseAutoSyncEnabled?: boolean;
+  supabaseAutoSyncIntervalMinutes?: number;
   libreOfficePath?: string;
   aiBackendUrl?: string;
   aiBackendKey?: string;
@@ -31,6 +33,8 @@ export interface IntegrationSettingsInput {
   supabaseServiceKey?: string;
   supabaseTable?: string;
   supabaseSyncLimit?: number;
+  supabaseAutoSyncEnabled?: boolean;
+  supabaseAutoSyncIntervalMinutes?: number;
   libreOfficePath?: string;
   aiBackendUrl?: string;
   aiBackendKey?: string;
@@ -41,6 +45,8 @@ export interface IntegrationSettingsMasked {
   supabaseUrl: string;
   supabaseTable: string;
   supabaseSyncLimit: number;
+  supabaseAutoSyncEnabled: boolean;
+  supabaseAutoSyncIntervalMinutes: number;
   supabaseServiceKeyMask: string;
   supabaseServiceKeyHas: boolean;
   libreOfficePath: string;
@@ -57,15 +63,17 @@ export function maskIntegrationSettings(s: IntegrationSettingsStored): Integrati
     return '••••••••' + v.slice(-4);
   };
   return {
-    supabaseUrl:            s.supabaseUrl            || '',
-    supabaseTable:          s.supabaseTable          || 'leads',
-    supabaseSyncLimit:      s.supabaseSyncLimit      || 50,
-    supabaseServiceKeyMask: maskSecret(s.supabaseServiceKey),
-    supabaseServiceKeyHas:  Boolean(s.supabaseServiceKey),
-    libreOfficePath:        s.libreOfficePath        || '',
-    aiBackendUrl:           s.aiBackendUrl           || '',
-    aiBackendKeyMask:       maskSecret(s.aiBackendKey),
-    aiBackendKeyHas:        Boolean(s.aiBackendKey),
+    supabaseUrl:                    s.supabaseUrl                    || '',
+    supabaseTable:                  s.supabaseTable                  || 'leads',
+    supabaseSyncLimit:              s.supabaseSyncLimit              || 50,
+    supabaseAutoSyncEnabled:        Boolean(s.supabaseAutoSyncEnabled),
+    supabaseAutoSyncIntervalMinutes: s.supabaseAutoSyncIntervalMinutes || 5,
+    supabaseServiceKeyMask:         maskSecret(s.supabaseServiceKey),
+    supabaseServiceKeyHas:          Boolean(s.supabaseServiceKey),
+    libreOfficePath:                s.libreOfficePath                || '',
+    aiBackendUrl:                   s.aiBackendUrl                   || '',
+    aiBackendKeyMask:               maskSecret(s.aiBackendKey),
+    aiBackendKeyHas:                Boolean(s.aiBackendKey),
   };
 }
 
@@ -1173,6 +1181,10 @@ export class LocalDatabase {
       supabaseUrl:        ('supabaseUrl'        in input ? input.supabaseUrl?.trim()        : current.supabaseUrl)        ?? '',
       supabaseTable:      ('supabaseTable'      in input ? input.supabaseTable?.trim()      : current.supabaseTable)      || 'leads',
       supabaseSyncLimit:  ('supabaseSyncLimit'  in input ? Number(input.supabaseSyncLimit)  : current.supabaseSyncLimit)  || 50,
+      supabaseAutoSyncEnabled:
+        ('supabaseAutoSyncEnabled' in input ? Boolean(input.supabaseAutoSyncEnabled) : current.supabaseAutoSyncEnabled) ?? false,
+      supabaseAutoSyncIntervalMinutes:
+        ('supabaseAutoSyncIntervalMinutes' in input ? Number(input.supabaseAutoSyncIntervalMinutes) : current.supabaseAutoSyncIntervalMinutes) || 5,
       libreOfficePath:    ('libreOfficePath'    in input ? input.libreOfficePath?.trim()    : current.libreOfficePath)    ?? '',
       aiBackendUrl:       ('aiBackendUrl'       in input ? input.aiBackendUrl?.trim()       : current.aiBackendUrl)       ?? '',
       // Секреты: заменяем только если в input передана непустая строка

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarDays, Inbox, Loader2, Plus, RefreshCw, Search, UserRound } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -87,6 +87,20 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
 
   useEffect(() => {
     void loadLeads();
+  }, []);
+
+  // Тихий polling: обновляем список заявок раз в 60 сек, если раздел открыт.
+  // Нужен для отображения заявок, добавленных автосинхронизацией в фоне.
+  const silentPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    silentPollRef.current = setInterval(async () => {
+      try {
+        setLeads(await leadApi.list());
+      } catch { /* ignore — тихий poll, ошибки не показываем */ }
+    }, 60_000);
+    return () => {
+      if (silentPollRef.current) { clearInterval(silentPollRef.current); silentPollRef.current = null; }
+    };
   }, []);
 
   useEffect(() => {

@@ -6,13 +6,14 @@
  * Маска: «••••••••abcd». Чтобы заменить ключ — ввести новое значение.
  * Пустое поле при сохранении = оставить прежнее значение.
  */
-import React, { useEffect, useState } from 'react';
-import { Bot, Check, ChevronDown, Database, Loader2, Search, X, Zap } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Bot, Check, ChevronDown, Clock, Database, Loader2, RefreshCw, Search, X, Zap } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import {
   integrationSettingsApi,
   type AiBackendTestResult,
+  type AutoSyncStatus,
   type IntegrationSettingsMasked,
   type IntegrationSettingsInput,
   type LibreOfficeTestResult,
@@ -102,8 +103,14 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseTable, setSupabaseTable] = useState('leads');
   const [supabaseSyncLimit, setSupabaseSyncLimit] = useState('50');
+  const [supabaseAutoSyncEnabled, setSupabaseAutoSyncEnabled] = useState(false);
+  const [supabaseAutoSyncInterval, setSupabaseAutoSyncInterval] = useState('5');
   const [libreOfficePath, setLibreOfficePath] = useState('');
   const [aiBackendUrl, setAiBackendUrl] = useState('');
+
+  // Auto-sync status (опрашивается с сервера)
+  const [autoSyncStatus, setAutoSyncStatus] = useState<AutoSyncStatus | null>(null);
+  const autoSyncPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Новые секреты (пустая строка = не менять)
   const [supabaseKeyInput, setSupabaseKeyInput] = useState('');
@@ -126,9 +133,30 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
   // Collapsible sections
   const [openSection, setOpenSection] = useState<'supabase' | 'libreoffice' | 'ai' | null>('supabase');
 
+  // Опрос статуса автосинхронизации (когда секция открыта)
+  const pollAutoSyncStatus = useCallback(async () => {
+    try {
+      const status = await integrationSettingsApi.getAutoSyncStatus();
+      setAutoSyncStatus(status);
+    } catch { /* ignore — сервер может быть недоступен */ }
+  }, []);
+
   useEffect(() => {
     void load();
   }, []);
+
+  // Запускаем поллинг когда открыта секция Supabase
+  useEffect(() => {
+    if (openSection === 'supabase') {
+      void pollAutoSyncStatus();
+      autoSyncPollRef.current = setInterval(() => { void pollAutoSyncStatus(); }, 10_000);
+    } else {
+      if (autoSyncPollRef.current) { clearInterval(autoSyncPollRef.current); autoSyncPollRef.current = null; }
+    }
+    return () => {
+      if (autoSyncPollRef.current) { clearInterval(autoSyncPollRef.current); autoSyncPollRef.current = null; }
+    };
+  }, [openSection, pollAutoSyncStatus]);
 
   async function load() {
     setIsLoading(true);
@@ -138,6 +166,8 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
       setSupabaseUrl(data.supabaseUrl);
       setSupabaseTable(data.supabaseTable);
       setSupabaseSyncLimit(String(data.supabaseSyncLimit));
+      setSupabaseAutoSyncEnabled(data.supabaseAutoSyncEnabled);
+      setSupabaseAutoSyncInterval(String(data.supabaseAutoSyncIntervalMinutes));
       setLibreOfficePath(data.libreOfficePath);
       setAiBackendUrl(data.aiBackendUrl);
     } catch (err) {
@@ -155,6 +185,8 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
         supabaseUrl: supabaseUrl.trim(),
         supabaseTable: supabaseTable.trim() || 'leads',
         supabaseSyncLimit: Number(supabaseSyncLimit) || 50,
+        supabaseAutoSyncEnabled: supabaseAutoSyncEnabled,
+        supabaseAutoSyncIntervalMinutes: Number(supabaseAutoSyncInterval) || 5,
         libreOfficePath: libreOfficePath.trim(),
         aiBackendUrl: aiBackendUrl.trim(),
       };
@@ -163,9 +195,13 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
 
       const saved = await integrationSettingsApi.save(input);
       setSettings(saved);
+      setSupabaseAutoSyncEnabled(saved.supabaseAutoSyncEnabled);
+      setSupabaseAutoSyncInterval(String(saved.supabaseAutoSyncIntervalMinutes));
       setSupabaseKeyInput('');
       setAiKeyInput('');
       setSavingState('saved');
+      // Обновляем статус планировщика после сохранения
+      void pollAutoSyncStatus();
       setTimeout(() => setSavingState('idle'), 2500);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err));
@@ -184,6 +220,13 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
     } finally {
       setSupabaseTesting(false);
     }
+  }
+
+  function fmtTime(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    try {
+      return new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch { return iso; }
   }
 
   async function handleDetectLibreOffice() {
@@ -334,6 +377,92 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
                     ? `Подключено (${supabaseTest.rowCount ?? 0} строк в выборке)`
                     : (supabaseTest.error || 'Ошибка')}
                 />
+              )}
+            </div>
+
+            {/* ── Автосинхронизация ── */}
+            <div className={cn(
+              'rounded-xl border p-3 space-y-3 mt-1',
+              isDarkMode ? 'border-[#3D423E] bg-[#0E1210]' : 'border-gray-100 bg-gray-50',
+            )}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <RefreshCw size={14} className={isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} />
+                  <span className="text-sm font-bold">Автоматическая проверка заявок</span>
+                </div>
+                {/* Чекбокс */}
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={supabaseAutoSyncEnabled}
+                    onChange={e => setSupabaseAutoSyncEnabled(e.target.checked)}
+                    className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
+                  />
+                  <span className={cn('text-xs font-bold', isDarkMode ? 'text-[#B4CDD2]' : 'text-gray-600')}>
+                    {supabaseAutoSyncEnabled ? 'Включено' : 'Выключено'}
+                  </span>
+                </label>
+              </div>
+
+              {supabaseAutoSyncEnabled && (
+                <div className="flex items-center gap-3">
+                  <span className={cn('text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+                    Проверять каждые
+                  </span>
+                  <select
+                    value={supabaseAutoSyncInterval}
+                    onChange={e => setSupabaseAutoSyncInterval(e.target.value)}
+                    className={cn(
+                      'rounded-lg border px-2 py-1 text-xs font-mono outline-none transition-colors',
+                      isDarkMode
+                        ? 'border-[#3D423E] bg-[#1A1C1B] text-[#F4F1EA] focus:border-[#D98E2B]/60'
+                        : 'border-gray-200 bg-white text-gray-900 focus:border-orange-400',
+                    )}
+                  >
+                    {[1, 3, 5, 10, 15, 30].map(n => (
+                      <option key={n} value={String(n)}>{n} мин</option>
+                    ))}
+                  </select>
+                  <span className={cn('text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+                    (применится после сохранения)
+                  </span>
+                </div>
+              )}
+
+              {/* Статус планировщика */}
+              {autoSyncStatus && (
+                <div className={cn(
+                  'rounded-lg p-2 text-xs space-y-1',
+                  isDarkMode ? 'bg-[#1A1C1B]' : 'bg-white border border-gray-100',
+                )}>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={11} className={isDarkMode ? 'text-[#8F9894]' : 'text-gray-400'} />
+                    <span className={isDarkMode ? 'text-[#8F9894]' : 'text-gray-400'}>
+                      Статус планировщика:
+                    </span>
+                    {autoSyncStatus.running ? (
+                      <span className="text-amber-400 font-bold inline-flex items-center gap-1">
+                        <Loader2 size={10} className="animate-spin" /> Выполняется...
+                      </span>
+                    ) : autoSyncStatus.enabled ? (
+                      <span className={isDarkMode ? 'text-emerald-400 font-bold' : 'text-emerald-600 font-bold'}>Активен</span>
+                    ) : (
+                      <span className={isDarkMode ? 'text-[#8F9894]' : 'text-gray-400'}>Отключён</span>
+                    )}
+                  </div>
+                  <div className={cn('grid gap-0.5', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
+                    <span>Последний запуск: {fmtTime(autoSyncStatus.lastRunAt)}</span>
+                    <span>Последний успех: {fmtTime(autoSyncStatus.lastSuccessAt)}</span>
+                    {autoSyncStatus.lastPulledCount !== null && (
+                      <span>Получено заявок: {autoSyncStatus.lastPulledCount}</span>
+                    )}
+                    {autoSyncStatus.lastErrorAt && (
+                      <span className={isDarkMode ? 'text-red-400' : 'text-red-500'}>
+                        Ошибка ({fmtTime(autoSyncStatus.lastErrorAt)}): {autoSyncStatus.lastError}
+                      </span>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

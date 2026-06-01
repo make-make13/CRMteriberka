@@ -404,6 +404,8 @@ export interface IntegrationSettingsMasked {
   supabaseUrl: string;
   supabaseTable: string;
   supabaseSyncLimit: number;
+  supabaseAutoSyncEnabled: boolean;
+  supabaseAutoSyncIntervalMinutes: number;
   supabaseServiceKeyMask: string;
   supabaseServiceKeyHas: boolean;
   libreOfficePath: string;
@@ -417,9 +419,22 @@ export interface IntegrationSettingsInput {
   supabaseServiceKey?: string;   // пустая строка = оставить прежнее
   supabaseTable?: string;
   supabaseSyncLimit?: number;
+  supabaseAutoSyncEnabled?: boolean;
+  supabaseAutoSyncIntervalMinutes?: number;
   libreOfficePath?: string;
   aiBackendUrl?: string;
   aiBackendKey?: string;         // пустая строка = оставить прежнее
+}
+
+export interface AutoSyncStatus {
+  enabled: boolean;
+  intervalMinutes: number;
+  running: boolean;
+  lastRunAt: string | null;
+  lastSuccessAt: string | null;
+  lastErrorAt: string | null;
+  lastError: string | null;
+  lastPulledCount: number | null;
 }
 
 export interface SupabaseTestResult {
@@ -459,6 +474,7 @@ export const integrationSettingsApi = {
     method: 'PUT',
     body: JSON.stringify(input),
   }),
+  getAutoSyncStatus: () => apiRequest<AutoSyncStatus>('/api/leads/auto-sync/status'),
   testSupabase: () => apiRequest<SupabaseTestResult>('/api/integration-settings/test-supabase', {
     method: 'POST',
     body: JSON.stringify({}),

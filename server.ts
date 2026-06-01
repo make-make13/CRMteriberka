@@ -13,6 +13,7 @@ import { BookingConflictError, localDb, localPaths, maskIntegrationSettings } fr
 import { backupService } from './server/backupService';
 import { authService } from './server/authService';
 import { syncSupabaseLeads, testSupabaseConnection } from './server/supabaseLeadSync';
+import { restartAutoSync, getAutoSyncStatus } from './server/autoSyncScheduler';
 import { findSofficePath, setLibreOfficePath, resetSofficePathCache } from './src/utils/docx/docxToPdf';
 import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
@@ -194,6 +195,8 @@ async function startServer() {
       // Обновляем LibreOffice override без перезапуска
       const full = localDb.getIntegrationSettingsFull();
       setLibreOfficePath(full.libreOfficePath);
+      // Перезапускаем планировщик с обновлёнными настройками автосинхронизации
+      restartAutoSync();
       res.json(masked);
     } catch (error) {
       res.status(400).json({ error: asErrorMessage(error) });
@@ -421,6 +424,10 @@ async function startServer() {
     } catch (error) {
       res.status(400).json({ error: asErrorMessage(error) });
     }
+  });
+
+  app.get('/api/leads/auto-sync/status', requireAuth, (_req, res) => {
+    res.json(getAutoSyncStatus());
   });
 
   app.post('/api/leads/:id/create-client', requireAuth, (req, res) => {
@@ -748,6 +755,8 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    // Запускаем планировщик автосинхронизации (если включён в настройках)
+    restartAutoSync();
   });
 }
 
