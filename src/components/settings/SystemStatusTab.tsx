@@ -10,6 +10,7 @@
  * Секреты (service key, api key) не отображаются — только маска и флаг наличия.
  */
 import React, { useEffect, useState } from 'react';
+import { getErrorMessage } from '../../utils/errors';
 import {
   AlertTriangle,
   Bot,
@@ -182,7 +183,7 @@ export default function SystemStatusTab({ isDarkMode }: SystemStatusTabProps) {
       setAppInfo(info);
       setSettings(cfg);
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : String(err));
+      setLoadError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +195,7 @@ export default function SystemStatusTab({ isDarkMode }: SystemStatusTabProps) {
     try {
       setSupabaseTest(await integrationSettingsApi.testSupabase());
     } catch (err) {
-      setSupabaseTest({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setSupabaseTest({ ok: false, error: getErrorMessage(err) });
     } finally {
       setSupabaseTesting(false);
     }
@@ -206,7 +207,7 @@ export default function SystemStatusTab({ isDarkMode }: SystemStatusTabProps) {
     try {
       setLibreOfficeTest(await integrationSettingsApi.testLibreOffice());
     } catch (err) {
-      setLibreOfficeTest({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setLibreOfficeTest({ ok: false, error: getErrorMessage(err) });
     } finally {
       setLibreOfficeTesting(false);
     }
@@ -218,7 +219,7 @@ export default function SystemStatusTab({ isDarkMode }: SystemStatusTabProps) {
     try {
       setAiTest(await integrationSettingsApi.testAiBackend());
     } catch (err) {
-      setAiTest({ ok: false, status: 'error', error: err instanceof Error ? err.message : String(err) });
+      setAiTest({ ok: false, status: 'error', error: getErrorMessage(err) });
     } finally {
       setAiTesting(false);
     }

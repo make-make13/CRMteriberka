@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Bot, Check, ChevronDown, Clock, Database, Loader2, RefreshCw, Search, X, Zap } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { getErrorMessage } from '../../utils/errors';
 import {
   integrationSettingsApi,
   type AiBackendTestResult,
@@ -204,7 +205,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
       void pollAutoSyncStatus();
       setTimeout(() => setSavingState('idle'), 2500);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : String(err));
+      setSaveError(getErrorMessage(err));
       setSavingState('error');
       setTimeout(() => setSavingState('idle'), 4000);
     }
@@ -216,7 +217,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
     try {
       setSupabaseTest(await integrationSettingsApi.testSupabase());
     } catch (err) {
-      setSupabaseTest({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setSupabaseTest({ ok: false, error: getErrorMessage(err) });
     } finally {
       setSupabaseTesting(false);
     }
@@ -244,7 +245,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
     try {
       setLibreOfficeTest(await integrationSettingsApi.testLibreOffice());
     } catch (err) {
-      setLibreOfficeTest({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setLibreOfficeTest({ ok: false, error: getErrorMessage(err) });
     } finally {
       setLibreOfficeTesting(false);
     }
@@ -256,7 +257,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
     try {
       setAiTest(await integrationSettingsApi.testAiBackend());
     } catch (err) {
-      setAiTest({ ok: false, status: 'offline', error: err instanceof Error ? err.message : String(err) });
+      setAiTest({ ok: false, status: 'offline', error: getErrorMessage(err) });
     } finally {
       setAiTesting(false);
     }

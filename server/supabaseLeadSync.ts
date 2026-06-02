@@ -1,4 +1,5 @@
 import { localDb, type SupabaseLeadRow } from './localDatabase';
+import { asErrorMessage } from './errorUtils';
 
 /**
  * Supabase конфиг берётся в порядке приоритета:
@@ -67,7 +68,7 @@ export async function testSupabaseConnection(): Promise<{ ok: true; rowCount: nu
     const rows = await response.json() as unknown[];
     return { ok: true, rowCount: Array.isArray(rows) ? rows.length : 0 };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return { ok: false, error: asErrorMessage(err) };
   }
 }
 
@@ -157,7 +158,7 @@ export async function syncSupabaseLeads(): Promise<SupabaseLeadSyncResult> {
       });
     } catch (error) {
       result.failed += 1;
-      const message = error instanceof Error ? error.message : String(error);
+      const message = asErrorMessage(error);
       result.errors.push(message);
       await patchSupabaseLead(config, supabaseId, {
         sync_error: message,

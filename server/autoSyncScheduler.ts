@@ -10,6 +10,7 @@
 
 import { syncSupabaseLeads } from './supabaseLeadSync';
 import { localDb } from './localDatabase';
+import { asErrorMessage } from './errorUtils';
 
 // ── Состояние ────────────────────────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ async function runOneTick(): Promise<void> {
     );
   } catch (err) {
     state.lastErrorAt = new Date().toISOString();
-    state.lastError = err instanceof Error ? err.message : String(err);
+    state.lastError = asErrorMessage(err);
     // NOT_CONFIGURED — штатная ситуация, только предупреждение
     if (state.lastError.includes('не настроен')) {
       console.warn('[autoSync] Supabase не настроен, автосинхронизация пропущена');

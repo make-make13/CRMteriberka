@@ -11,6 +11,7 @@ import { useToast } from '../../context/ToastContext';
 import { taskApi } from '../../services/localApi';
 import type { TaskColor, TaskReminder } from '../../types';
 import { getActiveVisibleTasks, getArchivedTasks, getCompletedVisibleTasks } from '../../utils/taskArchive';
+import { getErrorMessage } from '../../utils/errors';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -106,7 +107,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
       setPreviewPdfBlob(await response.blob());
       setIsPreviewOpen(true);
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка при открытии бланка заявления', 'error');
+      toast(getErrorMessage(error, 'Ошибка при открытии бланка заявления'), 'error');
     }
   };
 
@@ -149,7 +150,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
       setRemindAt(toDateTimeLocalValue(new Date()));
       toast('Задача добавлена', 'success');
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка при сохранении задачи', 'error');
+      toast(getErrorMessage(error, 'Ошибка при сохранении задачи'), 'error');
     } finally {
       setIsSavingTask(false);
     }
@@ -169,7 +170,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
       });
       toast(nextIsDone ? 'Задача выполнена' : 'Задача снова активна', 'success');
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка при обновлении задачи', 'error');
+      toast(getErrorMessage(error, 'Ошибка при обновлении задачи'), 'error');
     } finally {
       setBusyTaskId(null);
     }
@@ -182,7 +183,7 @@ export default function Additional({ isDarkMode, tasks, setTasks, currentManager
       setTasks(prev => prev.filter(task => task.id !== taskId));
       toast('Задача удалена', 'success');
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка при удалении задачи', 'error');
+      toast(getErrorMessage(error, 'Ошибка при удалении задачи'), 'error');
     } finally {
       setBusyTaskId(null);
     }

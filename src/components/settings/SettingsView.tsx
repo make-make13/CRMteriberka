@@ -18,6 +18,7 @@ import IntegrationsSettingsTab from './IntegrationsSettingsTab';
 import SystemStatusTab from './SystemStatusTab';
 import RoomPricesCard from './RoomPricesCard';
 import { TEMPLATE_VARIABLES } from '../../utils/templateVariables';
+import { getErrorMessage } from '../../utils/errors';
 import { PDFME_TEMPLATE_DEFINITIONS, type PdfmeTemplateDefinition } from '../../utils/pdfmeTemplateIds';
 import { useToast } from '../../context/ToastContext';
 import { maintenanceApi, organizationApi, settingsApi, templateApi, pdfTemplateApi } from '../../services/localApi';
@@ -195,7 +196,7 @@ export default function SettingsView({
       toast('Реквизиты организации сохранены');
     } catch (error) {
       console.error('Local organization save error:', error);
-      toast(error instanceof Error ? error.message : 'Ошибка при сохранении реквизитов', 'error');
+      toast(getErrorMessage(error, 'Ошибка при сохранении реквизитов'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -206,7 +207,7 @@ export default function SettingsView({
       const result = await maintenanceApi.createBackup();
       toast(`Резервная копия создана: ${result.path}`);
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка при создании резервной копии', 'error');
+      toast(getErrorMessage(error, 'Ошибка при создании резервной копии'), 'error');
     }
   };
 
@@ -227,7 +228,7 @@ export default function SettingsView({
       setTemplatesMeta(metaData);
       toast(`Шаблон "${title}" сброшен`);
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка при удалении шаблона', 'error');
+      toast(getErrorMessage(error, 'Ошибка при удалении шаблона'), 'error');
     }
   };
 

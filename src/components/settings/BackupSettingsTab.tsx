@@ -5,6 +5,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { backupApi, BackupRunResult, BackupSettings, BackupStatus } from '../../services/localApi';
 import { useToast } from '../../context/ToastContext';
+import { getErrorMessage } from '../../utils/errors';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -88,7 +89,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
 
   useEffect(() => {
     refresh()
-      .catch(error => toast(error instanceof Error ? error.message : 'Ошибка загрузки статуса резервных копий', 'error'))
+      .catch(error => toast(getErrorMessage(error, 'Ошибка загрузки статуса резервных копий'), 'error'))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -101,7 +102,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
       await refresh();
       toast('Настройки резервных копий сохранены');
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка сохранения настроек резервных копий', 'error');
+      toast(getErrorMessage(error, 'Ошибка сохранения настроек резервных копий'), 'error');
     } finally {
       setIsBusy(false);
     }
@@ -120,7 +121,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
         toast(`Бэкап создан с ошибками: ${errors.join('; ')}`, 'error');
       }
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка создания резервной копии', 'error');
+      toast(getErrorMessage(error, 'Ошибка создания резервной копии'), 'error');
     } finally {
       setIsBusy(false);
     }
@@ -135,7 +136,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
       await refresh();
       toast(failed.length ? `Проверка облаков: есть ошибки (${failed.length})` : 'Оба облака доступны', failed.length ? 'error' : 'success');
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Ошибка проверки облаков', 'error');
+      toast(getErrorMessage(error, 'Ошибка проверки облаков'), 'error');
     } finally {
       setIsBusy(false);
     }
@@ -145,7 +146,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
     try {
       await backupApi.openFolder();
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Не удалось открыть папку бэкапов', 'error');
+      toast(getErrorMessage(error, 'Не удалось открыть папку бэкапов'), 'error');
     }
   };
 

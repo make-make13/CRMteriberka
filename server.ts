@@ -19,6 +19,7 @@ import { buildClientContractHistory } from './src/utils/clientHistory';
 import { validate, clientSchema, contractSchema, ValidationError } from './server/validation';
 import { registerBmDocxRoutes } from './server/bmDocxRouter';
 import { registerBmDocxTemplateRoutes } from './server/bmDocxTemplateRouter';
+import { asErrorMessage } from './server/errorUtils';
 import type { Client } from './src/types';
 
 dotenv.config({ path: '.env.local' });
@@ -45,10 +46,6 @@ const APP_VERSION: string = (() => {
   }
   return '0.0.0';
 })();
-
-function asErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
-}
 
 function asErrorResponse(error: unknown) {
   if (error instanceof BookingConflictError) {
