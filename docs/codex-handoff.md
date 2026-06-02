@@ -235,14 +235,14 @@ Auth:
 
 Clients:   GET/POST /api/clients, DELETE /api/clients/:id
 Contracts: GET/POST /api/contracts, DELETE /api/contracts/:id
-Bookings:  GET /api/bookings
+Bookings:  отдельного /api/bookings нет; бронирования живут внутри Contract.bookings
 
 Leads:
   GET  /api/leads[?status=&search=]
   POST /api/leads
   GET  /api/leads/:id
-  PUT  /api/leads/:id
-  DELETE /api/leads/:id
+  PATCH /api/leads/:id
+  PATCH /api/leads/:id/status
   POST /api/leads/sync               ← ручная Supabase sync
   GET  /api/leads/auto-sync/status   ← статус планировщика
   POST /api/leads/:id/create-client
