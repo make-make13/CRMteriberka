@@ -19,8 +19,9 @@ async function close(server: http.Server): Promise<void> {
 
 function getPort(server: http.Server): number {
   const address = server.address();
-  assert.equal(typeof address, 'object');
-  assert(address && 'port' in address);
+  if (typeof address !== 'object' || address === null || !('port' in address)) {
+    throw new Error('Expected HTTP server address with a port');
+  }
   return address.port;
 }
 

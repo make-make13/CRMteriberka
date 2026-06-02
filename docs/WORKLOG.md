@@ -1,5 +1,145 @@
 # WORKLOG
 
+### 2026-06-02 17:00:58 +03:00 - Archive RC installer, clean workspace, fix window title
+
+Files changed:
+- `index.html`
+- `docs/WORKLOG.md`
+
+Completed:
+- Changed browser/Electron document title from `My Google AI Studio App` to `Большая Медведица CRM`.
+- Copied the generated installer to `D:\CRM Teriberka\Готовые сборки\0.1.0-RC\Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe`.
+- Removed safe generated/local junk from the project folder: `dist/`, `dist-server/`, `dist-electron/`, `release/`, `.claude/`, `bolshaya_medveditsa_crm_icon_pack/`, and `bolshaya_medveditsa_crm_icon_pack.zip`.
+- Kept `.env.local`, SQLite DB files, `node_modules/`, `storage/docx-templates/`, `templates/docx/`, and `tools/` intact.
+
+Checks run:
+- Verified archived installer exists and is `614226583` bytes.
+- Verified `index.html` now contains `<title>Большая Медведица CRM</title>`.
+- No Electron rebuild was run, per request.
+
+Next recommended step:
+- Commit and push the current release checkpoint, then install the archived RC installer on another PC for smoke testing.
+
+Risks / TODO:
+- The archived installer was built before the title change, so its window title may still show the old AI Studio text until the next installer build.
+- Build outputs were removed from the working tree and can be regenerated with the existing npm scripts.
+
+### 2026-06-02 11:36:08 +03:00 - Clean generated artifacts and restore compile/build
+
+Files changed:
+- `electron-builder.yml`
+- `scripts/checkEncoding.mjs`
+- `scripts/create_bm_contract_template_poc.ts`
+- `scripts/create_bm_contract_template_signed_poc.ts`
+- `scripts/electronFindFreePortTest.ts`
+- `scripts/electronWaitForHealthTest.ts`
+- `scripts/leadModalSimplificationTest.ts`
+- `src/components/chessboard/Chessboard.tsx`
+- `src/utils/docx/bmDocxBuilder.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Removed generated/ignored junk directories: `dist/`, `dist-server/`, `dist-electron/`, `release/`, and `scratch/`.
+- Kept local data and sensitive/runtime files intact: `.env.local`, SQLite DB files, `node_modules/`, `storage/docx-templates/`, and `templates/docx/`.
+- Fixed TypeScript compile errors from `docx@9` enum value typing and `HeightRule.ATLEAST`.
+- Removed an impossible Chessboard status comparison to `closed`; existing `ContractStatus` does not include it.
+- Fixed Electron helper test address narrowing so TypeScript compiles.
+- Updated the Lead modal source test to match the current status-select UI.
+- Restored NSIS installer config promised by the prior worklog: custom include, zip packaging, differential package disabled.
+- Added `compression: store` so the large local RC installer can finish instead of stalling in 7zip compression.
+- Excluded the intentional mojibake-normalization test fixture from `checkEncoding`.
+
+Checks run:
+- `npm run lint` - passed.
+- `npm run check:encoding` - passed.
+- `npx tsx scripts/electronFindFreePortTest.ts` - passed.
+- `npx tsx scripts/electronWaitForHealthTest.ts` - passed.
+- `npx tsx scripts/leadModalSimplificationTest.ts` - passed.
+- `npx tsx scripts/supabaseLeadSyncUiTest.ts` - passed.
+- `npm run build` - passed.
+- `npm run build:server` - passed.
+- `npm run build:electron` - passed.
+- `npm run electron:installer` - passed and produced `release/Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe` (~614 MB).
+
+Next recommended step:
+- Smoke-test the generated installer manually: install, launch, login, check `/api/health`, then uninstall while confirming AppData/userData is preserved.
+
+Risks / TODO:
+- `compression: store` makes the installer much larger but avoids the observed 7zip stall on this local RC build.
+- electron-builder still warns that `description` and `author` are missing in `package.json`, `asar` is disabled, and npm collector reports invalid/duplicate React dependency references. These warnings did not block the build.
+- Vite still warns about large PDFMe chunks; this is not a compile blocker.
+
+### 2026-06-02 10:57:00 +03:00 - Project audit and compile/package checks
+
+Files changed:
+- `docs/WORKLOG.md`
+
+Completed:
+- Reviewed current project state, package scripts, Electron/server build configs, and recent RC installer notes.
+- Reproduced the current TypeScript gate failure with `npm run lint`.
+- Verified separate Vite, server tsup, Electron tsup, and unpacked Electron packaging commands.
+- Reproduced NSIS installer packaging hang/timeout in `npm run electron:installer`; stopped the spawned npm/electron-builder/7za processes.
+- Checked encoding guard and a few targeted script tests.
+
+Checks run:
+- `git status --short`
+- `git diff --stat`
+- `npm run lint` - failed with TypeScript errors in DOCX helpers, Electron helper tests, and Chessboard status comparison.
+- `npm run build` - passed; large chunk warnings for PDFMe bundles.
+- `npm run build:server` - passed.
+- `npm run build:electron` - passed.
+- `npm run electron:pack` - passed, but reported package metadata/dependency/asar warnings.
+- `npm run electron:installer` - timed out after about 424s while `7za` was creating `.nsis.7z`.
+- `npm run check:encoding` - failed on mojibake in `src/utils/pdfmeTemplatesTest.ts`.
+- `npx tsx scripts/electronFindFreePortTest.ts` - passed.
+- `npx tsx scripts/electronWaitForHealthTest.ts` - passed.
+- `npx tsx scripts/supabaseLeadSyncUiTest.ts` - passed.
+- `npx tsx scripts/leadModalSimplificationTest.ts` - failed because the expected modal footer marker was not found.
+
+Next recommended step:
+- Fix the compile gate first (`npm run lint`), then restore/finish the NSIS config promised by the previous worklog entry (`useZip`, `differentialPackage`, custom NSIS hook wiring) and rerun installer smoke from a clean `release/`.
+
+Risks / TODO:
+- Working tree already had uncommitted Electron/release documentation and installer config changes before this audit.
+- Current docs say installer hardening added `useZip: true`, `differentialPackage: false`, and a custom hook, but the actual `electron-builder.yml` does not contain those settings.
+- `release/` contains stale ignored artifacts plus a fresh zero-byte `.nsis.7z` from the timed-out installer run.
+- `win-unpacked` includes a large production `node_modules`; NSIS compression is slow and currently blocks final installer generation.
+
+### 2026-06-01 21:17:30 +03:00 — Fix NSIS silent install/reinstall hang
+
+Files changed:
+- `electron-builder.yml`
+- `scripts/nsis-installer.nsh`
+- `docs/electron-build.md`
+- `docs/release-checklist.md`
+- `docs/WORKLOG.md`
+
+Completed:
+- Investigated the silent install/reinstall hang with process checks, clean install-dir backups, and repeated `/S` watchdog runs.
+- Confirmed the old failure was not caused by a running CRM/backend process or AppData/userData deletion.
+- Identified the packaging issue: `useZip: true` did not take effect while NSIS was still differential-aware and using the `.nsis.7z` path.
+- Updated NSIS config for RC testing: ASCII executable/artifact name, `runAfterFinish: false`, `deleteAppDataOnUninstall: false`, `useZip: true`, `differentialPackage: false`, and a tracked silent `customInstall` hook.
+- Verified silent install `/S`, silent reinstall `/S`, installed-app smoke, backend shutdown, and silent uninstall while preserving userData.
+
+Checks run:
+- Context7 lookup for current electron-builder NSIS option behavior.
+- `npx electron-builder --win nsis`
+- Silent install: `Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe /S` exited 0 in ~331s.
+- Silent reinstall: `Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe /S` exited 0 in ~391s.
+- Installed app selected port 3003 while 3002 was occupied.
+- `/api/health`, `/api/app-info`, login `Make / 3552`, and `/api/leads/auto-sync/status` returned 200.
+- Closing installed app stopped the packaged backend; port 3003 stopped responding.
+- Silent uninstall: `Uninstall Bolshaya Medveditsa CRM.exe /currentuser /S` completed after temporary `Un_A.exe` finished and removed the install dir.
+- Project DB `data/crm.sqlite` stayed unchanged; AppData DB stayed present and unchanged.
+
+Next recommended step:
+- Run a final `npm run electron:installer` from a clean `release/` directory before tagging RC artifacts, then repeat the same install/reinstall/uninstall smoke.
+
+Risks / TODO:
+- `release/` contains ignored stale artifacts from earlier builds; clean it before final artifact handoff.
+- `asar` remains disabled; installer is large and build/install are slow, but packaged backend runtime is confirmed with the current layout.
+- Auto-update remains disabled; `latest.yml` may be generated but is not used for RC 0.1.0.
+
 ### 2026-06-01 14:41:38 +03:00 — Installer hardening for RC 0.1.0
 
 Files changed:

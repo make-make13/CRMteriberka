@@ -44,12 +44,12 @@ npm run electron:pack
 
 Проверить артефакты в `release/`:
 
-- `Большая-Медведица-CRM-Setup-0.1.0.exe` существует.
+- `Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe` существует.
 - Размер installer записан в release report.
-- `Большая-Медведица-CRM-Setup-0.1.0.exe.blockmap` существует.
 - `latest.yml` существует и указывает на текущую версию `0.1.0`.
+- `.blockmap` не является критерием RC 0.1.0: auto-update отключён, `differentialPackage` выключен.
 - `release/win-unpacked/` существует.
-- `release/win-unpacked/Большая Медведица CRM.exe` существует.
+- `release/win-unpacked/Bolshaya Medveditsa CRM.exe` существует.
 
 Проверить установку:
 
@@ -65,6 +65,7 @@ npm run electron:pack
 - `/api/app-info` отвечает.
 - `dataDir` указывает на `%APPDATA%\Большая Медведица CRM`.
 - Login `Make / 3552` работает.
+- `/api/leads/auto-sync/status` отвечает после login.
 - Рабочая база проекта `data/crm.sqlite` не изменена.
 
 ---
@@ -162,14 +163,15 @@ npm run electron:pack
 ## RC 0.1.0 installer hardening
 
 - Перед reinstall закрыть установленную CRM и убедиться, что нет процессов
-  `Большая Медведица CRM.exe`, Setup.exe и uninstaller.
-- Silent install/reinstall проверять через Setup.exe с `/S`; если процесс ждёт
-  закрытия приложения, закрыть CRM вручную и повторить проверку.
+  `Bolshaya Medveditsa CRM.exe`, Setup.exe и uninstaller.
+- Silent install/reinstall проверять через `Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe /S`.
+- Silent uninstall проверять через `Uninstall Bolshaya Medveditsa CRM.exe /currentuser /S`.
+- При uninstall ждать не только exit code основного процесса, но и завершение временного
+  `%TEMP%\~nsu.tmp\Un_A.exe` или исчезновение install dir.
 - Не удалять `%APPDATA%\Большая Медведица CRM`; userData должен сохраняться при
-  обновлении и reinstall.
+  install, reinstall и uninstall.
 - После запуска installed или `win-unpacked` убедиться, что Electron не пишет
   ложный startup timeout, а `/api/health` отвечает на выбранном порту.
 - При занятом 3002 packaged app должен выбрать следующий свободный порт.
-- Known RC blocker: current silent Setup.exe reinstall can hang after copying files even
-  when CRM is closed. If this happens, stop only the Setup.exe PID, verify no CRM/backend
-  process remains, and do not delete `%APPDATA%\Большая Медведица CRM`.
+- Silent install/reinstall hang должен считаться regression, если Setup.exe не завершился
+  за разумный watchdog и install dir/uninstaller не появились.

@@ -35,6 +35,8 @@ import {
   BorderStyle,
 } from 'docx';
 
+type DocxAlignment = (typeof AlignmentType)[keyof typeof AlignmentType];
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const TEMPLATE_PATH = path.resolve(ROOT, 'templates', 'docx', 'bm_contract_template_signed_poc.docx');
@@ -68,7 +70,7 @@ function p(
   text: string,
   opts: {
     bold?: boolean;
-    align?: AlignmentType;
+    align?: DocxAlignment;
     size?: number;
     spaceAfter?: number;
     pageBreakBefore?: boolean;
@@ -103,7 +105,7 @@ function h(text: string, opts: { pageBreakBefore?: boolean } = {}): Paragraph {
 
 function mixed(
   parts: Array<{ text: string; bold?: boolean }>,
-  opts: { align?: AlignmentType; spaceAfter?: number } = {},
+  opts: { align?: DocxAlignment; spaceAfter?: number } = {},
 ): Paragraph {
   return new Paragraph({
     alignment: opts.align,

@@ -20,8 +20,9 @@ async function close(server: net.Server): Promise<void> {
 async function main() {
   const occupied = await listen('0.0.0.0');
   const address = occupied.address();
-  assert.equal(typeof address, 'object');
-  assert(address && 'port' in address);
+  if (typeof address !== 'object' || address === null || !('port' in address)) {
+    throw new Error('Expected TCP server address with a port');
+  }
 
   const occupiedPort = address.port;
   try {

@@ -9,6 +9,7 @@
 appId: ru.teriberka.big-medveditsa-crm
 productName: "Большая Медведица CRM"
 copyright: "© 2025 Большая Медведица"
+compression: store
 
 # ── Директории ────────────────────────────────────────────────────────────────
 directories:
@@ -50,18 +51,22 @@ win:
     - target: nsis        # Setup.exe installer (electron:installer)
       arch: [x64]
   icon: assets/app-icon/icon.ico
+  executableName: "Bolshaya Medveditsa CRM"
 
 # ── NSIS installer ────────────────────────────────────────────────────────────
 nsis:
-  # Показывать диалог установки (не silent one-click)
   oneClick: false
-  # Установка для текущего пользователя (без прав администратора)
   perMachine: false
-  # Показывать выбор директории установки
-  allowToChangeInstallationDirectory: true
-  # Ярлыки
+  # allowToChangeInstallationDirectory: true — вызывал зависание silent install
+  # через инициализацию nsDialogs/LOCALAPPDATA в electron-builder NSIS template.
+  # Установка всегда идёт в %LOCALAPPDATA%\Programs\bolshaya-medveditsa-crm\
+  allowToChangeInstallationDirectory: false
+  runAfterFinish: false
+  deleteAppDataOnUninstall: false
+  useZip: true
+  differentialPackage: false
+  include: scripts/nsis-installer.nsh
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: "Большая Медведица CRM"
-  # Имя файла установщика
-  artifactName: "Большая-Медведица-CRM-Setup-${version}.${ext}"
+  artifactName: "Bolshaya-Medveditsa-CRM-Setup-${version}.${ext}"

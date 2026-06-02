@@ -29,6 +29,8 @@ import {
 import fs from 'fs';
 import type { BmDocxVariables } from './bmDocxData';
 
+type DocxAlignment = (typeof AlignmentType)[keyof typeof AlignmentType];
+
 /**
  * Нормализация текста перед вставкой в DOCX:
  *  - "бутик-отел*" → non-breaking hyphen U+2011, чтобы слово не разрывалось при
@@ -130,7 +132,7 @@ const NO_BORDER = {
 
 // --- Хелперы для типичных абзацев ---
 
-function p(text: string, opts: { bold?: boolean; align?: AlignmentType; size?: number; spaceAfter?: number; pageBreakBefore?: boolean; keepNext?: boolean } = {}): Paragraph {
+function p(text: string, opts: { bold?: boolean; align?: DocxAlignment; size?: number; spaceAfter?: number; pageBreakBefore?: boolean; keepNext?: boolean } = {}): Paragraph {
   return new Paragraph({
     alignment: opts.align,
     spacing: { after: opts.spaceAfter ?? SPACE_AFTER },
@@ -158,7 +160,7 @@ function h(text: string, opts: { pageBreakBefore?: boolean } = {}): Paragraph {
 }
 
 /** Параграф с подстановкой {var} → значение, переменные выделяются жирным. */
-function mvt(template: string, vars: BmDocxVariables, opts: { align?: AlignmentType; size?: number } = {}): Paragraph {
+function mvt(template: string, vars: BmDocxVariables, opts: { align?: DocxAlignment; size?: number } = {}): Paragraph {
   const parts = normalizeRu(template).split(/(\{[a-z_]+\})/gi);
   const children: TextRun[] = [];
   for (const part of parts) {
@@ -362,7 +364,7 @@ function buildRequisitesTable(vars: BmDocxVariables, opts: BmDocxBuildOptions): 
       // Row 3: подписи — cantSplit, минимальная высота для print-режима (1.5 дюйма)
       new TableRow({
         cantSplit: true,
-        height: { value: 2160, rule: HeightRule.AT_LEAST },
+        height: { value: 2160, rule: HeightRule.ATLEAST },
         children: [buildExecutorSignatureCell(opts), buildClientSignatureCell(vars, isSigned)],
       }),
     ],

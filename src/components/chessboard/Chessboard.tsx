@@ -75,9 +75,6 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
     if (contract.status === 'pre_booking') {
       return 'pre_booking';
     }
-    if (contract.status === 'closed') {
-      return 'closed';
-    }
     if (contract.status === 'cancelled') {
       return 'cancelled';
     }

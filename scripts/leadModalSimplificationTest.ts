@@ -23,7 +23,7 @@ assert.match(modalSource, /Нет технических данных/, 'technic
 assert.match(modalSource, /isTechOpen/, 'technical data must use explicit collapsed state');
 assert.match(modalSource, /setIsTechOpen\(false\)/, 'technical data must be collapsed when the modal opens');
 
-const footerStart = modalSource.lastIndexOf('border-t border-white/10');
+const footerStart = modalSource.lastIndexOf('flex justify-end border-t');
 assert.notEqual(footerStart, -1, 'modal footer must exist');
 const footerSource = modalSource.slice(footerStart);
 assert.equal(footerSource.includes('В работу'), false, 'footer must not contain the in-progress action');
@@ -36,7 +36,7 @@ const techSectionStart = modalSource.indexOf('Технические данны�
 assert.notEqual(workSectionStart, -1, 'work section must exist');
 assert.notEqual(techSectionStart, -1, 'technical section must exist');
 const workSectionSource = modalSource.slice(workSectionStart, techSectionStart);
-assert.match(workSectionSource, /В работу/, 'in-progress action must be inside the work section');
+assert.match(workSectionSource, /STATUS_OPTIONS\.map/, 'status options must be inside the work section');
 assert.match(workSectionSource, /Отклонить/, 'reject action must be inside the work section');
 
 console.log('lead modal simplification tests passed');

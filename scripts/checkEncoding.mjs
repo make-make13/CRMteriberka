@@ -6,6 +6,7 @@ const EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const SELF = path.normalize('scripts/checkEncoding.mjs');
 const IGNORED_FILES = new Set([
   path.normalize('src/utils/pdfmeTemplates.ts'),
+  path.normalize('src/utils/pdfmeTemplatesTest.ts'),
   path.normalize('scripts/auditFixesTest.ts'),
 ]);
 

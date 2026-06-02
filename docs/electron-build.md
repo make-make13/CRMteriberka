@@ -216,30 +216,32 @@ npm run electron:installer:win
 
 ```
 release/
-  Большая-Медведица-CRM-Setup-0.1.0.exe   ← ~155 MB
-  Большая-Медведица-CRM-Setup-0.1.0.exe.blockmap
+  Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe   ← ~216 MB
   latest.yml                               ← auto-update metadata (будущее)
 ```
 
 ### Что устанавливается
 
-- **Install dir:** `%LOCALAPPDATA%\Programs\bolshaya-medveditsa-crm\`
+- **Install dir:** `%LOCALAPPDATA%\Programs\Bolshaya Medveditsa CRM\`
 - **Ярлык рабочего стола:** `Большая Медведица CRM.lnk`
 - **Ярлык меню Пуск:** `Большая Медведица CRM.lnk`
 - **Данные CRM:** `%APPDATA%\Большая Медведица CRM\` (не в install dir!)
-- **Деинсталлятор:** через «Установка и удаление программ»
+- **Деинсталлятор:** `%LOCALAPPDATA%\Programs\Bolshaya Medveditsa CRM\Uninstall Bolshaya Medveditsa CRM.exe`
 
 ### Проверенные сценарии
 
 | Проверка | Результат |
 |---|---|
 | Installer запускается | ✓ |
-| Silent install `/S` | ✓ (exit 0) |
+| Silent install `/S` | ✓ (exit 0, проверено за ~331s) |
+| Silent reinstall `/S` поверх установленной версии | ✓ (exit 0, проверено за ~391s) |
+| Silent uninstall `/currentuser /S` | ✓ (uninstaller стартует временный `Un_A.exe`; ждать удаления install dir) |
 | Ярлык рабочего стола | ✓ |
 | Ярлык меню Пуск | ✓ |
 | `/api/health → {"ok":true}` | ✓ |
 | `/api/app-info version/mode/dataDir` | ✓ |
 | Login Make/3552 | ✓ |
+| `/api/leads/auto-sync/status` | ✓ |
 | Backend умирает при закрытии | ✓ |
 | data/crm.sqlite не тронута | ✓ |
 
@@ -279,29 +281,34 @@ release/
 ## RC 0.1.0 installer hardening notes
 
 Перед silent install или reinstall закройте установленную CRM и убедитесь, что не
-запущены процессы `Большая Медведица CRM.exe`, Setup.exe или uninstaller. NSIS-шаблон
-electron-builder при обновлении пытается закрыть процессы из install dir, затем запускает
-старый uninstaller с `/S /KEEP_APP_DATA --updated`; пользовательские данные в
-`%APPDATA%\Большая Медведица CRM` при этом должны сохраняться.
+запущены процессы `Bolshaya Medveditsa CRM.exe`, Setup.exe или uninstaller. Пользовательские
+данные в `%APPDATA%\Большая Медведица CRM` должны сохраняться при install, reinstall и uninstall.
+
+Причина прежнего зависания: NSIS-пакет собирался как differential-aware `.nsis.7z`, хотя
+`useZip: true` был включён. Для RC 0.1.0 auto-update не используется, поэтому в
+`electron-builder.yml` отключён `differentialPackage` и добавлен silent hook
+`scripts/nsis-installer.nsh`, который завершает silent-путь после стандартной установки.
 
 Рекомендуемый порядок проверки:
 
 ```powershell
 Get-CimInstance Win32_Process |
-  Where-Object { $_.ExecutablePath -like "$env:LOCALAPPDATA\Programs\bolshaya-medveditsa-crm\*" }
+  Where-Object { $_.ExecutablePath -like "$env:LOCALAPPDATA\Programs\Bolshaya Medveditsa CRM\*" }
 
-.\release\Большая-Медведица-CRM-Setup-0.1.0.exe /S
+.\release\Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe /S  # install
+.\release\Bolshaya-Medveditsa-CRM-Setup-0.1.0.exe /S  # reinstall
+
+$uninstaller = "$env:LOCALAPPDATA\Programs\Bolshaya Medveditsa CRM\Uninstall Bolshaya Medveditsa CRM.exe"
+& $uninstaller /currentuser /S
 ```
 
 Если reinstall ждёт закрытия приложения, сначала закройте CRM вручную и повторите
 установку. Во время таких проверок не удаляйте `%APPDATA%\Большая Медведица CRM`.
 
+При uninstall NSIS может быстро вернуть exit code 0 из основного uninstaller-процесса и
+продолжить удаление во временном `%TEMP%\~nsu.tmp\Un_A.exe`. Для проверки нужно ждать, пока
+исчезнет временный процесс или папка `%LOCALAPPDATA%\Programs\Bolshaya Medveditsa CRM`.
+
 Electron wrapper ждёт packaged backend на `/api/health` до 60 секунд. Это убирает
 ложный startup timeout на холодном запуске, когда инициализация SQLite/native modules
 занимает больше прежнего лимита 20 секунд, но backend затем отвечает корректно.
-
-Known RC limitation: silent Setup.exe reinstall still hangs after copying files when the
-CRM is already closed. The hung process must be stopped by PID; do not delete AppData.
-After a hung silent run, verify install dir, registry uninstall key, and userData before
-using the installed copy for smoke tests. Use `win-unpacked` as the source of truth for
-code smoke checks until the installer hang is fixed.
