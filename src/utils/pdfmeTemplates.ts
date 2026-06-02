@@ -257,7 +257,18 @@ export const pdfmePlugins = {
 };
 
 export async function getPdfmeFont() {
-  const fontData = await fetch('/fonts/NotoSerif-Regular.ttf').then(res => res.arrayBuffer());
+  const fontData = await fetch('/fonts/NotoSerif-Regular.ttf')
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.arrayBuffer();
+    })
+    .catch((err) => {
+      throw new Error(
+        'Не удалось загрузить базовый шрифт NotoSerif-Regular.ttf для генерации PDF. '
+        + 'Проверьте, что приложение установлено корректно (файл /fonts/NotoSerif-Regular.ttf должен быть доступен). '
+        + `Причина: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    });
   const boldFontData = await fetch('/fonts/NotoSerif-Bold.ttf')
     .then(res => (res.ok ? res.arrayBuffer() : fontData))
     .catch(() => fontData);
