@@ -195,8 +195,7 @@ async function startServer() {
   // POST /test-ai-backend      — проверить AI backend URL
 
   app.get('/api/integration-settings', requireAuth, (_req, res) => {
-    const full = localDb.getIntegrationSettingsFull();
-    res.json(maskIntegrationSettings(full));
+    sendJsonResult(res, () => maskIntegrationSettings(localDb.getIntegrationSettingsFull()));
   });
 
   app.put('/api/integration-settings', requireAdmin, (req, res) => {
@@ -369,8 +368,7 @@ async function startServer() {
   });
 
   app.get('/api/clients/:id/history', requireAuth, (req, res) => {
-    const contracts = localDb.listContractsByClient(req.params.id);
-    res.json(buildClientContractHistory(contracts as any, req.params.id));
+    sendJsonResult(res, () => buildClientContractHistory(localDb.listContractsByClient(req.params.id) as any, req.params.id));
   });
 
   app.get('/api/contracts', requireAuth, (_req, res) => {
@@ -550,7 +548,7 @@ async function startServer() {
   });
 
   app.get('/api/settings', requireAuth, (_req, res) => {
-    res.json(localDb.getSettings() || null);
+    sendJsonResult(res, () => localDb.getSettings() || null);
   });
 
   app.put('/api/settings', requireAuth, (req, res) => {
@@ -558,7 +556,7 @@ async function startServer() {
   });
 
   app.get('/api/settings/:id', requireAuth, (req, res) => {
-    res.json(localDb.getSettings(req.params.id) || null);
+    sendJsonResult(res, () => localDb.getSettings(req.params.id) || null);
   });
 
   app.put('/api/settings/:id', requireAuth, (req, res) => {
@@ -566,11 +564,11 @@ async function startServer() {
   });
 
   app.get('/api/organizations', requireAuth, (_req, res) => {
-    res.json(localDb.listOrganizations());
+    sendJsonResult(res, () => localDb.listOrganizations());
   });
 
   app.get('/api/organizations/:id', requireAuth, (req, res) => {
-    res.json(localDb.getOrganization(req.params.id));
+    sendJsonResult(res, () => localDb.getOrganization(req.params.id));
   });
 
   app.put('/api/organizations/:id', requireAdmin, (req, res) => {
@@ -578,15 +576,15 @@ async function startServer() {
   });
 
   app.get('/api/templates-meta', requireAuth, (_req, res) => {
-    res.json(localDb.listTemplatesMeta());
+    sendJsonResult(res, () => localDb.listTemplatesMeta());
   });
 
   app.get('/api/pdf-templates', requireAuth, (_req, res) => {
-    res.json(localDb.listPdfTemplates());
+    sendJsonResult(res, () => localDb.listPdfTemplates());
   });
 
   app.get('/api/pdf-templates/:id', requireAuth, (req, res) => {
-    res.json(localDb.getPdfTemplate(req.params.id));
+    sendJsonResult(res, () => localDb.getPdfTemplate(req.params.id));
   });
 
   app.put('/api/pdf-templates/:id', requireAdmin, (req, res) => {
