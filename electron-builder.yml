@@ -52,6 +52,15 @@ win:
       arch: [x64]
   icon: assets/app-icon/icon.ico
   executableName: "Bolshaya Medveditsa CRM"
+  # ── Code signing OFF (локальная RC-сборка без сертификата) ──────────────────
+  # signAndEditExecutable: false запрещает подпись/resource-edit app.exe и helper-бинарей.
+  # signExts: ["!.exe"] дополнительно запрещает signIf() для NSIS installer/uninstaller.
+  # Нужно, потому что очистка env (CSC_IDENTITY_AUTO_DISCOVERY=false, CSC_LINK=…)
+  # не остановила signtool — config-уровень имеет приоритет.
+  # Побочный эффект: rcedit не правит метаданные/иконку exe (для RC некритично).
+  signAndEditExecutable: false
+  signExts:
+    - "!.exe"
 
 # ── NSIS installer ────────────────────────────────────────────────────────────
 nsis:
