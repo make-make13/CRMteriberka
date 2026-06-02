@@ -61,6 +61,19 @@ function asErrorResponse(error: unknown) {
   return { error: asErrorMessage(error) };
 }
 
+/**
+ * Выполняет читающий обработчик и отдаёт результат как JSON.
+ * При ошибке возвращает JSON { error } со статусом 500 вместо HTML-страницы
+ * дефолтного обработчика Express — важно для GET-роутов списков без try/catch.
+ */
+function sendJsonResult(res: express.Response, produce: () => unknown) {
+  try {
+    res.json(produce());
+  } catch (error) {
+    res.status(500).json({ error: asErrorMessage(error) });
+  }
+}
+
 function asEmailErrorMessage(error: unknown) {
   const message = asErrorMessage(error);
   if (message.includes('ECONNREFUSED')) {
@@ -319,7 +332,7 @@ async function startServer() {
   });
 
   app.get('/api/clients', requireAuth, (_req, res) => {
-    res.json(localDb.listClients());
+    sendJsonResult(res, () => localDb.listClients());
   });
 
   app.post('/api/clients', requireAuth, (req, res) => {
@@ -361,7 +374,7 @@ async function startServer() {
   });
 
   app.get('/api/contracts', requireAuth, (_req, res) => {
-    res.json(localDb.listContracts());
+    sendJsonResult(res, () => localDb.listContracts());
   });
 
   app.post('/api/contracts', requireAuth, (req, res) => {
@@ -392,7 +405,7 @@ async function startServer() {
   });
 
   app.get('/api/leads', requireAuth, (req, res) => {
-    res.json(localDb.getLeads({
+    sendJsonResult(res, () => localDb.getLeads({
       status: typeof req.query.status === 'string' ? req.query.status as any : undefined,
       search: typeof req.query.search === 'string' ? req.query.search : undefined,
     }));
@@ -508,7 +521,7 @@ async function startServer() {
   });
 
   app.get('/api/tasks', requireAuth, (_req, res) => {
-    res.json(localDb.listTasks());
+    sendJsonResult(res, () => localDb.listTasks());
   });
 
   app.post('/api/tasks', requireAuth, (req, res) => {
