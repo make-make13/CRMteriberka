@@ -28,6 +28,11 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function formatContractAmount(value: unknown) {
+  const amount = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(amount) ? amount.toLocaleString() : '0';
+}
+
 const CONTRACTS_PAGE_SIZE = 100;
 
 interface ContractsProps {
@@ -521,8 +526,8 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <div className={cn('font-bold text-sm', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>{contract.totalAmount.toLocaleString()} ₽</div>
-                      <div className={cn("text-xs mt-0.5", isDarkMode ? "text-[#8B8B8B]" : "text-gray-400")}>Остаток: {contract.remainder.toLocaleString()} ₽</div>
+                      <div className={cn('font-bold text-sm', isDarkMode ? 'text-[#F5F5F5]' : 'text-gray-900')}>{formatContractAmount(contract.totalAmount)} ₽</div>
+                      <div className={cn("text-xs mt-0.5", isDarkMode ? "text-[#8B8B8B]" : "text-gray-400")}>Остаток: {formatContractAmount(contract.remainder)} ₽</div>
                     </td>
                     <td className="px-5 py-4">
                       <span className={cn(

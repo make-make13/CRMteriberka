@@ -22,6 +22,11 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function formatContractAmount(value: unknown, locales?: Intl.LocalesArgument) {
+  const amount = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(amount) ? amount.toLocaleString(locales) : '0';
+}
+
 interface ContractModalProps {
   isOpen: boolean;
   isDarkMode: boolean;
@@ -1474,14 +1479,14 @@ export default function ContractModal({
                     isDarkMode ? "bg-white/[0.02] border-white/5" : "bg-gray-50 border-gray-100"
                   )}>
                     <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Итоговая стоимость (₽)</div>
-                    <div className="text-3xl font-bold mt-1">{totalAmount.toLocaleString()} ₽</div>
+                    <div className="text-3xl font-bold mt-1">{formatContractAmount(totalAmount)} ₽</div>
                   </div>
                   <div className={cn(
                     "p-6 rounded-2xl border",
                     isDarkMode ? "bg-orange-500/10 border-orange-500/20" : "bg-orange-50 border-orange-100"
                   )}>
                     <div className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">Остаток к оплате</div>
-                    <div className="text-3xl font-bold text-orange-500 mt-1">{remainder.toLocaleString()} ₽</div>
+                    <div className="text-3xl font-bold text-orange-500 mt-1">{formatContractAmount(remainder)} ₽</div>
                   </div>
                 </div>
               </div>
@@ -1608,7 +1613,7 @@ export default function ContractModal({
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-bold">{item.totalAmount.toLocaleString('ru-RU')} ₽</div>
+                            <div className="text-sm font-bold">{formatContractAmount(item.totalAmount, 'ru-RU')} ₽</div>
                             <div className={cn("mt-1 text-[10px] uppercase tracking-wider", isDarkMode ? "text-gray-500" : "text-gray-400")}>
                               {item.bookings.length} брон.
                             </div>

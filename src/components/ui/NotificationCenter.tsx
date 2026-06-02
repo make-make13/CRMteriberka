@@ -17,6 +17,11 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function formatContractAmount(value: unknown) {
+  const amount = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(amount) ? amount.toLocaleString() : '0';
+}
+
 interface NotificationCenterProps {
   isDarkMode: boolean;
   contracts: Contract[];
@@ -80,7 +85,7 @@ export default function NotificationCenter({
           id: contract.id,
           contractId: contract.id,
           title: 'Оплата',
-          message: `Договор №${contract.number} (${clientName}). Остаток: ${contract.remainder.toLocaleString()} ₽. Заезд скоро!`,
+          message: `Договор №${contract.number} (${clientName}). Остаток: ${formatContractAmount(contract.remainder)} ₽. Заезд скоро!`,
           type: 'payment' as const,
           date: new Date().toISOString(),
           contract
@@ -227,7 +232,7 @@ export default function NotificationCenter({
                       >
                         №{alert.contract.number} ({getContractClientName(alert.contract)})
                       </button>
-                      . Остаток: {alert.contract.remainder.toLocaleString()} ₽. Заезд скоро!
+                      . Остаток: {formatContractAmount(alert.contract.remainder)} ₽. Заезд скоро!
                     </p>
                   ) : (
                     <p className="text-sm font-medium leading-tight">{alert.message}</p>
