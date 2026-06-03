@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Loader2, X } from 'lucide-react';
+import { ChevronDown, ExternalLink, Loader2, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
@@ -45,6 +45,8 @@ interface LeadModalProps {
   onCreateClient: (id: string) => Promise<void>;
   onCreatePrebookingFromLead: (lead: Lead) => void;
   onOpenClient?: (clientId: string) => void;
+  /** URL веб-панели BM-concierge (не секрет). Если передан, показывается кнопка «Открыть диалог». */
+  aiConsoleUrl?: string;
 }
 
 function textInputValue(value: unknown) {
@@ -101,10 +103,11 @@ function parseTranscript(raw: string | undefined): AiMessage[] | null {
   return null;
 }
 
-function AiConciergeBlock({ lead, isDarkMode, cn: cls }: {
+function AiConciergeBlock({ lead, isDarkMode, cn: cls, aiConsoleUrl }: {
   lead: Lead;
   isDarkMode: boolean;
   cn: (...inputs: ClassValue[]) => string;
+  aiConsoleUrl?: string;
 }) {
   const [transcriptOpen, setTranscriptOpen] = React.useState(false);
 
@@ -167,6 +170,27 @@ function AiConciergeBlock({ lead, isDarkMode, cn: cls }: {
           <div className="grid gap-0.5">
             <span className={labelCls}>ID диалога</span>
             <span className={cls(valueCls, 'font-mono text-xs break-all')}>{lead.externalConversationId}</span>
+          </div>
+        )}
+
+        {/* Кнопка «Открыть диалог» — ведёт в web-console BM-concierge, ключей не содержит */}
+        {lead.externalConversationId && aiConsoleUrl && (
+          <div className="pt-0.5">
+            <a
+              href={aiConsoleUrl.replace(/\/$/, '')}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Диалог: ${lead.externalConversationId}`}
+              className={cls(
+                'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors',
+                isDarkMode
+                  ? 'border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20'
+                  : 'border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100'
+              )}
+            >
+              <ExternalLink size={12} />
+              Открыть диалог в ИИ-консьерже
+            </a>
           </div>
         )}
 
@@ -258,6 +282,7 @@ export default function LeadModal({
   onCreateClient,
   onCreatePrebookingFromLead,
   onOpenClient,
+  aiConsoleUrl,
 }: LeadModalProps) {
   const [form, setForm] = useState<LeadFormState>(() => getInitialState(lead));
   const [isTechOpen, setIsTechOpen] = useState(false);
@@ -443,7 +468,7 @@ export default function LeadModal({
           </section>
 
           {lead && (
-            <AiConciergeBlock lead={lead} isDarkMode={isDarkMode} cn={cn} />
+            <AiConciergeBlock lead={lead} isDarkMode={isDarkMode} cn={cn} aiConsoleUrl={aiConsoleUrl} />
           )}
 
           <section className={sectionClass}>

@@ -25,6 +25,8 @@ export interface IntegrationSettingsStored {
   libreOfficePath?: string;
   aiBackendUrl?: string;
   aiBackendKey?: string;
+  /** URL веб-панели BM-concierge (не секрет, отдаётся frontend как есть) */
+  aiConsoleUrl?: string;
 }
 
 /** Входные данные для сохранения (пустой секрет = оставить прежнее) */
@@ -38,6 +40,7 @@ export interface IntegrationSettingsInput {
   libreOfficePath?: string;
   aiBackendUrl?: string;
   aiBackendKey?: string;
+  aiConsoleUrl?: string;
 }
 
 /** Маскированный вид для frontend (секреты заменены маской) */
@@ -53,6 +56,8 @@ export interface IntegrationSettingsMasked {
   aiBackendUrl: string;
   aiBackendKeyMask: string;
   aiBackendKeyHas: boolean;
+  /** URL веб-панели BM-concierge (не секрет) */
+  aiConsoleUrl: string;
 }
 
 /** Маскирует секреты: показывает только последние 4 символа */
@@ -74,6 +79,7 @@ export function maskIntegrationSettings(s: IntegrationSettingsStored): Integrati
     aiBackendUrl:                   s.aiBackendUrl                   || '',
     aiBackendKeyMask:               maskSecret(s.aiBackendKey),
     aiBackendKeyHas:                Boolean(s.aiBackendKey),
+    aiConsoleUrl:                   s.aiConsoleUrl                   || '',
   };
 }
 
@@ -1187,6 +1193,7 @@ export class LocalDatabase {
         ('supabaseAutoSyncIntervalMinutes' in input ? Number(input.supabaseAutoSyncIntervalMinutes) : current.supabaseAutoSyncIntervalMinutes) || 5,
       libreOfficePath:    ('libreOfficePath'    in input ? input.libreOfficePath?.trim()    : current.libreOfficePath)    ?? '',
       aiBackendUrl:       ('aiBackendUrl'       in input ? input.aiBackendUrl?.trim()       : current.aiBackendUrl)       ?? '',
+      aiConsoleUrl:       ('aiConsoleUrl'       in input ? input.aiConsoleUrl?.trim()       : current.aiConsoleUrl)       ?? '',
       // Секреты: заменяем только если в input передана непустая строка
       supabaseServiceKey: (input.supabaseServiceKey?.trim())  || current.supabaseServiceKey  || '',
       aiBackendKey:       (input.aiBackendKey?.trim())        || current.aiBackendKey        || '',

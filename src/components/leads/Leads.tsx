@@ -6,7 +6,7 @@ import { ru } from 'date-fns/locale';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
-import { clientApi, leadApi } from '../../services/localApi';
+import { clientApi, integrationSettingsApi, leadApi } from '../../services/localApi';
 import { getErrorMessage } from '../../utils/errors';
 import { useToast } from '../../context/ToastContext';
 import EmptyState from '../common/EmptyState';
@@ -72,6 +72,15 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [leadOpenError, setLeadOpenError] = useState('');
   const [pendingClientEdit, setPendingClientEdit] = useState<Client | null>(null);
+  const [aiConsoleUrl, setAiConsoleUrl] = useState('');
+
+  // Загружаем URL web-console BM-concierge для кнопки «Открыть диалог» в карточке заявки.
+  // Не секрет, не aiBackendKey — просто публичный URL панели.
+  useEffect(() => {
+    integrationSettingsApi.get()
+      .then(s => setAiConsoleUrl(s.aiConsoleUrl || ''))
+      .catch(() => { /* не критично — кнопка просто не покажется */ });
+  }, []);
 
   const loadLeads = async () => {
     setIsLoading(true);
@@ -530,6 +539,7 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
         onCreateClient={handleCreateClient}
         onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
         onOpenClient={handleOpenClient}
+        aiConsoleUrl={aiConsoleUrl}
       />
 
       {pendingClientEdit && (

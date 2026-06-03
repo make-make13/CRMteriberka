@@ -108,6 +108,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
   const [supabaseAutoSyncInterval, setSupabaseAutoSyncInterval] = useState('5');
   const [libreOfficePath, setLibreOfficePath] = useState('');
   const [aiBackendUrl, setAiBackendUrl] = useState('');
+  const [aiConsoleUrl, setAiConsoleUrl] = useState('');
 
   // Auto-sync status (опрашивается с сервера)
   const [autoSyncStatus, setAutoSyncStatus] = useState<AutoSyncStatus | null>(null);
@@ -171,6 +172,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
       setSupabaseAutoSyncInterval(String(data.supabaseAutoSyncIntervalMinutes));
       setLibreOfficePath(data.libreOfficePath);
       setAiBackendUrl(data.aiBackendUrl);
+      setAiConsoleUrl(data.aiConsoleUrl || '');
     } catch (err) {
       console.error('Failed to load integration settings', err);
     } finally {
@@ -190,6 +192,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
         supabaseAutoSyncIntervalMinutes: Number(supabaseAutoSyncInterval) || 5,
         libreOfficePath: libreOfficePath.trim(),
         aiBackendUrl: aiBackendUrl.trim(),
+        aiConsoleUrl: aiConsoleUrl.trim(),
       };
       if (supabaseKeyInput.trim()) input.supabaseServiceKey = supabaseKeyInput.trim();
       if (aiKeyInput.trim()) input.aiBackendKey = aiKeyInput.trim();
@@ -570,6 +573,18 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
                 value={aiBackendUrl}
                 onChange={e => setAiBackendUrl(e.target.value)}
               />
+            </FieldRow>
+
+            <FieldRow label="URL веб-панели ИИ-консьержа">
+              <input
+                className={inputClass}
+                placeholder="https://ai.4-am.ru/console"
+                value={aiConsoleUrl}
+                onChange={e => setAiConsoleUrl(e.target.value)}
+              />
+              <p className={cn('text-[11px] leading-relaxed mt-1', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+                Не секрет. Используется для кнопки «Открыть диалог» в карточке заявки от ИИ.
+              </p>
             </FieldRow>
 
             <FieldRow label={

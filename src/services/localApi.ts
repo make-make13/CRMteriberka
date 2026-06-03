@@ -412,6 +412,8 @@ export interface IntegrationSettingsMasked {
   aiBackendUrl: string;
   aiBackendKeyMask: string;
   aiBackendKeyHas: boolean;
+  /** URL веб-панели BM-concierge (не секрет, отдаётся как есть) */
+  aiConsoleUrl: string;
 }
 
 export interface IntegrationSettingsInput {
@@ -424,6 +426,7 @@ export interface IntegrationSettingsInput {
   libreOfficePath?: string;
   aiBackendUrl?: string;
   aiBackendKey?: string;         // пустая строка = оставить прежнее
+  aiConsoleUrl?: string;
 }
 
 export interface AutoSyncStatus {
