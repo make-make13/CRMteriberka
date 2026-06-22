@@ -11,6 +11,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build:server": "tsup",
     "build:electron": "tsup --config tsup.electron.config.ts",
     "electron:dev": "npm run build && npm run build:server && npm run build:electron && electron .",
@@ -80,6 +82,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
+    "vitest": "^4.1.9",
     "wait-on": "^8.0.5"
   }
 }
