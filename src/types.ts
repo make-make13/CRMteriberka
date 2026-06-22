@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type View = 'chessboard' | 'leads' | 'clients' | 'contracts' | 'additional' | 'settings';
+export type View = 'dashboard' | 'chessboard' | 'leads' | 'clients' | 'contracts' | 'additional' | 'settings';
 
 export type ManagerRole = 'admin' | 'manager';
 

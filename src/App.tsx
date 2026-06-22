@@ -5,8 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Grid3X3, 
-  Users, 
+  Grid3X3,
+  LayoutDashboard,
+  Users,
   FileText, 
   ClipboardList,
   Inbox,
@@ -24,6 +25,7 @@ import { twMerge } from 'tailwind-merge';
 import { addDays, format } from 'date-fns';
 
 import Chessboard from './components/chessboard/Chessboard';
+import Dashboard from './components/dashboard/Dashboard';
 import LeadsView from './components/leads/Leads';
 import ClientsView from './components/clients/Clients';
 import ContractsView from './components/contracts/Contracts';
@@ -489,6 +491,8 @@ function AppShell() {
 
   const renderView = () => {
     switch (currentView) {
+      case 'dashboard':
+        return <Dashboard isDarkMode={isDarkMode} contracts={contracts} clients={clients} />;
       case 'chessboard':
         return (
           <Chessboard 
@@ -610,6 +614,7 @@ function AppShell() {
 
               <nav className="flex items-center gap-1.5">
                 {[
+                  { id: 'dashboard' as View, label: 'Сводка', icon: LayoutDashboard },
                   { id: 'chessboard' as View, label: 'Шахматка', icon: Grid3X3 },
                   { id: 'leads' as View, label: 'Заявки', icon: Inbox },
                   { id: 'clients' as View, label: 'Гости', icon: Users },
