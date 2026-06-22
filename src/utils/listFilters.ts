@@ -101,7 +101,9 @@ export function bookingOverlapsDateRange(
 
   const from = toIsoDateFilter(dateFrom);
   const to = toIsoDateFilter(dateTo);
-  if ((dateFrom && !from) || (dateTo && !to)) return false;
+  // Неполная/некорректная дата (например, 2-значный год во время ввода) не должна
+  // прятать все договоры — просто не сужаем выборку по непарсящейся границе.
+  if (!from && !to) return true;
 
   const start = booking.startTime.split('T')[0];
   const end = booking.endTime.split('T')[0];

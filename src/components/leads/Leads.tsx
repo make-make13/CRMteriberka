@@ -189,6 +189,23 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
     }
   };
 
+  const handleDeleteLead = async (id: string) => {
+    if (!window.confirm('Удалить эту заявку? Действие необратимо.')) return;
+    setIsSaving(true);
+    try {
+      await leadApi.delete(id);
+      setLeads(prev => prev.filter(l => l.id !== id));
+      setIsModalOpen(false);
+      setEditingLead(null);
+      toast('Заявка удалена', 'success');
+    } catch (error) {
+      console.error('Error deleting lead:', error);
+      toast(getErrorMessage(error, 'Ошибка при удалении заявки'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleOpenClient = async (clientId: string) => {
     // Сначала ищем в prop (быстро), если нет — грузим с сервера (fallback)
     let client = clients.find(c => c.id === clientId) ?? null;
@@ -539,6 +556,7 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
         onCreateClient={handleCreateClient}
         onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
         onOpenClient={handleOpenClient}
+        onDelete={handleDeleteLead}
         aiConsoleUrl={aiConsoleUrl}
       />
 

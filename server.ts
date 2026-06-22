@@ -397,9 +397,21 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/contracts/:id', requireAdmin, (req, res) => {
-    localDb.deleteContract(req.params.id);
-    res.json({ success: true });
+  app.delete('/api/contracts/:id', requireAuth, (req, res) => {
+    try {
+      const id = req.params.id;
+      const target = (localDb.listContracts() as Array<{ id: string; status?: string }>)
+        .find(c => c.id === id);
+      // Предбронь может удалить любой авторизованный (менеджер или админ).
+      // Полноценный договор удаляет только админ.
+      if (target && target.status !== 'pre_booking') {
+        authService.requireAdmin(getRequestManager(req));
+      }
+      localDb.deleteContract(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(403).json({ error: asErrorMessage(error) });
+    }
   });
 
   app.get('/api/leads', requireAuth, (req, res) => {
@@ -513,6 +525,14 @@ async function startServer() {
         return;
       }
       res.json(lead);
+    } catch (error) {
+      res.status(400).json({ error: asErrorMessage(error) });
+    }
+  });
+
+  app.delete('/api/leads/:id', requireAuth, (req, res) => {
+    try {
+      res.json(localDb.deleteLead(req.params.id));
     } catch (error) {
       res.status(400).json({ error: asErrorMessage(error) });
     }

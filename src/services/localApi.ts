@@ -140,6 +140,9 @@ export const leadApi = {
     method: 'POST',
     body: JSON.stringify({}),
   }),
+  delete: (id: string) => apiRequest<{ success: true }>(`/api/leads/${id}`, {
+    method: 'DELETE',
+  }),
 };
 
 export const taskApi = {

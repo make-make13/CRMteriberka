@@ -45,6 +45,8 @@ interface LeadModalProps {
   onCreateClient: (id: string) => Promise<void>;
   onCreatePrebookingFromLead: (lead: Lead) => void;
   onOpenClient?: (clientId: string) => void;
+  /** Удаление входящей заявки. Если не передан — кнопка удаления не показывается. */
+  onDelete?: (id: string) => void;
   /** URL веб-панели BM-concierge (не секрет). Если передан, показывается кнопка «Открыть диалог». */
   aiConsoleUrl?: string;
 }
@@ -282,6 +284,7 @@ export default function LeadModal({
   onCreateClient,
   onCreatePrebookingFromLead,
   onOpenClient,
+  onDelete,
   aiConsoleUrl,
 }: LeadModalProps) {
   const [form, setForm] = useState<LeadFormState>(() => getInitialState(lead));
@@ -363,6 +366,7 @@ export default function LeadModal({
 
   const handleCreateClient = async () => {
     if (!lead || !canCreateClient) return;
+    if (!window.confirm('Создать нового клиента из этой заявки?')) return;
     await onCreateClient(lead.id);
   };
 
@@ -522,7 +526,7 @@ export default function LeadModal({
                       className="inline-flex items-center gap-2 rounded-lg bg-[#D98E2B] px-4 py-1.5 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSaving && <Loader2 size={15} className="animate-spin" />}
-                      Создать гостя
+                      Подтвердить
                     </button>
                   ) : null}
                 </div>
@@ -562,7 +566,12 @@ export default function LeadModal({
           </section>
         </div>
 
-        <div className={cn("flex justify-end border-t px-5 py-3", isDarkMode ? "border-[#3D423E]" : "border-gray-100")}>
+        <div className={cn("flex items-center justify-between border-t px-5 py-3", isDarkMode ? "border-[#3D423E]" : "border-gray-100")}>
+          {lead && onDelete ? (
+            <button type="button" disabled={isSaving} onClick={() => onDelete(lead.id)} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'text-[#F3B2BF] hover:bg-[#F3B2BF]/10' : 'text-red-600 hover:bg-red-50')}>
+              Удалить заявку
+            </button>
+          ) : <span />}
           <div className="flex items-center gap-2">
             <button type="button" disabled={isSaving} onClick={onClose} className={cn('rounded-xl px-4 py-2 text-sm font-bold transition-colors', isDarkMode ? 'bg-white/[0.05] border border-white/10 hover:border-[#B4CDD2]/50 text-[#B4CDD2] hover:text-[#F4F1EA]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
               Отмена

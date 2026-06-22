@@ -1052,6 +1052,11 @@ export class LocalDatabase {
     return this.updateLead(id, { contractId, status: 'contract_created', convertedAt: nowIso() });
   }
 
+  deleteLead(id: string) {
+    this.db.prepare('DELETE FROM leads WHERE id = ?').run(id);
+    return { success: true as const };
+  }
+
   listTasks<T>() {
     const rows = this.db.prepare('SELECT data_json FROM tasks ORDER BY is_done ASC, remind_at ASC, created_at DESC').all() as { data_json: string }[];
     return rows.map(row => safeJsonParse<T>(row.data_json, {} as T));

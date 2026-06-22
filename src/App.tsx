@@ -135,7 +135,12 @@ function AppShell() {
   const auth = useAuth();
   const { toast } = useToast();
   const [currentView, setCurrentView] = useState<View>('chessboard');
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try { return localStorage.getItem('bm-theme') !== 'light'; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bm-theme', isDarkMode ? 'dark' : 'light'); } catch { /* ignore */ }
+  }, [isDarkMode]);
   const [clients, setClients] = useState<Client[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [tasks, setTasks] = useState<TaskReminder[]>([]);
@@ -676,9 +681,9 @@ function AppShell() {
               </div>
 
               <motion.button 
-                onClick={() => setIsDarkMode(true)}
+                onClick={() => setIsDarkMode(prev => !prev)}
                 whileTap={{ scale: 0.9 }}
-                title="Тёмная фирменная тема включена"
+                title={isDarkMode ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
                 className={cn(
                   "p-2.5 rounded-xl border transition-all",
                   isDarkMode ? "bg-[#111111] border-[#232323] hover:bg-[#161616]" : "bg-white border-gray-200 hover:bg-gray-50"

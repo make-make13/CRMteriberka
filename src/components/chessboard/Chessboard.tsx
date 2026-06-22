@@ -282,50 +282,6 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
             </select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <motion.button
-              onClick={handleExportExcel}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                isDarkMode ? "bg-[#111111] border border-[#232323] hover:border-[#8F9894] text-[#8F9894] hover:text-[#F4F1EA]" : "bg-gray-100 hover:bg-gray-200 text-gray-600",
-              )}
-            >
-              <Download size={18} />
-              Экспорт Excel
-            </motion.button>
-            <motion.button
-              onClick={handleSendEmail}
-              disabled={isSendingEmail}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                isDarkMode ? "bg-[#111111] border border-[#232323] hover:border-[#8F9894] text-[#8F9894] hover:text-[#F4F1EA]" : "bg-gray-100 hover:bg-gray-200 text-gray-600",
-                isSendingEmail && "opacity-50 cursor-not-allowed",
-              )}
-            >
-              <div className="relative w-5 h-5 flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  {isSendingEmail ? (
-                    <motion.div
-                      key="sending"
-                      initial={{ x: -20, y: 10, opacity: 0, scale: 0.5 }}
-                      animate={{ x: [0, 20], y: [0, -20], opacity: [1, 0], scale: [1, 0.8] }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: "easeOut" }}
-                      className="absolute"
-                    >
-                      <Mail size={18} className="text-[#8CAFBE]" />
-                    </motion.div>
-                  ) : (
-                    <motion.div key="idle" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
-                      <Mail size={18} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              {isSendingEmail ? 'Отправка...' : 'Отправить на почту'}
-            </motion.button>
-          </div>
         </div>
 
       <div className={cn(
