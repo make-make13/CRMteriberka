@@ -2,10 +2,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, FileText, Loader2, FileDown, Printer, Mail } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+// Worker pdf.js подключается через Vite ?worker — так он корректно бандлится и
+// запускается и в dev, и в упакованном Electron (без проблем с путём/MIME при
+// отдаче статики). Раньше worker грузился по new URL(..., import.meta.url),
+// что в установленной версии давало 404 и срывало предпросмотр.
+import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Один worker на всё приложение (переиспользуется между открытиями предпросмотра).
+let pdfWorkerPort: Worker | null = null;
 
 export type DocumentPreviewMode = 'print' | 'send';
 
@@ -72,10 +80,8 @@ export default function DocumentPreviewModal({
 
       try {
         const pdfjs = await import('pdfjs-dist/build/pdf.mjs');
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-          'pdfjs-dist/build/pdf.worker.min.mjs',
-          import.meta.url,
-        ).toString();
+        if (!pdfWorkerPort) pdfWorkerPort = new PdfjsWorker();
+        pdfjs.GlobalWorkerOptions.workerPort = pdfWorkerPort;
 
         const data = await pdfBlob.arrayBuffer();
         const pdfDocument = await pdfjs.getDocument({ data }).promise;
