@@ -13,6 +13,8 @@ function cn(...inputs: ClassValue[]) {
 
 const STATUS_OPTIONS: LeadStatus[] = [
   'new',
+  'confirmed',
+  'client_created',
   'contract_created',
   'rejected',
 ];

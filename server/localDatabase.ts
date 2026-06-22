@@ -130,6 +130,7 @@ export interface TaskReminderRecord {
 
 export type LeadStatusRecord =
   | 'new'
+  | 'confirmed'
   | 'in_progress'
   | 'client_created'
   | 'prebooking_created'
@@ -1419,6 +1420,7 @@ export class LocalDatabase {
     const value = cleanOptionalString(status);
     if (
       value === 'new'
+      || value === 'confirmed'
       || value === 'in_progress'
       || value === 'client_created'
       || value === 'prebooking_created'

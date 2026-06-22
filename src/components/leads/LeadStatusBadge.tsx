@@ -9,16 +9,18 @@ function cn(...inputs: ClassValue[]) {
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
   new:               'Новая',
+  confirmed:         'Подтверждена',
   in_progress:       'В работе',
   client_created:    'Гость создан',   // гость создан из заявки → архив
   prebooking_created:'В работе',
-  contract_created:  'Подтверждена',
+  contract_created:  'Договор создан',
   rejected:          'Отклонена',
   duplicate:         'Дубль',
 };
 
 const statusClass: Record<LeadStatus, string> = {
   new:                'bg-blue-500/10 text-blue-400',
+  confirmed:          'bg-violet-500/10 text-violet-400',
   in_progress:        'bg-amber-500/10 text-amber-400',
   client_created:     'bg-teal-500/10 text-teal-400',   // отличается от contract_created
   prebooking_created: 'bg-sky-500/10 text-sky-400',
@@ -29,6 +31,7 @@ const statusClass: Record<LeadStatus, string> = {
 
 const statusIcon: Record<LeadStatus, typeof CircleDot> = {
   new:               CircleDot,
+  confirmed:         CheckCircle2,
   in_progress:       Clock3,
   client_created:    UserCheck,     // иконка "человек с галкой"
   prebooking_created:CheckCircle2,

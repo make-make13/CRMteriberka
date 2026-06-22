@@ -140,6 +140,7 @@ export interface TaskReminder {
 
 export type LeadStatus =
   | 'new'
+  | 'confirmed'
   | 'in_progress'
   | 'client_created'
   | 'prebooking_created'

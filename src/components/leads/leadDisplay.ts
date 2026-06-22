@@ -75,6 +75,7 @@ export function getLeadOriginLabel(lead: LeadLike | null | undefined) {
 export function normalizeLeadStatus(status: unknown): LeadStatus {
   if (
     status === 'new'
+    || status === 'confirmed'
     || status === 'in_progress'
     || status === 'client_created'
     || status === 'prebooking_created'
