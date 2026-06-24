@@ -422,6 +422,7 @@ export class LocalDatabase {
     this.migratePdfmeInvoiceTemplateId();
     this.migrateLeadAiFields();
     this.runNewMigrations(dbExistedBeforeOpen);
+    this.ensureDefaultSettings();
   }
 
   private initSchema() {
@@ -655,6 +656,73 @@ export class LocalDatabase {
       if (!existing.includes(col.name)) {
         this.db.exec(`ALTER TABLE leads ADD COLUMN ${col.name} ${col.def}`);
       }
+    }
+  }
+
+  /**
+   * Safe auto-initialization / seeding of settings for an empty database.
+   * If there are clients, contracts, or bookings present, it does not overwrite.
+   */
+  private ensureDefaultSettings() {
+    const clientsCount = (this.db.prepare('SELECT COUNT(*) as count FROM clients').get() as { count: number }).count;
+    const contractsCount = (this.db.prepare('SELECT COUNT(*) as count FROM contracts').get() as { count: number }).count;
+    const bookingsCount = (this.db.prepare('SELECT COUNT(*) as count FROM bookings').get() as { count: number }).count;
+
+    if (clientsCount > 0 || contractsCount > 0 || bookingsCount > 0) {
+      console.log(`[DB] Existing data found (clients: ${clientsCount}, contracts: ${contractsCount}, bookings: ${bookingsCount}). Skipping settings seeding.`);
+      return;
+    }
+
+    console.log('[DB] No user data found. Ensuring default settings...');
+
+    // 1. Seed general settings
+    const existingGeneral = this.getSettings('general');
+    if (!existingGeneral) {
+      const INITIAL_SETTINGS = {
+        companyName: 'Большая Медведица',
+        inn: '5105013870',
+        address: '184433, Мурманская область, Печенгский район, г. Заполярный, ул. Ленина, д.1А, помещение 34',
+        phone: '+7 (931) 802-21-51',
+        vatRate: 0.05,
+        emailForReports: 'medvedica.hotel@vk.com',
+      };
+      this.saveSettings(INITIAL_SETTINGS, 'general');
+      console.log('[DB] Seeded default general settings for Большая Медведица.');
+    }
+
+    // 2. Seed integrations (Supabase sync) settings
+    const currentIntegrations = this.getIntegrationSettingsFull();
+    if (!currentIntegrations.supabaseUrl) {
+      const url = process.env.SUPABASE_URL || '';
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      const table = process.env.SUPABASE_LEADS_TABLE || 'leads';
+      const limit = Number(process.env.SUPABASE_LEAD_SYNC_LIMIT || 50);
+
+      this.saveIntegrationSettings({
+        supabaseUrl: url,
+        supabaseServiceKey: key,
+        supabaseTable: table,
+        supabaseSyncLimit: limit,
+        supabaseAutoSyncEnabled: false,
+        supabaseAutoSyncIntervalMinutes: 5,
+      });
+      console.log('[DB] Seeded default integration settings (Supabase).');
+    }
+
+    // 3. Seed SMTP email settings
+    const currentEmail = this.getEmailSettings();
+    if (!currentEmail) {
+      const password = process.env.SMTP_PASSWORD || '';
+      this.saveEmailSettings({
+        senderEmail: 'medvedica.hotel@vk.com',
+        senderName: 'Большая Медведица',
+        smtpHost: 'smtp.mail.ru',
+        smtpPort: 465,
+        smtpSecure: true,
+        authUser: 'medvedica.hotel@vk.com',
+        appPassword: password,
+      });
+      console.log('[DB] Seeded default SMTP settings.');
     }
   }
 

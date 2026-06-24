@@ -1,5 +1,26 @@
 # WORKLOG
 
+### 2026-06-24 12:41:00 +03:00 - Prepare final installer update and auto-seeding for Bolshaya Medveditsa CRM
+
+Files changed:
+- `package.json`
+- `package-lock.json`
+- `tsup.config.ts`
+- `server/localDatabase.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Bumped application version from `0.1.2` to `0.1.3` in both `package.json` and `package-lock.json` to ensure Windows installer performs an update rather than installing a duplicate.
+- Maintained identical App ID (`ru.teriberka.big-medveditsa-crm`), product name (`Большая Медведица CRM`), executable name (`Bolshaya Medveditsa CRM`), and installation path (`%LOCALAPPDATA%\Programs\bolshaya-medveditsa-crm\`) for seamless upgrade logic.
+- Configured tsup to load environment variables from `.env.local` at build time and bundle them into `dist-server/server.cjs` via esbuild define options, keeping secrets safe from Git and isolated from the frontend.
+- Added a `ensureDefaultSettings()` seeding routine to the `LocalDatabase` class. Upon first launch of version `0.1.3` on an empty SQLite database, the app automatically initializes general settings, integration settings (Supabase URL/Service Role Key), and SMTP email settings (port 465, host `smtp.mail.ru`, sender `medvedica.hotel@vk.com`) using the build-time injected credentials.
+- Ensured existing user data safety: if any clients, contracts, or bookings exist in the database, the seeding is skipped entirely.
+
+Checks run:
+- `npm run lint` - passed.
+- `npm run build` - compiled.
+- `npm run electron:installer` - built the setup executable under `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe` successfully.
+
 ### 2026-06-24 12:28:00 +03:00 - Bolshaya Medveditsa room inventory configuration for Dashboard
 
 Files changed:
