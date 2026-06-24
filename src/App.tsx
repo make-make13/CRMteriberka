@@ -165,15 +165,14 @@ function AppShell() {
   const logoutOnly = async () => {
     setLogoutFlowStep('logging-out');
     try {
-      await archiveCompletedTasksForLogout();
-    } catch (error) {
-      toast(getErrorMessage(error, 'Не удалось перенести выполненные задачи в архив'), 'error');
-    }
-
-    try {
-      await auth.logout();
+      await Promise.all([
+        archiveCompletedTasksForLogout().catch(error => {
+          toast(getErrorMessage(error, 'Не удалось перенести выполненные задачи в архив'), 'error');
+        }),
+        auth.logout().catch(() => {})
+      ]);
     } catch {
-      // AuthContext clears local session even if the server-side logout request fails.
+      // Игнорируем ошибки, так как сессия все равно сбросится
     }
   };
 
@@ -193,22 +192,30 @@ function AppShell() {
 
   const runShutdownBackup = async () => {
     try {
-      setLogoutFlowStep('creating-backup');
       const status = await backupApi.status();
       if (!status.rclone.available) {
         toast('Облачные резервные копии не настроены: rclone недоступен. Выход выполнен без отправки архива в облако.', 'error');
         return true;
       }
-      const result = await backupApi.run('shutdown');
-      if (result.success) {
-        toast('Резервная копия создана и отправлена в оба облака.', 'success');
-      } else {
-        toast(`Резервная копия создана с ошибками: ${result.errors.join('; ')}`, 'error');
-      }
+      
+      // Запускаем резервное копирование в фоне (без await)
+      backupApi.run('shutdown')
+        .then(result => {
+          if (result.success) {
+            toast('Резервная копия успешно создана в фоне и отправлена в оба облака.', 'success');
+          } else {
+            toast(`Фоновое резервное копирование завершилось с ошибками: ${result.errors.join('; ')}`, 'error');
+          }
+        })
+        .catch(error => {
+          toast(getErrorMessage(error, 'Ошибка фонового резервного копирования'), 'error');
+        });
+      
+      toast('Резервное копирование запущено в фоне', 'info');
       return true;
     } catch (error) {
-      toast(getErrorMessage(error, 'Ошибка при создании резервной копии перед выходом'), 'error');
-      return false;
+      console.error('Ошибка при запуске резервной копии перед выходом:', error);
+      return true; // Не блокируем logout при ошибке проверки статуса
     }
   };
 
