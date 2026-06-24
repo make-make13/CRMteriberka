@@ -1,5 +1,27 @@
 # WORKLOG
 
+### 2026-06-24 08:55:21 +03:00 - Contracts visible legacy labels pass
+
+Files changed:
+- `src/utils/templateVariables.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Ran targeted grep for visible/internal/legal legacy markers: `Чунга-Чанга`, `Голубая Бухта`, `ЧЧ`, `ГБ`, `chunga-changa`, `golubaya-bukhta`.
+- Updated the non-legal template variable hint for `contract_number`: example `ГБ-5` -> `БМ-5`.
+- Left legal PDFMe templates/test fixtures and internal baseType/objectId/contract-number logic unchanged.
+
+Checks run:
+- `git status --short`
+- targeted `rg`
+- `npm run lint` - passed.
+
+Next recommended step:
+- Continue contracts cleanup only with a separate scoped task.
+
+Risks / TODO:
+- No DB, Supabase, env, migrations, deploy, Graphify, enum/zod/baseType/objectId, legal templates, PDFMe, or DOCX template changes were made.
+
 ### 2026-06-24 08:52:53 +03:00 - Contracts cleanup pass
 
 Files changed:
