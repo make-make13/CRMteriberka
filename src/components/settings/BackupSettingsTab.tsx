@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Cloud, Database, FolderOpen, Loader2, Power, RefreshCcw, Save, XCircle } from 'lucide-react';
+import { CheckCircle2, Cloud, Database, Download, FolderOpen, Loader2, Power, RefreshCcw, Save, XCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { backupApi, BackupRunResult, BackupSettings, BackupStatus } from '../../services/localApi';
+import { backupApi, BackupRunResult, BackupSettings, BackupStatus, RcloneCommandResult } from '../../services/localApi';
 import { useToast } from '../../context/ToastContext';
 import { getErrorMessage } from '../../utils/errors';
 
@@ -79,6 +79,7 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
   const [isLoading, setIsLoading] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [lastResult, setLastResult] = useState<BackupRunResult | null>(null);
+  const [rcloneInstallResult, setRcloneInstallResult] = useState<RcloneCommandResult | null>(null);
 
   const refresh = async () => {
     const nextStatus = await backupApi.status();
@@ -137,6 +138,34 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
       toast(failed.length ? `Проверка облаков: есть ошибки (${failed.length})` : 'Оба облака доступны', failed.length ? 'error' : 'success');
     } catch (error) {
       toast(getErrorMessage(error, 'Ошибка проверки облаков'), 'error');
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const checkRclone = async () => {
+    setIsBusy(true);
+    try {
+      await backupApi.checkRclone();
+      await refresh();
+      toast('Проверка rclone выполнена');
+    } catch (error) {
+      toast(getErrorMessage(error, 'Ошибка проверки rclone'), 'error');
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const installRclone = async () => {
+    setIsBusy(true);
+    setRcloneInstallResult(null);
+    try {
+      const result = await backupApi.installRclone();
+      setRcloneInstallResult(result);
+      await refresh();
+      toast(result.ok ? 'Команда установки rclone завершена' : (result.error || 'rclone не установлен'), result.ok ? 'success' : 'error');
+    } catch (error) {
+      toast(getErrorMessage(error, 'Ошибка установки rclone'), 'error');
     } finally {
       setIsBusy(false);
     }
@@ -281,6 +310,32 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
           </motion.button>
           <motion.button
             type="button"
+            onClick={checkRclone}
+            disabled={isBusy}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50",
+              isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"
+            )}
+          >
+            <RefreshCcw size={18} />
+            Проверить rclone
+          </motion.button>
+          <motion.button
+            type="button"
+            onClick={installRclone}
+            disabled={isBusy}
+            whileTap={{ scale: 0.95 }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50",
+              isDarkMode ? "bg-white/5 hover:bg-white/10" : "bg-gray-100 hover:bg-gray-200"
+            )}
+          >
+            <Download size={18} />
+            Установить rclone
+          </motion.button>
+          <motion.button
+            type="button"
             onClick={openFolder}
             whileTap={{ scale: 0.95 }}
             className={cn(
@@ -292,6 +347,15 @@ export default function BackupSettingsTab({ isDarkMode }: BackupSettingsTabProps
             Открыть папку бэкапов
           </motion.button>
         </div>
+
+        {rcloneInstallResult && (
+          <div className={cn("rounded-2xl border p-4 text-xs space-y-2", rcloneInstallResult.ok ? "border-green-500/20 bg-green-500/10" : "border-red-500/20 bg-red-500/10")}>
+            <div className="font-bold">{rcloneInstallResult.ok ? 'Команда установки rclone завершена' : 'rclone не установлен'}</div>
+            {rcloneInstallResult.error && <div>{rcloneInstallResult.error}</div>}
+            {rcloneInstallResult.stdout && <pre className="max-h-28 overflow-auto whitespace-pre-wrap">{rcloneInstallResult.stdout}</pre>}
+            {rcloneInstallResult.stderr && <pre className="max-h-28 overflow-auto whitespace-pre-wrap">{rcloneInstallResult.stderr}</pre>}
+          </div>
+        )}
       </section>
 
       <section className={cn(

@@ -200,8 +200,12 @@ export const pdfTemplateApi = {
 
 export interface EmailSettings {
   senderEmail: string;
+  appPassword: string;
   senderName: string;
   defaultMessage: string;
+  host: string;
+  port: number;
+  secure: boolean;
 }
 
 export const emailSettingsApi = {
@@ -405,12 +409,15 @@ export const bmDocxTemplateApi = {
 
 export interface IntegrationSettingsMasked {
   supabaseUrl: string;
+  supabaseUrlSource: 'crm' | 'env' | 'none';
   supabaseTable: string;
+  supabaseTableSource: 'crm' | 'env' | 'default';
   supabaseSyncLimit: number;
   supabaseAutoSyncEnabled: boolean;
   supabaseAutoSyncIntervalMinutes: number;
   supabaseServiceKeyMask: string;
   supabaseServiceKeyHas: boolean;
+  supabaseServiceKeySource: 'crm' | 'env' | 'none';
   libreOfficePath: string;
   aiBackendUrl: string;
   aiBackendKeyMask: string;
@@ -552,6 +559,13 @@ export interface BackupStatus {
   scheduledDir: string;
 }
 
+export interface RcloneCommandResult {
+  ok: boolean;
+  stdout: string;
+  stderr: string;
+  error?: string;
+}
+
 export const backupApi = {
   status: () => apiRequest<BackupStatus>('/api/backups/status'),
   getSettings: () => apiRequest<BackupSettings>('/api/backups/settings'),
@@ -560,6 +574,14 @@ export const backupApi = {
     body: JSON.stringify(settings),
   }),
   testRemotes: () => apiRequest<{ rclone: BackupStatus['rclone']; remotes: BackupRemoteResult[] }>('/api/backups/test-remotes', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  checkRclone: () => apiRequest<BackupStatus['rclone']>('/api/backups/rclone/check', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+  installRclone: () => apiRequest<RcloneCommandResult>('/api/backups/rclone/install', {
     method: 'POST',
     body: JSON.stringify({}),
   }),

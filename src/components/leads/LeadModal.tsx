@@ -354,6 +354,8 @@ export default function LeadModal({
 
   const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
   const canCreateClient = Boolean(lead && !lead.clientId && !isClientCreateBlockedStatus);
+  const isPrebookingCreateBlockedStatus = ['contract_created', 'prebooking_created', 'rejected', 'duplicate'].includes(form.status);
+  const canCreatePrebooking = Boolean(lead && lead.clientId && !lead.prebookingId && !lead.contractId && !isPrebookingCreateBlockedStatus);
 
   // Найти привязанного гостя
   const linkedClient = lead?.clientId ? clients.find(c => c.id === lead.clientId) : null;
@@ -488,6 +490,14 @@ export default function LeadModal({
               <div className="flex items-end gap-2">
                 <button
                   type="button"
+                  disabled={isSaving || form.status === 'confirmed'}
+                  onClick={() => handleQuickStatus('confirmed')}
+                  className={cn("rounded-lg px-3 py-1.5 text-sm font-bold transition-colors border", isDarkMode ? "bg-emerald-400/10 border-emerald-400/25 text-emerald-300 hover:bg-emerald-400/20 disabled:opacity-50" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50")}
+                >
+                  Подтвердить
+                </button>
+                <button
+                  type="button"
                   disabled={isSaving}
                   onClick={() => handleQuickStatus('rejected')}
                   className={cn("rounded-lg px-3 py-1.5 text-sm font-bold transition-colors border", isDarkMode ? "bg-[#F3B2BF]/15 border-[#F3B2BF]/30 text-[#F3B2BF] hover:bg-[#F3B2BF]/25" : "bg-red-500/10 border-red-500/20 text-red-600 hover:bg-red-500/20")}
@@ -525,9 +535,27 @@ export default function LeadModal({
                       className="inline-flex items-center gap-2 rounded-lg bg-[#D98E2B] px-4 py-1.5 text-sm font-bold text-[#1A1C1B] transition-colors hover:bg-[#F2B35B] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isSaving && <Loader2 size={15} className="animate-spin" />}
-                      Подтвердить
+                      Создать гостя
                     </button>
                   ) : null}
+                  {lead.prebookingId || lead.contractId ? (
+                    <span className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold', isDarkMode ? 'bg-blue-400/10 border-blue-400/20 text-blue-300' : 'bg-blue-50 text-blue-700')}>
+                      Предбронь создана
+                    </span>
+                  ) : canCreatePrebooking ? (
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={handleCreatePrebooking}
+                      className={cn('rounded-lg border px-3 py-1.5 text-sm font-bold transition-colors', isDarkMode ? 'border-[#FFE08A]/30 bg-[#FFE08A]/15 text-[#FFE08A] hover:bg-[#FFE08A]/25' : 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100')}
+                    >
+                      Создать предбронь
+                    </button>
+                  ) : lead.clientId ? null : (
+                    <span className={cn('text-xs font-medium', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+                      Сначала создайте гостя
+                    </span>
+                  )}
                 </div>
               )}
               <label className="space-y-1.5 md:col-span-2">

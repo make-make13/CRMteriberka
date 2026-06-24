@@ -72,6 +72,13 @@ export interface BackupStatus {
   scheduledDir: string;
 }
 
+export interface RcloneCommandResult {
+  ok: boolean;
+  stdout: string;
+  stderr: string;
+  error?: string;
+}
+
 const DEFAULT_BACKUP_SETTINGS: BackupSettings = {
   enabled: true,
   remote1: 'big_medveditsa_cloud_1',
@@ -292,6 +299,46 @@ async function checkRclone() {
   }
 }
 
+function truncateCommandOutput(value: unknown) {
+  return String(value || '').slice(0, 2000);
+}
+
+async function installRclone(): Promise<RcloneCommandResult> {
+  if (process.platform !== 'win32') {
+    return {
+      ok: false,
+      stdout: '',
+      stderr: '',
+      error: 'Установка через winget доступна только на Windows. Установите rclone вручную.',
+    };
+  }
+
+  try {
+    const { stdout, stderr } = await execFileAsync('winget', [
+      'install',
+      'Rclone.Rclone',
+      '--accept-package-agreements',
+      '--accept-source-agreements',
+    ], { timeout: 180000 });
+    return {
+      ok: true,
+      stdout: truncateCommandOutput(stdout),
+      stderr: truncateCommandOutput(stderr),
+    };
+  } catch (error: any) {
+    const code = error?.code;
+    const wingetMissing = code === 'ENOENT';
+    return {
+      ok: false,
+      stdout: truncateCommandOutput(error?.stdout),
+      stderr: truncateCommandOutput(error?.stderr),
+      error: wingetMissing
+        ? 'winget не найден. Установите App Installer из Microsoft Store или установите rclone вручную.'
+        : truncateCommandOutput(error?.message || error),
+    };
+  }
+}
+
 async function testRemote(remote: string, cloudPath: string): Promise<BackupRemoteResult> {
   try {
     const command = fs.existsSync(LOCAL_RCLONE_PATH) ? LOCAL_RCLONE_PATH : 'rclone';
@@ -403,6 +450,14 @@ function cleanupRetention(settings: BackupSettings) {
 }
 
 export const backupService = {
+  async checkRclone() {
+    return checkRclone();
+  },
+
+  async installRclone() {
+    return installRclone();
+  },
+
   getSettings() {
     return normalizeSettings(localDb.getSettings<Partial<BackupSettings>>(BACKUP_SETTINGS_ID));
   },

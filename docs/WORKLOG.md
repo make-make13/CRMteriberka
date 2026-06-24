@@ -1,5 +1,42 @@
 # WORKLOG
 
+### 2026-06-24 09:36:23 +03:00 - CRM usability sprint 1: booking workflow and integrations
+
+Files changed:
+- `server.ts`
+- `server/backupService.ts`
+- `server/localDatabase.ts`
+- `src/components/contracts/PreBookingModal.tsx`
+- `src/components/leads/LeadModal.tsx`
+- `src/components/settings/BackupSettingsTab.tsx`
+- `src/components/settings/EmailSettingsTab.tsx`
+- `src/components/settings/IntegrationsSettingsTab.tsx`
+- `src/services/localApi.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Prebooking modal now shows a visible check-in/check-out date range for prebookings without a DB migration.
+- Lead modal now separates status confirmation from guest creation: `Подтвердить`, `Отклонить`, `Создать гостя`, and `Создать предбронь` are clearer.
+- Supabase integration UI shows safe source status for CRM settings / `.env.local` / defaults without exposing Service Role Key.
+- Email SMTP settings no longer use Yandex-specific wording; Mail.ru / VK WorkMail defaults were added with manual host/port/SSL fields.
+- rclone check/install actions were added to integrations/backups; install runs only on explicit user click via `winget install Rclone.Rclone`.
+- Backup rclone command output is truncated before returning to the UI.
+
+Checks run:
+- `git status --short`
+- `npm run lint` - passed.
+- `npm run dev` - started after replacing a stale listener on port 3002.
+- Browser check: login, Settings tabs, Integrations/Supabase source status, Integrations rclone card, Email SMTP settings, Backups rclone buttons, Leads new/existing modal actions.
+- Browser console errors: 0.
+
+Next recommended step:
+- Do a separate focused pass only if real manager testing finds a concrete usability issue in prebooking or integrations.
+
+Risks / TODO:
+- No DB, Supabase, `.env` values, migrations, deploy, Graphify, legal PDFMe/DOCX templates, SQLite schema, enum/zod, baseType/objectId, or document template logic were changed.
+- rclone installation was not executed during browser verification.
+- Existing local lead data was viewed only for UI verification and not saved or modified.
+
 ### 2026-06-24 08:55:21 +03:00 - Contracts visible legacy labels pass
 
 Files changed:

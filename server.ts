@@ -77,13 +77,13 @@ function sendJsonResult(res: express.Response, produce: () => unknown) {
 function asEmailErrorMessage(error: unknown) {
   const message = asErrorMessage(error);
   if (message.includes('ECONNREFUSED')) {
-    return 'Не удалось подключиться к SMTP-серверу. Проверьте, что интернет, антивирус, фаервол или роутер не блокируют исходящие подключения к smtp.yandex.ru на портах 465/587.';
+    return 'Не удалось подключиться к SMTP-серверу. Проверьте host, port, интернет, антивирус, фаервол или роутер.';
   }
   if (message.includes('ETIMEDOUT')) {
-    return 'SMTP-сервер не ответил вовремя. Проверьте интернет-соединение и доступность smtp.yandex.ru на портах 465/587.';
+    return 'SMTP-сервер не ответил вовремя. Проверьте интернет-соединение и доступность указанного SMTP host/port.';
   }
   if (message.includes('EAUTH') || message.includes('Invalid login')) {
-    return 'SMTP-сервер отклонил логин или пароль. Проверьте SMTP_USER и новый пароль приложения Яндекса в .env.local.';
+    return 'SMTP-сервер отклонил логин или пароль. Проверьте email отправителя и пароль для внешнего приложения.';
   }
   return message;
 }
@@ -129,12 +129,13 @@ function cleanString(value: unknown) {
 
 function getSmtpConfig(body: any) {
   const storedSettings = localDb.getEmailSettings<any>() || {};
-  const senderEmail = process.env.SMTP_USER || storedSettings.senderEmail;
-  const appPassword = process.env.SMTP_PASSWORD || storedSettings.appPassword;
-  const senderName = process.env.SMTP_FROM_NAME || storedSettings.senderName || body.senderName || '';
-  const host = process.env.SMTP_HOST || 'smtp.yandex.ru';
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = String(process.env.SMTP_SECURE || 'true') !== 'false';
+  const senderEmail = storedSettings.senderEmail || process.env.SMTP_USER || body.senderEmail;
+  const appPassword = storedSettings.appPassword || process.env.SMTP_PASSWORD || body.appPassword;
+  const senderName = body.senderName || storedSettings.senderName || process.env.SMTP_FROM_NAME || 'Большая Медведица';
+  const host = body.host || storedSettings.host || process.env.SMTP_HOST || 'smtp.mail.ru';
+  const port = Number(body.port || storedSettings.port || process.env.SMTP_PORT || 465);
+  const rawSecure = body.secure ?? storedSettings.secure ?? process.env.SMTP_SECURE ?? true;
+  const secure = typeof rawSecure === 'boolean' ? rawSecure : String(rawSecure) !== 'false';
 
   return {
     senderEmail: String(senderEmail || '').trim(),
@@ -671,6 +672,22 @@ async function startServer() {
   app.post('/api/backups/test-remotes', requireAdmin, async (_req, res) => {
     try {
       res.json(await backupService.testRemotes());
+    } catch (error) {
+      res.status(500).json({ error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/backups/rclone/check', requireAdmin, async (_req, res) => {
+    try {
+      res.json(await backupService.checkRclone());
+    } catch (error) {
+      res.status(500).json({ error: asErrorMessage(error) });
+    }
+  });
+
+  app.post('/api/backups/rclone/install', requireAdmin, async (_req, res) => {
+    try {
+      res.json(await backupService.installRclone());
     } catch (error) {
       res.status(500).json({ error: asErrorMessage(error) });
     }

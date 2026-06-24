@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Mail, Save, Send, AlertCircle } from 'lucide-react';
+import { Mail, Save, Send, Server } from 'lucide-react';
 import { motion } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -18,6 +18,9 @@ interface EmailSettings {
   appPassword: string;
   senderName: string;
   defaultMessage: string;
+  host: string;
+  port: number;
+  secure: boolean;
 }
 
 interface EmailSettingsTabProps {
@@ -26,28 +29,40 @@ interface EmailSettingsTabProps {
 
 export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<EmailSettings>({
+const [settings, setSettings] = useState<EmailSettings>({
     senderEmail: '',
     appPassword: '',
     senderName: '',
-    defaultMessage: ''
+    defaultMessage: '',
+    host: 'smtp.mail.ru',
+    port: 465,
+    secure: true,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [showYandexHint, setShowYandexHint] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
       const saved = await emailSettingsApi.get();
-      if (saved.senderEmail || saved.senderName || saved.defaultMessage) {
-        setSettings(prev => ({ ...prev, ...saved, appPassword: '' }));
+      if (saved.senderEmail || saved.senderName || saved.defaultMessage || saved.host) {
+        setSettings(prev => ({
+          ...prev,
+          ...saved,
+          appPassword: '',
+          host: saved.host || prev.host,
+          port: Number(saved.port || prev.port),
+          secure: typeof saved.secure === 'boolean' ? saved.secure : prev.secure,
+        }));
       } else {
         // Set default settings if not exists
         const defaultSettings = {
           senderEmail: '',
           appPassword: '',
           senderName: 'Большая Медведица',
-          defaultMessage: 'Спасибо, что обратились к нам'
+          defaultMessage: 'Спасибо, что обратились к нам',
+          host: 'smtp.mail.ru',
+          port: 465,
+          secure: true,
         };
         setSettings(defaultSettings);
       }
@@ -57,7 +72,6 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
 
   const handleTestConnection = async () => {
     setIsTesting(true);
-    setShowYandexHint(false);
     try {
       const response = await fetch('/api/send-email', {
         method: 'POST',
@@ -68,7 +82,12 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
           htmlBody: '<p>Это тестовое письмо для проверки настроек SMTP.</p>',
           attachmentBase64: TEST_PDF_BASE64,
           attachmentName: 'test.pdf',
-          senderName: settings.senderName
+          senderName: settings.senderName,
+          senderEmail: settings.senderEmail.trim(),
+          appPassword: settings.appPassword.trim(),
+          host: settings.host.trim(),
+          port: Number(settings.port) || 465,
+          secure: settings.secure,
         }),
       });
 
@@ -76,13 +95,10 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
       if (response.ok) {
         toast('Соединение успешно установлено. Тестовое письмо отправлено.', 'success');
       } else {
-        if (result.error && result.error.includes('535 5.7.8')) {
-          setShowYandexHint(true);
-        }
         throw new Error(result.error || 'Ошибка при проверке');
       }
     } catch (error: any) {
-      if (!showYandexHint) toast(`Ошибка: ${error.message}`, 'error');
+      toast(`Ошибка: ${error.message}`, 'error');
     } finally {
       setIsTesting(false);
     }
@@ -95,9 +111,19 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
         ...settings,
         senderEmail: settings.senderEmail.trim(),
         appPassword: settings.appPassword.trim(),
+        host: settings.host.trim() || 'smtp.mail.ru',
+        port: Number(settings.port) || 465,
+        secure: Boolean(settings.secure),
       };
       const saved = await emailSettingsApi.save(cleanedSettings);
-      setSettings(prev => ({ ...prev, ...saved, appPassword: '' }));
+      setSettings(prev => ({
+        ...prev,
+        ...saved,
+        appPassword: '',
+        host: saved.host || cleanedSettings.host,
+        port: Number(saved.port || cleanedSettings.port),
+        secure: typeof saved.secure === 'boolean' ? saved.secure : cleanedSettings.secure,
+      }));
       toast('Настройки SMTP сохранены', 'success');
     } catch (error) {
       console.error('Error saving SMTP settings:', error);
@@ -119,30 +145,9 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
         <h3 className="font-bold text-lg">Настройки Email (SMTP)</h3>
       </div>
 
-      {showYandexHint && (
-        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 space-y-3">
-          <div className="flex items-center gap-2 text-red-500 font-bold text-sm">
-            <AlertCircle size={18} />
-            Яндекс блокирует доступ (Ошибка 535 5.7.8)
-          </div>
-          <p className="text-xs text-gray-400 leading-relaxed">
-            Ваш логин и пароль верны, но Яндекс запрещает отправку писем через сторонние программы.
-          </p>
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold text-gray-500 uppercase">Как исправить:</p>
-            <ol className="text-xs text-gray-300 space-y-1 list-decimal pl-4">
-              <li>Зайдите в почту <span className="text-indigo-400 font-mono">{settings.senderEmail || 'ваш email'}</span></li>
-              <li>Нажмите <strong>Настройки</strong> (шестеренка) → <strong>Все настройки</strong></li>
-              <li>Выберите <strong>Почтовые программы</strong></li>
-              <li>Включите галочку <strong>«С сервера smtp.yandex.ru по протоколу SMTP»</strong></li>
-              <li>Нажмите <strong>Сохранить изменения</strong></li>
-            </ol>
-          </div>
-          <p className="text-[10px] text-gray-500 italic">
-            После этого нажмите кнопку "Проверить соединение" еще раз.
-          </p>
-        </div>
-      )}
+      <div className={cn('rounded-2xl border p-4 text-xs leading-relaxed', isDarkMode ? 'border-white/10 bg-white/[0.03] text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-600')}>
+        Рекомендуемые настройки для Mail.ru / VK WorkMail: <span className="font-mono">smtp.mail.ru</span>, порт <span className="font-mono">465</span>, SSL/TLS. Пароль — это пароль для внешнего приложения. Пустое поле пароля при сохранении не меняет сохранённый пароль.
+      </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
@@ -157,7 +162,7 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пароль приложения (Yandex)</label>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пароль для внешнего приложения</label>
           <input
             type="password"
             value={settings.appPassword}
@@ -169,6 +174,52 @@ export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) 
             )}
           />
         </div>
+        <div className="grid gap-4 md:grid-cols-[1fr_120px_140px]">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">SMTP host</label>
+            <input
+              value={settings.host}
+              onChange={(e) => setSettings({ ...settings, host: e.target.value })}
+              placeholder="smtp.mail.ru"
+              className={cn(
+                "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
+                isDarkMode ? "bg-white/5 border-white/10 focus:border-indigo-500" : "bg-gray-50 border-gray-200 focus:border-indigo-500"
+              )}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Порт</label>
+            <input
+              type="number"
+              value={settings.port}
+              onChange={(e) => setSettings({ ...settings, port: Number(e.target.value) || 465 })}
+              className={cn(
+                "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
+                isDarkMode ? "bg-white/5 border-white/10 focus:border-indigo-500" : "bg-gray-50 border-gray-200 focus:border-indigo-500"
+              )}
+            />
+          </div>
+          <label className="flex items-end gap-2 pb-3 text-sm font-bold text-gray-500">
+            <input
+              type="checkbox"
+              checked={settings.secure}
+              onChange={(e) => setSettings({ ...settings, secure: e.target.checked })}
+              className="h-4 w-4 accent-indigo-500"
+            />
+            SSL/TLS
+          </label>
+        </div>
+        <button
+          type="button"
+          onClick={() => setSettings(prev => ({ ...prev, host: 'smtp.mail.ru', port: 465, secure: true, senderName: prev.senderName || 'Большая Медведица' }))}
+          className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all",
+            isDarkMode ? "bg-white/5 text-white hover:bg-white/10 border border-white/10" : "bg-gray-100 text-black hover:bg-gray-200 border border-gray-200"
+          )}
+        >
+          <Server size={15} />
+          Mail.ru / VK WorkMail
+        </button>
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя отправителя</label>
           <input 

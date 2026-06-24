@@ -7,18 +7,21 @@
  * Пустое поле при сохранении = оставить прежнее значение.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Bot, Check, ChevronDown, Clock, Database, Loader2, RefreshCw, Search, X, Zap } from 'lucide-react';
+import { Bot, Check, ChevronDown, Clock, Database, Download, Loader2, RefreshCw, Search, X, Zap } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { getErrorMessage } from '../../utils/errors';
 import {
+  backupApi,
   integrationSettingsApi,
   type AiBackendTestResult,
   type AutoSyncStatus,
+  type BackupStatus,
   type IntegrationSettingsMasked,
   type IntegrationSettingsInput,
   type LibreOfficeTestResult,
   type SupabaseTestResult,
+  type RcloneCommandResult,
 } from '../../services/localApi';
 
 function cn(...inputs: ClassValue[]) {
@@ -88,6 +91,13 @@ function StatusBadge({ ok, label, isDarkMode }: { ok: boolean | null; label: str
   );
 }
 
+function sourceLabel(source: 'crm' | 'env' | 'none' | 'default' | undefined) {
+  if (source === 'crm') return 'настройки CRM';
+  if (source === 'env') return '.env.local';
+  if (source === 'default') return 'значение по умолчанию';
+  return 'не задано';
+}
+
 // ── Главный компонент ──────────────────────────────────────────────────────
 
 interface IntegrationsSettingsTabProps {
@@ -131,9 +141,13 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
 
   const [aiTest, setAiTest] = useState<AiBackendTestResult | null>(null);
   const [aiTesting, setAiTesting] = useState(false);
+  const [rcloneStatus, setRcloneStatus] = useState<BackupStatus['rclone'] | null>(null);
+  const [rcloneChecking, setRcloneChecking] = useState(false);
+  const [rcloneInstalling, setRcloneInstalling] = useState(false);
+  const [rcloneInstallResult, setRcloneInstallResult] = useState<RcloneCommandResult | null>(null);
 
   // Collapsible sections
-  const [openSection, setOpenSection] = useState<'supabase' | 'libreoffice' | 'ai' | null>('supabase');
+  const [openSection, setOpenSection] = useState<'supabase' | 'libreoffice' | 'ai' | 'rclone' | null>('supabase');
 
   // Опрос статуса автосинхронизации (когда секция открыта)
   const pollAutoSyncStatus = useCallback(async () => {
@@ -266,6 +280,31 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
     }
   }
 
+  async function handleCheckRclone() {
+    setRcloneChecking(true);
+    try {
+      setRcloneStatus(await backupApi.checkRclone());
+    } catch (err) {
+      setRcloneStatus({ available: false, error: getErrorMessage(err) });
+    } finally {
+      setRcloneChecking(false);
+    }
+  }
+
+  async function handleInstallRclone() {
+    setRcloneInstalling(true);
+    setRcloneInstallResult(null);
+    try {
+      const result = await backupApi.installRclone();
+      setRcloneInstallResult(result);
+      await handleCheckRclone();
+    } catch (err) {
+      setRcloneInstallResult({ ok: false, stdout: '', stderr: '', error: getErrorMessage(err) });
+    } finally {
+      setRcloneInstalling(false);
+    }
+  }
+
   const inputClass = cn(
     'w-full rounded-xl border px-3 py-2 text-sm outline-none transition-colors font-mono',
     isDarkMode
@@ -321,6 +360,11 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
               Приоритет: настройки CRM → <code className="font-mono">.env.local</code>.
               Service Role Key хранится на сервере и никогда не передаётся во frontend.
             </p>
+            <div className={cn('grid gap-1 rounded-xl border px-3 py-2 text-xs', isDarkMode ? 'border-[#3D423E] bg-[#0E1210] text-[#8F9894]' : 'border-gray-200 bg-gray-50 text-gray-600')}>
+              <span>URL: {sourceLabel(settings?.supabaseUrlSource)}</span>
+              <span>Service Role Key: {sourceLabel(settings?.supabaseServiceKeySource)}{settings?.supabaseServiceKeyMask ? ` (${settings.supabaseServiceKeyMask})` : ''}</span>
+              <span>Таблица: {sourceLabel(settings?.supabaseTableSource)}</span>
+            </div>
 
             <FieldRow label="Supabase URL">
               <input
@@ -339,7 +383,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
               <input
                 className={inputClass}
                 type="password"
-                placeholder={settings?.supabaseServiceKeyHas ? 'Оставить без изменений' : 'sb_secret_...'}
+                placeholder={settings?.supabaseServiceKeyHas ? 'Оставьте пустым, чтобы не менять' : 'sb_secret_...'}
                 value={supabaseKeyInput}
                 onChange={e => setSupabaseKeyInput(e.target.value)}
                 autoComplete="new-password"
@@ -619,6 +663,64 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
                 />
               )}
             </div>
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard isDarkMode={isDarkMode}>
+        <button
+          type="button"
+          onClick={() => toggleSection('rclone')}
+          className="flex w-full items-center justify-between"
+        >
+          <SectionHeader
+            isDarkMode={isDarkMode}
+            icon={<Download size={17} className="text-cyan-400" />}
+            title="rclone"
+            subtitle="Интеграция для облачных резервных копий"
+          />
+          <ChevronDown
+            size={16}
+            className={cn(
+              'shrink-0 transition-transform text-[#8F9894]',
+              openSection === 'rclone' && 'rotate-180',
+            )}
+          />
+        </button>
+
+        {openSection === 'rclone' && (
+          <div className="space-y-3 pt-1">
+            <p className={cn('text-xs leading-relaxed', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+              Используется вкладкой «Резервные копии» для отправки архивов в облака. Установка запускается только по кнопке.
+            </p>
+            <p className={cn('rounded-xl border px-3 py-2 font-mono text-xs', isDarkMode ? 'border-[#3D423E] bg-[#0E1210] text-[#B4CDD2]' : 'border-gray-200 bg-gray-50 text-gray-600')}>
+              winget install Rclone.Rclone
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button type="button" onClick={handleCheckRclone} disabled={rcloneChecking || rcloneInstalling} className={btnSecondary}>
+                {rcloneChecking ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
+                Проверить rclone
+              </button>
+              <button type="button" onClick={handleInstallRclone} disabled={rcloneChecking || rcloneInstalling} className={btnSecondary}>
+                {rcloneInstalling ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                Установить rclone
+              </button>
+              {rcloneStatus && (
+                <StatusBadge
+                  isDarkMode={isDarkMode}
+                  ok={rcloneStatus.available}
+                  label={rcloneStatus.available ? (rcloneStatus.version || 'rclone доступен') : (rcloneStatus.error || 'rclone не найден')}
+                />
+              )}
+            </div>
+            {rcloneInstallResult && (
+              <div className={cn('rounded-xl border p-3 text-xs leading-relaxed', rcloneInstallResult.ok ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-red-500/20 bg-red-500/10')}>
+                <div className="font-bold">{rcloneInstallResult.ok ? 'Команда установки завершена' : 'Команда установки не выполнена'}</div>
+                {rcloneInstallResult.error && <div className="mt-1">{rcloneInstallResult.error}</div>}
+                {rcloneInstallResult.stdout && <pre className="mt-2 max-h-28 overflow-auto whitespace-pre-wrap">{rcloneInstallResult.stdout}</pre>}
+                {rcloneInstallResult.stderr && <pre className="mt-2 max-h-28 overflow-auto whitespace-pre-wrap">{rcloneInstallResult.stderr}</pre>}
+              </div>
+            )}
           </div>
         )}
       </SectionCard>

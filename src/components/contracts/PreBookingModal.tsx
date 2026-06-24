@@ -401,51 +401,44 @@ export default function PreBookingModal({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {leadPrefill && (
-              <>
-                <div>
-                  <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>Дата заезда</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                    className={cn(
-                      "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
-                    )}
-                  />
-                </div>
-                <div>
-                  <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>Дата выезда</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    className={cn(
-                      "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                      isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
-                    )}
-                  />
-                </div>
-              </>
-            )}
             <div>
               <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
-                {isGBCottage ? 'Дата заезда' : 'Заезд'}
+                Дата заезда
               </label>
-              {isGBCottage ? (
-                <input 
-                  type="date" 
-                  value={startDate}
-                  onChange={handleStartDateChange}
-                  className={cn(
-                    "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
-                  )}
-                />
-              ) : (
-                <input 
-                  type="time" 
+              <input
+                type="date"
+                value={startDate}
+                onChange={handleStartDateChange}
+                className={cn(
+                  "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                )}
+              />
+            </div>
+            <div>
+              <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
+                Дата выезда
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className={cn(
+                  "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
+                  isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
+                )}
+              />
+            </div>
+          </div>
+
+          {!isGBCottage && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
+                  Время заезда
+                </label>
+                <input
+                  type="time"
                   value={startTime}
                   onChange={handleStartTimeChange}
                   className={cn(
@@ -453,23 +446,11 @@ export default function PreBookingModal({
                     isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                   )}
                 />
-              )}
-            </div>
-            <div>
-              <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
-                {isGBCottage ? 'Дата выезда' : 'Выезд'}
-              </label>
-              {isGBCottage ? (
-                <input 
-                  type="date" 
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className={cn(
-                    "w-full px-4 py-2.5 rounded-xl border outline-none transition-all",
-                    isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
-                  )}
-                />
-              ) : (
+              </div>
+              <div>
+                <label className={cn("block text-xs font-bold mb-1.5 uppercase", isDarkMode ? "text-[#B4CDD2]/70" : "text-gray-500")}>
+                  Время выезда
+                </label>
                 <input 
                   type="time" 
                   value={endTime}
@@ -479,9 +460,9 @@ export default function PreBookingModal({
                     isDarkMode ? "bg-[#1A1C1B] border-[#3D423E] text-[#F4F1EA] focus:border-[#8CAFBE]/60" : "bg-gray-50 border-gray-200 focus:border-[#eab308]"
                   )}
                 />
-              )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>

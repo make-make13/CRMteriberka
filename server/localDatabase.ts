@@ -46,12 +46,15 @@ export interface IntegrationSettingsInput {
 /** Маскированный вид для frontend (секреты заменены маской) */
 export interface IntegrationSettingsMasked {
   supabaseUrl: string;
+  supabaseUrlSource: 'crm' | 'env' | 'none';
   supabaseTable: string;
+  supabaseTableSource: 'crm' | 'env' | 'default';
   supabaseSyncLimit: number;
   supabaseAutoSyncEnabled: boolean;
   supabaseAutoSyncIntervalMinutes: number;
   supabaseServiceKeyMask: string;
   supabaseServiceKeyHas: boolean;
+  supabaseServiceKeySource: 'crm' | 'env' | 'none';
   libreOfficePath: string;
   aiBackendUrl: string;
   aiBackendKeyMask: string;
@@ -67,14 +70,24 @@ export function maskIntegrationSettings(s: IntegrationSettingsStored): Integrati
     if (v.length <= 4) return '••••';
     return '••••••••' + v.slice(-4);
   };
+  const envSupabaseUrl = process.env.SUPABASE_URL || '';
+  const envSupabaseTable = process.env.SUPABASE_LEADS_TABLE || '';
+  const envSupabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const effectiveSupabaseUrl = s.supabaseUrl || envSupabaseUrl;
+  const effectiveSupabaseTable = s.supabaseTable || envSupabaseTable || 'leads';
+  const effectiveSupabaseKey = s.supabaseServiceKey || envSupabaseKey;
+
   return {
-    supabaseUrl:                    s.supabaseUrl                    || '',
-    supabaseTable:                  s.supabaseTable                  || 'leads',
+    supabaseUrl:                    effectiveSupabaseUrl,
+    supabaseUrlSource:              s.supabaseUrl ? 'crm' : (envSupabaseUrl ? 'env' : 'none'),
+    supabaseTable:                  effectiveSupabaseTable,
+    supabaseTableSource:            s.supabaseTable ? 'crm' : (envSupabaseTable ? 'env' : 'default'),
     supabaseSyncLimit:              s.supabaseSyncLimit              || 50,
     supabaseAutoSyncEnabled:        Boolean(s.supabaseAutoSyncEnabled),
     supabaseAutoSyncIntervalMinutes: s.supabaseAutoSyncIntervalMinutes || 5,
-    supabaseServiceKeyMask:         maskSecret(s.supabaseServiceKey),
-    supabaseServiceKeyHas:          Boolean(s.supabaseServiceKey),
+    supabaseServiceKeyMask:         maskSecret(effectiveSupabaseKey),
+    supabaseServiceKeyHas:          Boolean(effectiveSupabaseKey),
+    supabaseServiceKeySource:       s.supabaseServiceKey ? 'crm' : (envSupabaseKey ? 'env' : 'none'),
     libreOfficePath:                s.libreOfficePath                || '',
     aiBackendUrl:                   s.aiBackendUrl                   || '',
     aiBackendKeyMask:               maskSecret(s.aiBackendKey),
