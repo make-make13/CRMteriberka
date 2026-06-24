@@ -2002,3 +2002,30 @@ Checks run:
 
 **Risks/TODOs**:
 - The icon intentionally clips the key/card protrusion to the rounded rectangle to avoid mask artifacts and keep the background clean.
+
+### 2026-06-24 21:24:57 +03:00 — Apply corrected shortcut icon artwork
+
+Files changed:
+- `assets/app-icon/icon-1024.png`
+- `assets/app-icon/icon.png`
+- `assets/app-icon/icon.ico`
+- `docs/WORKLOG.md`
+
+**Task**: Replace installed shortcut icon with the user-corrected `medveditca.png` artwork.
+
+**Completed**:
+1. Verified the supplied PNG already has alpha transparency.
+2. Regenerated app PNG/ICO assets from the corrected artwork without extra masking or clipping.
+3. Visually checked `assets/app-icon/icon-1024.png`.
+4. Rebuilt the NSIS installer: `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe`.
+
+Checks run:
+- Visual check of `assets/app-icon/icon-1024.png` — passed
+- `npx tsx scripts/installerShortcutIconTest.ts` — passed
+- `npm run electron:installer` — passed
+
+**Next**:
+- Install the rebuilt setup on the target PC. If Windows still shows the old shortcut image, recreate the shortcut or refresh the Windows icon cache.
+
+**Risks/TODOs**:
+- Windows can cache the old shortcut icon after reinstalling.
