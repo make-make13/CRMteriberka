@@ -11,7 +11,13 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const TEST_PDF_BASE64 = 'JVBERi0xLjEKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAyMDAgMjAwXSA+PgplbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDQgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjE5OQolJUVPRgo=';
+const VK_MAIL_DEFAULTS = {
+  senderEmail: 'medvedica.hotel@vk.com',
+  senderName: 'Большая Медведица',
+  host: 'smtp.mail.ru',
+  port: 465,
+  secure: true,
+};
 
 interface EmailSettings {
   senderEmail: string;
@@ -29,14 +35,14 @@ interface EmailSettingsTabProps {
 
 export default function EmailSettingsTab({ isDarkMode }: EmailSettingsTabProps) {
   const { toast } = useToast();
-const [settings, setSettings] = useState<EmailSettings>({
-    senderEmail: '',
+  const [settings, setSettings] = useState<EmailSettings>({
+    senderEmail: VK_MAIL_DEFAULTS.senderEmail,
     appPassword: '',
-    senderName: '',
+    senderName: VK_MAIL_DEFAULTS.senderName,
     defaultMessage: '',
-    host: 'smtp.mail.ru',
-    port: 465,
-    secure: true,
+    host: VK_MAIL_DEFAULTS.host,
+    port: VK_MAIL_DEFAULTS.port,
+    secure: VK_MAIL_DEFAULTS.secure,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -56,13 +62,13 @@ const [settings, setSettings] = useState<EmailSettings>({
       } else {
         // Set default settings if not exists
         const defaultSettings = {
-          senderEmail: '',
+          senderEmail: VK_MAIL_DEFAULTS.senderEmail,
           appPassword: '',
-          senderName: 'Большая Медведица',
+          senderName: VK_MAIL_DEFAULTS.senderName,
           defaultMessage: 'Спасибо, что обратились к нам',
-          host: 'smtp.mail.ru',
-          port: 465,
-          secure: true,
+          host: VK_MAIL_DEFAULTS.host,
+          port: VK_MAIL_DEFAULTS.port,
+          secure: VK_MAIL_DEFAULTS.secure,
         };
         setSettings(defaultSettings);
       }
@@ -73,32 +79,17 @@ const [settings, setSettings] = useState<EmailSettings>({
   const handleTestConnection = async () => {
     setIsTesting(true);
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          toEmail: settings.senderEmail.trim(),
-          subject: 'Тестовое письмо',
-          htmlBody: '<p>Это тестовое письмо для проверки настроек SMTP.</p>',
-          attachmentBase64: TEST_PDF_BASE64,
-          attachmentName: 'test.pdf',
-          senderName: settings.senderName,
-          senderEmail: settings.senderEmail.trim(),
-          appPassword: settings.appPassword.trim(),
-          host: settings.host.trim(),
-          port: Number(settings.port) || 465,
-          secure: settings.secure,
-        }),
+      await emailSettingsApi.testSmtp({
+        ...settings,
+        senderEmail: settings.senderEmail.trim(),
+        appPassword: settings.appPassword.trim(),
+        host: settings.host.trim() || VK_MAIL_DEFAULTS.host,
+        port: Number(settings.port) || VK_MAIL_DEFAULTS.port,
+        secure: Boolean(settings.secure),
       });
-
-      const result = await response.json();
-      if (response.ok) {
-        toast('Соединение успешно установлено. Тестовое письмо отправлено.', 'success');
-      } else {
-        throw new Error(result.error || 'Ошибка при проверке');
-      }
-    } catch (error: any) {
-      toast(`Ошибка: ${error.message}`, 'error');
+      toast('SMTP авторизация успешна. Тестовое письмо не отправлялось.', 'success');
+    } catch (error) {
+      toast(getErrorMessage(error, 'Ошибка проверки SMTP'), 'error');
     } finally {
       setIsTesting(false);
     }
@@ -111,8 +102,8 @@ const [settings, setSettings] = useState<EmailSettings>({
         ...settings,
         senderEmail: settings.senderEmail.trim(),
         appPassword: settings.appPassword.trim(),
-        host: settings.host.trim() || 'smtp.mail.ru',
-        port: Number(settings.port) || 465,
+        host: settings.host.trim() || VK_MAIL_DEFAULTS.host,
+        port: Number(settings.port) || VK_MAIL_DEFAULTS.port,
         secure: Boolean(settings.secure),
       };
       const saved = await emailSettingsApi.save(cleanedSettings);
@@ -146,7 +137,7 @@ const [settings, setSettings] = useState<EmailSettings>({
       </div>
 
       <div className={cn('rounded-2xl border p-4 text-xs leading-relaxed', isDarkMode ? 'border-white/10 bg-white/[0.03] text-gray-400' : 'border-gray-200 bg-gray-50 text-gray-600')}>
-        Рекомендуемые настройки для Mail.ru / VK WorkMail: <span className="font-mono">smtp.mail.ru</span>, порт <span className="font-mono">465</span>, SSL/TLS. Пароль — это пароль для внешнего приложения. Пустое поле пароля при сохранении не меняет сохранённый пароль.
+        Рекомендуемые настройки для Mail.ru / VK Mail: <span className="font-mono">smtp.mail.ru</span>, порт <span className="font-mono">465</span>, SSL/TLS. Логин — полный email. Используйте пароль внешнего приложения Mail/VK, не обычный пароль от почты. Пустое поле пароля при сохранении не меняет сохранённый пароль.
       </div>
 
       <div className="space-y-4">
@@ -162,7 +153,7 @@ const [settings, setSettings] = useState<EmailSettings>({
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пароль для внешнего приложения</label>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Пароль внешнего приложения</label>
           <input
             type="password"
             value={settings.appPassword}
@@ -211,14 +202,21 @@ const [settings, setSettings] = useState<EmailSettings>({
         </div>
         <button
           type="button"
-          onClick={() => setSettings(prev => ({ ...prev, host: 'smtp.mail.ru', port: 465, secure: true, senderName: prev.senderName || 'Большая Медведица' }))}
+          onClick={() => setSettings(prev => ({
+            ...prev,
+            senderEmail: VK_MAIL_DEFAULTS.senderEmail,
+            senderName: VK_MAIL_DEFAULTS.senderName,
+            host: VK_MAIL_DEFAULTS.host,
+            port: VK_MAIL_DEFAULTS.port,
+            secure: VK_MAIL_DEFAULTS.secure,
+          }))}
           className={cn(
             "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all",
             isDarkMode ? "bg-white/5 text-white hover:bg-white/10 border border-white/10" : "bg-gray-100 text-black hover:bg-gray-200 border border-gray-200"
           )}
         >
           <Server size={15} />
-          Mail.ru / VK WorkMail
+          Mail.ru / VK Mail
         </button>
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Имя отправителя</label>

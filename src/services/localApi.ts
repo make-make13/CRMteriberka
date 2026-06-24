@@ -214,6 +214,16 @@ export const emailSettingsApi = {
     method: 'PUT',
     body: JSON.stringify(settings),
   }),
+  testSmtp: (settings: EmailSettings) => apiRequest<{
+    success: true;
+    host: string;
+    port: number;
+    secure: boolean;
+    user: string;
+  }>('/api/email-settings/test-smtp', {
+    method: 'POST',
+    body: JSON.stringify(settings),
+  }),
 };
 
 /**

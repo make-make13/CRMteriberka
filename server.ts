@@ -127,10 +127,10 @@ function cleanString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function getSmtpConfig(body: any) {
+function getSmtpConfig(body: any = {}) {
   const storedSettings = localDb.getEmailSettings<any>() || {};
-  const senderEmail = storedSettings.senderEmail || process.env.SMTP_USER || body.senderEmail;
-  const appPassword = storedSettings.appPassword || process.env.SMTP_PASSWORD || body.appPassword;
+  const senderEmail = body.senderEmail || storedSettings.senderEmail || process.env.SMTP_USER || 'medvedica.hotel@vk.com';
+  const appPassword = body.appPassword || storedSettings.appPassword || process.env.SMTP_PASSWORD;
   const senderName = body.senderName || storedSettings.senderName || process.env.SMTP_FROM_NAME || 'Большая Медведица';
   const host = body.host || storedSettings.host || process.env.SMTP_HOST || 'smtp.mail.ru';
   const port = Number(body.port || storedSettings.port || process.env.SMTP_PORT || 465);
@@ -145,6 +145,18 @@ function getSmtpConfig(body: any) {
     port,
     secure,
   };
+}
+
+function createSmtpTransporter(smtpConfig: ReturnType<typeof getSmtpConfig>) {
+  return nodemailer.createTransport({
+    host: smtpConfig.host,
+    port: smtpConfig.port,
+    secure: smtpConfig.secure,
+    auth: {
+      user: smtpConfig.senderEmail,
+      pass: smtpConfig.appPassword,
+    },
+  });
 }
 
 /** Применить LibreOffice-путь из настроек CRM при старте */
@@ -636,6 +648,29 @@ async function startServer() {
     res.json(localDb.saveEmailSettings(req.body));
   });
 
+  app.post('/api/email-settings/test-smtp', requireAdmin, async (req, res) => {
+    const smtpConfig = getSmtpConfig(req.body);
+    if (!smtpConfig.senderEmail || !smtpConfig.appPassword) {
+      return res.status(400).json({
+        error: 'SMTP не настроен. Укажите email отправителя и пароль внешнего приложения в настройках Email.',
+      });
+    }
+
+    try {
+      const transporter = createSmtpTransporter(smtpConfig);
+      await transporter.verify();
+      res.json({
+        success: true,
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: smtpConfig.secure,
+        user: smtpConfig.senderEmail,
+      });
+    } catch (error) {
+      res.status(500).json({ error: asEmailErrorMessage(error) });
+    }
+  });
+
   app.post('/api/backups', requireAdmin, async (_req, res) => {
     try {
       const backupPath = await localDb.createBackup();
@@ -725,7 +760,7 @@ async function startServer() {
     const smtpConfig = getSmtpConfig(req.body);
     if (!smtpConfig.senderEmail || !smtpConfig.appPassword) {
       return res.status(400).json({
-        error: 'SMTP не настроен. Укажите SMTP_USER и SMTP_PASSWORD в .env.local и перезапустите сервер.',
+        error: 'SMTP не настроен. Укажите email отправителя и пароль внешнего приложения в настройках Email.',
       });
     }
     if (!toEmail || !attachmentBase64 || !attachmentName) {
@@ -738,15 +773,7 @@ async function startServer() {
       : smtpConfig.senderEmail;
 
     try {
-      const transporter = nodemailer.createTransport({
-        host: smtpConfig.host,
-        port: smtpConfig.port,
-        secure: smtpConfig.secure,
-        auth: {
-          user: smtpConfig.senderEmail,
-          pass: smtpConfig.appPassword,
-        },
-      });
+      const transporter = createSmtpTransporter(smtpConfig);
 
       await transporter.sendMail({
         from,

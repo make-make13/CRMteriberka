@@ -1,5 +1,33 @@
 # WORKLOG
 
+### 2026-06-24 10:11:39 +03:00 - Email SMTP VK/Mail.ru authorization fix
+
+Files changed:
+- `server.ts`
+- `src/components/settings/EmailSettingsTab.tsx`
+- `src/services/localApi.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Fixed the Email settings "Проверить соединение" flow: it no longer calls `/api/send-email` with a raw unauthenticated `fetch`.
+- Added an authenticated SMTP verify endpoint that uses `nodemailer.verify()` and does not send a test email.
+- Ensured SMTP verify uses a newly entered password only when provided, otherwise falls back to the saved server-side password.
+- Kept password preservation on save: an empty password field does not erase the stored app password.
+- Set VK/Mail.ru defaults and preset: `medvedica.hotel@vk.com`, `smtp.mail.ru`, port `465`, SSL/TLS, sender name `Большая Медведица`.
+- Clarified UI copy: use a Mail/VK external app password, not the normal mailbox password.
+
+Checks run:
+- `rg` for Yandex-specific SMTP wording in the touched email zone - no matches.
+- `npm run lint` - passed.
+- Browser check: Settings -> Email shows VK/Mail.ru preset, full mailbox login, `smtp.mail.ru`, port `465`, SSL/TLS, empty password placeholder, no Yandex wording; console errors 0.
+
+Next recommended step:
+- Enter the Mail/VK external app password in Settings -> Email, save, then run the SMTP connection check from the UI.
+
+Risks / TODO:
+- No DB, Supabase, `.env`, contracts, templates, migrations, deploy, Graphify, or audit fix changes were made.
+- SMTP verify was not executed during browser-check because no password was entered in this session.
+
 ### 2026-06-24 09:36:23 +03:00 - CRM usability sprint 1: booking workflow and integrations
 
 Files changed:
