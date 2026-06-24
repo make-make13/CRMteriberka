@@ -357,7 +357,8 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
         {openSection === 'supabase' && (
           <div className="space-y-3 pt-1">
             <p className={cn('text-xs leading-relaxed', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
-              Приоритет: настройки CRM → <code className="font-mono">.env.local</code>.
+              После установки ключи задаются здесь, в настройках CRM; переменные окружения нужны только для разработки и аварийного запуска.
+              Приоритет: настройки CRM → переменные окружения.
               Service Role Key хранится на сервере и никогда не передаётся во frontend.
             </p>
             <div className={cn('grid gap-1 rounded-xl border px-3 py-2 text-xs', isDarkMode ? 'border-[#3D423E] bg-[#0E1210] text-[#8F9894]' : 'border-gray-200 bg-gray-50 text-gray-600')}>
@@ -542,6 +543,7 @@ export default function IntegrationsSettingsTab({ isDarkMode }: IntegrationsSett
         {openSection === 'libreoffice' && (
           <div className="space-y-3 pt-1">
             <p className={cn('text-xs leading-relaxed', isDarkMode ? 'text-[#8F9894]' : 'text-gray-500')}>
+              После установки путь можно указать здесь; переменные окружения нужны только для разработки.
               Приоритет: настройки CRM → <code className="font-mono">LIBREOFFICE_PATH</code> → автопоиск стандартных путей.
               Оставьте пустым для автопоиска.
             </p>

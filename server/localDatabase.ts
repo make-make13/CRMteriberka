@@ -660,8 +660,8 @@ export class LocalDatabase {
   }
 
   /**
-   * Safe auto-initialization / seeding of settings for an empty database.
-   * If there are clients, contracts, or bookings present, it does not overwrite.
+   * Safe auto-initialization / seeding of missing settings.
+   * Existing user data and already saved settings are preserved.
    */
   private ensureDefaultSettings() {
     const clientsCount = (this.db.prepare('SELECT COUNT(*) as count FROM clients').get() as { count: number }).count;
@@ -669,11 +669,10 @@ export class LocalDatabase {
     const bookingsCount = (this.db.prepare('SELECT COUNT(*) as count FROM bookings').get() as { count: number }).count;
 
     if (clientsCount > 0 || contractsCount > 0 || bookingsCount > 0) {
-      console.log(`[DB] Existing data found (clients: ${clientsCount}, contracts: ${contractsCount}, bookings: ${bookingsCount}). Skipping settings seeding.`);
-      return;
+      console.log(`[DB] Existing data found (clients: ${clientsCount}, contracts: ${contractsCount}, bookings: ${bookingsCount}). Ensuring only missing settings.`);
+    } else {
+      console.log('[DB] No user data found. Ensuring default settings...');
     }
-
-    console.log('[DB] No user data found. Ensuring default settings...');
 
     // 1. Seed general settings
     const existingGeneral = this.getSettings('general');
@@ -716,10 +715,10 @@ export class LocalDatabase {
       this.saveEmailSettings({
         senderEmail: 'medvedica.hotel@vk.com',
         senderName: 'Большая Медведица',
-        smtpHost: 'smtp.mail.ru',
-        smtpPort: 465,
-        smtpSecure: true,
-        authUser: 'medvedica.hotel@vk.com',
+        defaultMessage: 'Спасибо, что обратились к нам',
+        host: 'smtp.mail.ru',
+        port: 465,
+        secure: true,
         appPassword: password,
       });
       console.log('[DB] Seeded default SMTP settings.');
@@ -1415,8 +1414,32 @@ export class LocalDatabase {
     return { id, template, updatedAt };
   }
 
+  private normalizeEmailSettings<T>(settings: T | null): T | null {
+    if (!settings || typeof settings !== 'object') {
+      return settings;
+    }
+
+    const raw = settings as Record<string, unknown>;
+    const normalized: Record<string, unknown> = { ...raw };
+
+    if (!normalized.senderEmail && raw.authUser) {
+      normalized.senderEmail = raw.authUser;
+    }
+    if (!normalized.host && raw.smtpHost) {
+      normalized.host = raw.smtpHost;
+    }
+    if (normalized.port == null && raw.smtpPort != null) {
+      normalized.port = raw.smtpPort;
+    }
+    if (normalized.secure == null && raw.smtpSecure != null) {
+      normalized.secure = raw.smtpSecure;
+    }
+
+    return normalized as T;
+  }
+
   getEmailSettings<T>() {
-    return this.getJsonById<T>('email_settings', 'smtp');
+    return this.normalizeEmailSettings(this.getJsonById<T>('email_settings', 'smtp'));
   }
 
   saveEmailSettings<T extends object>(settings: T) {

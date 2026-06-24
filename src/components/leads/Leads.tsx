@@ -302,7 +302,7 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
     } catch (error) {
       const message = getErrorMessage(error, 'Ошибка при синхронизации заявок');
       if (message.includes('Supabase не настроен')) {
-        toast(`Supabase не настроен. Добавьте SUPABASE_URL и ${'SUPABASE_' + 'SERVICE_ROLE_KEY'} в .env.local`, 'error');
+        toast('Supabase не настроен. Укажите URL и Service Role Key в Настройки → Интеграции', 'error');
       } else {
         toast(message, 'error');
       }

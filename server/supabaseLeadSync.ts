@@ -4,7 +4,7 @@ import { asErrorMessage } from './errorUtils';
 /**
  * Supabase конфиг берётся в порядке приоритета:
  *  1. Настройки интеграций из SQLite (раздел «Интеграции» в CRM)
- *  2. Переменные окружения из .env.local (fallback для dev-режима)
+ *  2. Переменные окружения (fallback для dev-режима)
  */
 function getSupabaseConfig() {
   const stored = localDb.getIntegrationSettingsFull();
@@ -27,7 +27,7 @@ export interface SupabaseLeadSyncResult {
 
 const NOT_CONFIGURED_MESSAGE =
   'Supabase не настроен. Укажите URL и Service Role Key в Настройки → Интеграции, ' +
-  'или добавьте SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в .env.local';
+  'затем сохраните настройки и повторите синхронизацию.';
 
 function requireConfig() {
   const raw = getSupabaseConfig();

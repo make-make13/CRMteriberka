@@ -1869,3 +1869,40 @@ Checks run:
 **Risks/TODOs**:
 - rclone remote configuration is still a separate manual/admin setup step after rclone itself is available.
 - Lead confirmation opens the prebooking form; final save still goes through existing contract conflict validation.
+
+### 2026-06-24 19:52:21 +03:00 — Installed integration settings readiness
+
+Files changed:
+- `server/localDatabase.ts`
+- `server/supabaseLeadSync.ts`
+- `src/components/leads/Leads.tsx`
+- `src/components/settings/IntegrationsSettingsTab.tsx`
+- `src/components/settings/SystemStatusTab.tsx`
+- `src/utils/docx/docxToPdf.ts`
+- `scripts/installedIntegrationSettingsReadinessTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Check that integrations remain usable after build/install, keys are not bundled into the installer, and settings are understandable in the installed CRM.
+
+**Completed**:
+1. Fixed default settings seeding so existing installed databases with clients/contracts/bookings still receive missing settings rows without overwriting saved user data.
+2. Updated SMTP default seed to the current field names and added compatibility normalization for legacy SMTP fields (`smtpHost`, `smtpPort`, `smtpSecure`, `authUser`).
+3. Updated Supabase and LibreOffice user-facing messages to point installed users to `Настройки → Интеграции` instead of `.env.local`.
+4. Added a focused readiness test for installer file inclusion, secret exclusion, SMTP compatibility, and installed-app settings guidance.
+5. Built `release/win-unpacked` and verified backend/frontend/Electron files are present while `.env.local` is absent.
+
+Checks run:
+- `npx tsx scripts/installedIntegrationSettingsReadinessTest.ts` — passed
+- `npx tsx scripts/rcloneInstallCompatibilityTest.ts` — passed
+- `npx tsx scripts/leadConfirmCreatesPrebookingTest.ts` — passed
+- `npx tsx scripts/pdfjsPreviewCompatibilityTest.ts` — passed
+- `npm run lint` — passed
+- `npm run electron:pack` — passed
+- Package checks: `dist-server/server.cjs`, `dist/index.html`, and `dist-electron/main.cjs` present; `.env.local` absent
+
+**Next**:
+- Build the NSIS installer when ready to distribute: `npm run electron:installer`.
+
+**Risks/TODOs**:
+- `electron-builder` still reports existing packaging warnings: missing package metadata, asar disabled, and duplicate/mixed React dependency references. Packaging succeeds, but dependency cleanup is recommended separately.
+- Runtime integration success still depends on valid Supabase Service Role Key, SMTP app password, LibreOffice installation/path, and rclone remote configuration on the target PC.

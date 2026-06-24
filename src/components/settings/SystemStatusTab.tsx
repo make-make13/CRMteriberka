@@ -274,7 +274,7 @@ export default function SystemStatusTab({ isDarkMode }: SystemStatusTabProps) {
   const supabaseSourceLabel = (() => {
     if (settings?.supabaseUrl && settings.supabaseServiceKeyHas) return 'Настроен в UI';
     if (settings?.supabaseUrl && !settings.supabaseServiceKeyHas) return 'URL задан, ключ отсутствует';
-    return 'Не настроен (fallback: .env.local)';
+    return 'Не настроен — задайте ключи в Настройки → Интеграции';
   })();
 
   const libreOfficeSourceLabel = (() => {

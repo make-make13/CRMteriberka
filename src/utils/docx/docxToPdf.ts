@@ -27,7 +27,7 @@ const convertAsync = promisify(libreofficeConvert.convert) as (
 
 // ── Override из настроек CRM ────────────────────────────────────────────────
 // Сервер вызывает setLibreOfficePath() при старте и при сохранении настроек.
-// Это позволяет хранить путь в SQLite без правки .env.local.
+// Это позволяет хранить путь в SQLite без правки переменных окружения.
 
 let _settingsOverridePath: string | undefined;
 
@@ -49,7 +49,7 @@ const WINDOWS_STANDARD_PATHS = [
 
 const LIBREOFFICE_NOT_FOUND_MESSAGE =
   'LibreOffice не найден. Установите LibreOffice (https://www.libreoffice.org) ' +
-  'или укажите путь к soffice.exe в переменной LIBREOFFICE_PATH в файле .env.local.';
+  'или укажите путь к soffice.exe в Настройки → Интеграции → LibreOffice.';
 
 /**
  * Разворачивает LIBREOFFICE_PATH: принимает путь к exe или к директории.
@@ -98,7 +98,7 @@ export function findSofficePath(): string {
     console.warn(`[docxToPdf] settings libreOfficePath="${_settingsOverridePath}" не существует. Ищем дальше.`);
   }
 
-  // 1. LIBREOFFICE_PATH из .env.local
+  // 1. LIBREOFFICE_PATH из переменных окружения
   const envPath = process.env.LIBREOFFICE_PATH;
   if (envPath) {
     const resolved = resolveEnvPath(envPath);
