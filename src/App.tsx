@@ -499,7 +499,7 @@ function AppShell() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard isDarkMode={isDarkMode} contracts={contracts} clients={clients} />;
+        return <Dashboard isDarkMode={isDarkMode} contracts={contracts} clients={clients} onViewChange={setCurrentView} />;
       case 'chessboard':
         return (
           <Chessboard 
@@ -621,12 +621,12 @@ function AppShell() {
 
               <nav className="flex items-center gap-1.5">
                 {[
-                  { id: 'dashboard' as View, label: 'Сводка', icon: LayoutDashboard },
                   { id: 'chessboard' as View, label: 'Шахматка', icon: Grid3X3 },
                   { id: 'leads' as View, label: 'Заявки', icon: Inbox },
                   { id: 'clients' as View, label: 'Гости', icon: Users },
                   { id: 'contracts' as View, label: 'Договоры', icon: FileText },
                   { id: 'additional' as View, label: 'Дополнительно', icon: ClipboardList },
+                  { id: 'dashboard' as View, label: 'Сводка', icon: LayoutDashboard },
                   { id: 'settings' as View, label: 'Настройки', icon: SettingsIcon },
                 ].map((item) => (
                   <motion.button

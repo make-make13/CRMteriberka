@@ -29,7 +29,7 @@ import {
   subDays
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import type { Client, Contract, Lead } from '../../types';
+import type { Client, Contract, Lead, View } from '../../types';
 import { CC_OBJECTS, GB_OBJECTS } from '../../constants';
 import { leadApi } from '../../services/localApi';
 
@@ -86,11 +86,12 @@ interface DashboardProps {
   isDarkMode: boolean;
   contracts: Contract[];
   clients: Client[];
+  onViewChange?: (view: View) => void;
 }
 
 type PeriodMode = 'today' | '7days' | 'month' | 'custom';
 
-export default function Dashboard({ isDarkMode, contracts, clients }: DashboardProps) {
+export default function Dashboard({ isDarkMode, contracts, clients, onViewChange }: DashboardProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [periodMode, setPeriodMode] = useState<PeriodMode>('7days');
   
@@ -262,42 +263,54 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
         count: newLeads.length,
         text: `${plural(newLeads.length, 'новая заявка требует', 'новые заявки требуют', 'новых заявок требуют')} обработки`,
         color: 'blue',
-        icon: Inbox
+        icon: Inbox,
+        cta: 'Открыть заявки',
+        view: 'leads' as View
       },
       {
         id: 'confirmed-no-pre',
         count: confirmedLeadsNoPre.length,
         text: `${plural(confirmedLeadsNoPre.length, 'подтвержденная заявка', 'подтвержденные заявки', 'подтвержденных заявок')} без брони`,
         color: 'amber',
-        icon: AlertCircle
+        icon: AlertCircle,
+        cta: 'Открыть заявки',
+        view: 'leads' as View
       },
       {
         id: 'pre-no-contract',
         count: prebookingsWithoutContract.length,
         text: `${plural(prebookingsWithoutContract.length, 'предбронь', 'предброни', 'предброней')} без оформленного договора`,
         color: 'amber',
-        icon: FileText
+        icon: FileText,
+        cta: 'Проверить предброни',
+        view: 'contracts' as View
       },
       {
         id: 'debt',
         count: contractsWithDebt.length,
         text: `${plural(contractsWithDebt.length, 'активный договор', 'активных договора', 'активных договоров')} с задолженностью`,
         color: 'red',
-        icon: Wallet
+        icon: Wallet,
+        cta: 'Проверить долги',
+        view: 'contracts' as View
       },
       {
         id: 'arrivals',
         count: arrivalsToday.length,
         text: `${plural(arrivalsToday.length, 'заезд ожидается', 'заезда ожидаются', 'заездов ожидаются')} сегодня`,
         color: 'green',
-        icon: BedDouble
+        icon: BedDouble,
+        cta: 'Посмотреть заезды',
+        view: 'chessboard' as View
       },
       {
         id: 'departures',
         count: departuresToday.length,
         text: `${plural(departuresToday.length, 'выезд запланирован', 'выезда запланированы', 'выездов запланированы')} сегодня`,
         color: 'indigo',
-        icon: CalendarCheck
+        icon: CalendarCheck,
+        cta: 'Посмотреть выезды',
+        view: 'chessboard' as View
       }
     ].filter(item => item.count > 0);
   }, [contracts, leads]);
@@ -454,7 +467,7 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
           icon={BedDouble}
           label="Загрузка за период"
           value={`${periodStats.occupancyPct}%`}
-          sub={`${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'ночь занята', 'ночи заняты', 'ночей занято')}`}
+          sub={`${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'номер-ночь занята', 'номер-ночи заняты', 'номер-ночей занято')} из ${periodStats.totalAvailableNights} доступных`}
           accent={isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-600'}
         />
         <KpiCard
@@ -494,7 +507,7 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
         />
         <KpiCard
           icon={Inbox}
-          label="Новые заявки"
+          label="Новые за период"
           value={String(periodStats.leadsInPeriodNew)}
           sub={`Всего получено: ${periodStats.totalLeads}`}
           accent={isDarkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}
@@ -517,7 +530,7 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
             Требует внимания
           </h3>
           {attentionItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
               <CheckCircle2 className="text-emerald-500 mb-2" size={32} />
               <p className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>Нет срочных задач</p>
               <p className={cn('text-xs mt-1', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Вся оперативная работа выполнена</p>
@@ -528,34 +541,53 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
                 const Icon = item.icon;
                 return (
                   <div key={item.id} className={cn(
-                    'flex items-center gap-3 p-3 rounded-xl border transition-all duration-150',
+                    'flex items-center gap-4 p-4 rounded-xl border transition-all duration-150',
                     isDarkMode ? 'bg-[#161616] border-[#242424]' : 'bg-gray-50 border-gray-100 hover:shadow-xs'
                   )}>
                     <div className={cn(
-                      'p-2 rounded-lg shrink-0',
+                      'p-2.5 rounded-lg shrink-0',
                       item.color === 'red' && (isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'),
                       item.color === 'amber' && (isDarkMode ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600'),
                       item.color === 'blue' && (isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'),
                       item.color === 'green' && (isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'),
                       item.color === 'indigo' && (isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600')
                     )}>
-                      <Icon size={16} />
+                      <Icon size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className={cn('text-[9px] font-bold uppercase tracking-wider block', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
-                        {item.id === 'new-leads' && 'Новые заявки'}
+                        {item.id === 'new-leads' && 'Новые к обработке'}
                         {item.id === 'confirmed-no-pre' && 'Ожидают действий'}
                         {item.id === 'pre-no-contract' && 'Неоформленные брони'}
                         {item.id === 'debt' && 'Задолженность'}
                         {item.id === 'arrivals' && 'Заезды'}
                         {item.id === 'departures' && 'Выезды'}
                       </span>
-                      <p className={cn('text-xs font-semibold mt-0.5 truncate', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>
-                        {item.text}
-                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className={cn('text-sm font-semibold truncate', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>
+                          {item.text}
+                        </p>
+                      </div>
                     </div>
+                    
+                    {item.cta && onViewChange && (
+                      <button
+                        onClick={() => onViewChange(item.view)}
+                        className={cn(
+                          'text-xs font-bold underline transition-all hover:no-underline shrink-0 px-3 py-1.5 rounded-lg ml-auto hidden sm:block',
+                          item.color === 'red' && (isDarkMode ? 'text-red-400 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-50'),
+                          item.color === 'amber' && (isDarkMode ? 'text-amber-400 hover:bg-amber-500/10' : 'text-amber-600 hover:bg-amber-50'),
+                          item.color === 'blue' && (isDarkMode ? 'text-blue-400 hover:bg-blue-500/10' : 'text-blue-600 hover:bg-blue-50'),
+                          item.color === 'green' && (isDarkMode ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-emerald-600 hover:bg-emerald-50'),
+                          item.color === 'indigo' && (isDarkMode ? 'text-indigo-400 hover:bg-indigo-500/10' : 'text-indigo-600 hover:bg-indigo-50')
+                        )}
+                      >
+                        {item.cta}
+                      </button>
+                    )}
+
                     <span className={cn(
-                      'px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0',
+                      'px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 ml-2',
                       item.color === 'red' && 'bg-red-500 text-white',
                       item.color === 'amber' && 'bg-amber-500 text-white',
                       item.color === 'blue' && 'bg-blue-500 text-white',
@@ -583,32 +615,40 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className={subClass}>Выручка</span>
-                <div className={cn('text-lg font-bold mt-0.5', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{money(periodStats.revenuePeriod)}</div>
+            {/* Блок Главное */}
+            <div className={cn('p-4 rounded-xl border text-xs space-y-2', isDarkMode ? 'bg-[#161616] border-[#242424]' : 'bg-gray-50 border-gray-100')}>
+              <div className={cn('font-bold uppercase tracking-wider text-[9px] mb-1', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+                Главное
               </div>
-              <div>
-                <span className={subClass}>Оплачено</span>
-                <div className={cn('text-lg font-bold mt-0.5 text-emerald-500')}>{money(periodStats.prepaidPeriod)}</div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Создано договоров:</span>
+                <span className={cn('font-bold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.contractsCount}</span>
               </div>
-              <div>
-                <span className={subClass}>Остаток к оплате</span>
-                <div className={cn('text-lg font-bold mt-0.5 text-rose-400')}>{money(periodStats.debtPeriod)}</div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Поступило заявок:</span>
+                <span className={cn('font-bold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.totalLeads}</span>
               </div>
-              <div>
-                <span className={subClass}>Загрузка номеров</span>
-                <div className={cn('text-lg font-bold mt-0.5', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</div>
+              <div className="flex justify-between items-center py-0.5 border-t border-gray-100 dark:border-[#242424] pt-2">
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Оплачено за период:</span>
+                <span className="font-bold text-emerald-500 text-sm">{money(periodStats.prepaidPeriod)}</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Остаток к оплате:</span>
+                <span className="font-bold text-rose-400 text-sm">{money(periodStats.debtPeriod)}</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Средняя загрузка:</span>
+                <span className={cn('font-bold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</span>
               </div>
             </div>
 
             {/* Прогресс-бар загрузки */}
-            <div className="space-y-1 pt-2">
+            <div className="space-y-1">
               <div className="flex justify-between items-center text-xs">
-                <span className={subClass}>Средняя занятость</span>
+                <span className={subClass}>Средняя загрузка фонда</span>
                 <span className={cn('font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</span>
               </div>
-              <div className={cn('h-2 w-full overflow-hidden rounded-full', isDarkMode ? 'bg-[#232323]' : 'bg-gray-100')}>
+              <div className={cn('h-2.5 w-full overflow-hidden rounded-full', isDarkMode ? 'bg-[#232323]' : 'bg-gray-100')}>
                 <div
                   className="h-full rounded-full bg-orange-500 transition-all duration-300"
                   style={{ width: `${Math.min(100, periodStats.occupancyPct)}%` }}
@@ -616,9 +656,9 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
               </div>
             </div>
 
-            <div className="border-t pt-3 border-gray-100 dark:border-[#232323] space-y-1.5">
-              <span className={subClass}>Краткий вывод</span>
-              <p className={cn('text-xs leading-relaxed font-semibold', isDarkMode ? 'text-gray-300' : 'text-gray-700')}>
+            <div className="border-t pt-3 border-gray-100 dark:border-[#232323] space-y-1">
+              <span className={subClass}>Выводы по периоду</span>
+              <p className={cn('text-xs leading-relaxed font-medium', isDarkMode ? 'text-gray-300' : 'text-gray-700')}>
                 {reportText}
               </p>
             </div>
@@ -635,9 +675,12 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
             Ближайшие заезды
           </h3>
           {upcomingArrivals.length === 0 ? (
-            <p className={cn('text-xs py-6 text-center', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Нет запланированных заездов в ближайшее время</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Calendar className={cn('mb-1.5 opacity-40', isDarkMode ? 'text-gray-500' : 'text-gray-400')} size={24} />
+              <p className={cn('text-xs font-semibold', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Нет запланированных заездов</p>
+            </div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-[#232323]">
+            <div className="divide-y divide-gray-100 dark:divide-[#232323] max-h-[320px] overflow-y-auto">
               {upcomingArrivals.map(({ b, c }) => (
                 <div key={b.id} className="py-2.5 flex items-center justify-between gap-4">
                   <div className="min-w-0">
@@ -677,9 +720,12 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
             Ближайшие выезды
           </h3>
           {upcomingDepartures.length === 0 ? (
-            <p className={cn('text-xs py-6 text-center', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Нет запланированных выездов в ближайшее время</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Calendar className={cn('mb-1.5 opacity-40', isDarkMode ? 'text-gray-500' : 'text-gray-400')} size={24} />
+              <p className={cn('text-xs font-semibold', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Нет запланированных выездов</p>
+            </div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-[#232323]">
+            <div className="divide-y divide-gray-100 dark:divide-[#232323] max-h-[320px] overflow-y-auto">
               {upcomingDepartures.map(({ b, c }) => (
                 <div key={b.id} className="py-2.5 flex items-center justify-between gap-4">
                   <div className="min-w-0">

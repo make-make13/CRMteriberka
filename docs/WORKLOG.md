@@ -1432,6 +1432,200 @@ Files changed:
 3. Rebuilt the Dashboard section:
    - Added period picker state: "Сегодня", "7 дней", "Месяц", "Произвольный период" (with two date input fields).
    - Formulated dynamic metrics: loading/occupancy rate (based on occupied room-nights vs available room-nights), arrivals, departures, active contracts, total revenue, payments paid/remainder, leads count, and conversion.
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/chessboard/Chessboard.tsx`
+- `src/components/clients/Clients.tsx`
+
+**Шахматка — color hierarchy + controls zone:**
+- Page bg: `#0A0A0A` → `#050505` (near-black, matches App.tsx)
+- Table surface: `#0A0A0A` → `#111111`; table header: `#111111` → `#161616`
+- All borders: `#262626` → `#232323`
+- Primary text: `#F5F5F5` → `#F4F1EA`; secondary text: `#8B8B8B` → `#8F9894`
+- Price color: white `#F4F1EA` → orange `#F97316` (to match room category accent)
+- Sea view icon: vivid blue `#2D9CDB` → muted blue-gray `#8CAFBE`
+- Cell hover: `#262626/50` → `#232323`
+- Removed outer card wrapper (`rounded-2xl border p-4 bg-[#0A0A0A]`) from controls zone — controls now float directly on page bg
+- Legend: removed bordered panel, simplified to compact `flex gap-4 text-xs`; dot size `w-2.5 h-2.5`; only Забронирован (orange) + Предбронь (blue)
+- Export/Email buttons: `bg-[#161616]` → `bg-[#111111]`; nav arrows hover: → `bg-[#161616]`
+
+**Гости — filter palette:**
+- Active filter: orange `bg-[#F59E0B] text-[#050505]` → neutral `bg-[#161616] text-[#F4F1EA]`
+- Inactive filter: transparent bg, `text-[#8F9894]`, hover `bg-[#111111]`
+- Filter container: `bg-[#111111]` → transparent (no bg in dark mode)
+- CTA «Добавить гостя»: stays orange `bg-[#F59E0B] hover:bg-[#F97316]` — orange reserved for primary actions only
+- Design principle applied: orange = CTA only; segmented filter highlights use neutral `#161616`
+
+Checks run:
+- Claude_in_Chrome screenshot: Шахматка — no card wrapper, #050505 bg, #111111 table, price orange, legend compact, no console errors
+- Claude_in_Chrome screenshot: Гости — search + filters inline, active «Все» neutral (not orange), CTA button stays orange
+- No npm run lint / build (UI-only, per project policy)
+
+### 2026-05-29 — Align badges/buttons to reference app (branch)
+
+Branch: `feature/chessboard-restyle`
+Reference read-only from copy: `D:\CRM Teriberka\CRM-main\Новая папка\CRM-main`
+Files changed:
+- `src/components/clients/Clients.tsx`
+- `src/components/contracts/Contracts.tsx`
+
+**Гости (Clients):**
+- Status badge «Активен»/«Чёрный список»: removed heavy border + emerald, now matches
+  reference — `rounded-md bg-green-500/10 text-green-500 text-[10px] font-bold uppercase`
+  (red equivalent for blacklist)
+- Delete (trash) button: fixed "disappearing" — was `h-7 w-7 opacity-40 group-hover:opacity-100`
+  with border (visible only on row hover). Now reference style: `h-9 w-9 rounded-xl
+  text-red-500 bg-red-500/10 hover:bg-red-500/20`, always visible, Trash2 size 16
+
+**Договоры (Contracts):**
+- Status pill: removed border, switched from teal/FFE08A/F3B2BF to reference palette —
+  paid `green-500/10`, cancelled `red-500/10`, signed_not_paid `orange-500/10`,
+  else `blue-500/10`; `px-2.5 py-1 font-semibold` (icon inherits via text-current)
+- «На печать» button: removed border, brighter text — `bg-[#161616] text-[#F4F1EA]
+  hover:bg-[#232323]`
+- «На отправку» button: removed border — `bg-orange-500/10 text-orange-400
+  hover:bg-orange-500/20`
+
+Checks run:
+- Claude_in_Chrome zoom: Гости — green «АКТИВЕН» badge, red trash always visible
+- Claude_in_Chrome zoom: Договоры — clean status pills (orange/blue), borderless
+  action buttons matching reference photo
+- No npm run lint / build (UI-only, per project policy)
+- Reference sources only READ, never modified
+
+### 2026-05-29 — Match reference amber (#F59E0B) on filled buttons (branch)
+
+Branch: `feature/chessboard-restyle`
+Files changed:
+- `src/components/contracts/Contracts.tsx`
+- `src/components/clients/Clients.tsx`
+
+Issue: our filled CTA/active-filter used the redder orange `#F97316` + white text,
+not the reference amber `#f59e0b` + black text.
+
+**Договоры:**
+- CTA «Новый договор» (header + EmptyState): `bg-[#F97316] text-white hover:bg-[#FB923C]`
+  → `bg-[#F59E0B] text-[#050505] hover:bg-[#D97706]`
+- Active status filter: `bg-[#F97316] text-white` → `bg-[#F59E0B] text-[#050505]
+  shadow-[0_0_15px_rgba(245,158,11,0.3)]` (reference glow)
+- Input focus borders kept `#F97316` — matches reference `focus-within:border-orange-500/50`
+  (orange-500 = #f97316)
+
+**Гости:**
+- CTA «Добавить гостя» hover no longer jumps to orange+white: `hover:bg-[#F97316]
+  hover:text-white` → `hover:bg-[#D97706]` (stays amber, black text)
+
+Checks run:
+- Claude_in_Chrome screenshot: Договоры — «Все» filter + «Новый договор» now amber
+- No console errors; no npm run lint / build (UI-only)
+
+### 2026-05-28 05:51 +03:00 — Backup Settings Runtime Crash Fixes
+
+Files changed:
+- `src/components/settings/BackupSettingsTab.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Added extremely defensive runtime checks in `BackupSettingsTab.tsx`.
+- Ensured UI does not crash if `/api/backups/status` returns an incomplete object (like `{}`).
+- Displays "Резервные копии не настроены или нет данных о статусе" if status or settings is empty.
+- Used `Array.isArray()` before calling `.map` or `.join` on `lastResult.remotes` and `lastResult.errors` to prevent runtime crashes if strings are provided instead of arrays.
+- Safely wrapped `.toLocaleString` and `.toFixed` inside protective try/catch and type checking blocks.
+
+Checks run:
+- Verified safe component rendering locally with extreme edge cases (null properties).
+- Did NOT run npm run lint or build as requested.
+
+Next:
+- Return to modal redesign task once the crash is confirmed solved.
+
+Risks/TODOs:
+- None.
+
+### 2026-05-29 — Create definitive UI_STYLE.md design system documentation (branch)
+
+Branch: `feature/chessboard-restyle`
+Files changed/created:
+- `docs/UI_STYLE.md` (new, 768 lines)
+
+**Task**: Create immutable reference document of current dark enterprise CRM design system
+by collecting REAL values from live interface and source code (NOT guessing, NOT inventing).
+
+**Approach**:
+- Read all component source files (Leads.tsx, Clients.tsx, Contracts.tsx, Chessboard.tsx, App.tsx)
+- Used grep to extract all `bg-[#...]`, `text-[#...]`, `border-[#...]` Tailwind classes
+- Navigated live app on localhost:3002 to verify colors visually
+- Evaluated JavaScript in browser to confirm computed styles
+- Organized real hex values into semantic sections
+
+**Document sections** (16 total):
+1. Design philosophy (compact dark CRM, no unnecessary panels)
+2. Color tokens (page #050505, surface #111111, elevated #161616, border #232323)
+3. Text colors (primary #F4F1EA, secondary #8F9894)
+4. Interface layers (hierarchical depth: page → surface → elevated → interactive)
+5. Buttons (primary CTA amber #F59E0B + black #050505, secondary neutral, danger red)
+6. Tables (compact rows py-3, header bg-[#161616] text-[#8F9894], borders #232323)
+7. Filters/tabs (active amber + glow, inactive neutral #161616 — NEVER share colors)
+8. Chessboard special rules (booking #F97316 + #2D9CDB, "Свободен" no highlight, legend compact)
+9. Typography (sizes 11-20px, weights 400-700 by element, standard font stack)
+10. Inputs/forms (bg-[#161616], focus border-[#F97316]/60, placeholder text-[#8F9894]/60)
+11. Modals/panels (bg-[#111111], header/footer borders, specific padding)
+12. Navigation (header bg-[#050505]/95, active tab #232323, inactive hover #161616)
+13. Forbidden patterns (❌ no big panels, no amber mixing, no orange on buttons, no bright accents)
+14. Screen examples (Leads, Clients, Contracts, Chessboard with actual class sequences)
+15. Legacy migration (deprecated colors: #D98E2B → #F59E0B, #B4CDD2 → #8F9894, etc.)
+16. Compliance checklist (verify before adding elements: layer, text color, CTA, filters, borders, badge pattern, hover, panels, palette, border-radius)
+
+**Real values collected from**:
+- Live interface: Chessboard (orange bookings #F97316, sea icon #8CAFBE, legend)
+- Live interface: Leads (amber CTA #F59E0B, filter glow shadow, table structure)
+- Live interface: Clients (green status badges, red delete button)
+- Live interface: Contracts (status colors, action buttons)
+- Source code grep: 250+ matches of hex color patterns across all components
+- Browser DevTools computed styles: header, buttons, inputs, table cells
+
+**Key decisions documented**:
+- Orange (#F97316) is input focus ONLY, never CTA (CTA = amber #F59E0B)
+- Filters: active uses amber with glow, inactive uses neutral #161616 (NEVER compete for amber)
+- Badges: pattern is `bg-{color}/10 text-{color}` (no borders, 10% opacity bg)
+- "Свободен" booking status has NO color highlight (already removed from legend)
+- Row hover is #161616 (lift to next surface layer)
+- Text is ONLY #F4F1EA (primary) or #8F9894 (secondary), no other grays
+
+**Commits**:
+- 4d0cb59: docs: Create definitive UI_STYLE.md with actual design system values
+
+Checks run:
+- Document created with 768 lines, all sections filled with real hex values
+- No npm lint / build (documentation-only, per project policy)
+- No code changes, no file modifications
+- Manual verification: visual inspection of app matched hex values in doc
+
+**Next**:
+- Document serves as immutable reference for all future UI work
+- All future changes must be documented here
+- If old palette colors appear again, refer to migration section and replace
+
+**Risks/TODOs**:
+- None. Document is complete and reflects current state of feature/chessboard-restyle branch.
+
+### 2026-06-24 — Redesign Dashboard/Summary and fix email/logout issues
+
+Files changed:
+- `src/components/dashboard/Dashboard.tsx`
+- `src/services/localApi.ts`
+- `src/services/emailService.ts`
+- `src/components/chessboard/Chessboard.tsx`
+- `src/App.tsx`
+
+**Task**: Fix SMTP client auth header & logout delays, and overhaul hotel CRM Dashboard / Summary.
+
+**Approach**:
+1. Fixed SMTP authorization error "Требуется авторизация" by exporting `apiRequest` from `localApi.ts` and using it in `emailService.ts` and `Chessboard.tsx` to automatically send the Authorization token header.
+2. Resolved slow logout block by launching the database shutdown cloud backup asynchronously in the background. The user is logged out immediately and notified via a background backup toast. Completed tasks archiving is run in parallel with logout session clearing using `Promise.all`.
+3. Rebuilt the Dashboard section:
+   - Added period picker state: "Сегодня", "7 дней", "Месяц", "Произвольный период" (with two date input fields).
+   - Formulated dynamic metrics: loading/occupancy rate (based on occupied room-nights vs available room-nights), arrivals, departures, active contracts, total revenue, payments paid/remainder, leads count, and conversion.
    - Designed a "Requires Attention" widget showing urgent tasks (new leads, confirmed leads without prebooking, prebookings without contracts, contracts with debt, today's arrivals/departures) using grammatically correct pluralization helpers.
    - Designed an "Upcoming Events" grid for arrivals and departures (safely showing guest names, dates, and payment status badges).
    - Formulated a clean management report containing textual conclusion summaries.
@@ -1439,3 +1633,23 @@ Files changed:
 
 **Next**:
 - Monitor operational metrics on the dashboard to verify stats accuracy.
+
+### 2026-06-24 — Polish Dashboard layout, tab order, and metrics representation
+
+Files changed:
+- `src/App.tsx`
+- `src/components/dashboard/Dashboard.tsx`
+
+**Task**: Polish Dashboard UI/UX, reorder navigation tabs, clarify metrics terminology.
+
+**Approach**:
+1. Reordered tabs in `App.tsx` navigation menu to position "Сводка" (Dashboard) immediately after "Дополнительно".
+2. Passed the `onViewChange` handler from `App.tsx` to `<Dashboard />` to enable interactive CTA links inside the "Requires Attention" widget.
+3. Updated "Requires Attention" row styles to be visually larger and added explicit CTA buttons:
+   - "Открыть заявки", "Проверить предброни", "Проверить долги", "Посмотреть заезды/выезды".
+4. Clarified card terminology:
+   - Renamed "Новые заявки" to "Новые за период" to differentiate it from all active new leads.
+   - Renamed row headers in attention widget to "Новые к обработке".
+   - Changed occupancy card subtext to calculate "номер-ночи" instead of "койко-ночи" (e.g. "X номер-ночей занято из Y доступных").
+5. Overhauled "Отчёт за период" by adding a dedicated "Главное" metrics section summary for management.
+6. Improved upcoming arrivals/departures listings empty states with clean calendar icons.
