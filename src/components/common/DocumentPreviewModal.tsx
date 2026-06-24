@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, FileText, Loader2, FileDown, Printer, Mail } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { installPdfjsRuntimeCompatibility } from '../../utils/pdfjsCompat';
 // Worker pdf.js подключается через Vite ?worker — так он корректно бандлится и
 // запускается и в dev, и в упакованном Electron (без проблем с путём/MIME при
 // отдаче статики). Раньше worker грузился по new URL(..., import.meta.url),
 // что в установленной версии давало 404 и срывало предпросмотр.
-import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
+import PdfjsWorker from '../../utils/pdfjsWorkerCompat?worker';
+
+installPdfjsRuntimeCompatibility();
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

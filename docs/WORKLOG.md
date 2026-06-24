@@ -1796,3 +1796,38 @@ Files changed:
    - Changed occupancy card subtext to calculate "номер-ночи" instead of "койко-ночи" (e.g. "X номер-ночей занято из Y доступных").
 5. Overhauled "Отчёт за период" by adding a dedicated "Главное" metrics section summary for management.
 6. Improved upcoming arrivals/departures listings empty states with clean calendar icons.
+
+### 2026-06-24 14:17:45 +03:00 — Permanent PDF preview compatibility fix
+
+Files changed:
+- `src/components/common/DocumentPreviewModal.tsx`
+- `src/utils/pdfjsCompat.ts`
+- `src/utils/pdfjsWorkerCompat.ts`
+- `scripts/pdfjsPreviewCompatibilityTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Move the installed CRM PDF preview hotfix into the source project used to build the installer.
+
+**Completed**:
+1. Added a shared pdf.js runtime compatibility module for Electron 36 / Chrome 136:
+   - `Uint8Array.prototype.toHex`
+   - `Map.prototype.getOrInsert`
+   - `Map.prototype.getOrInsertComputed`
+   - `WeakMap.prototype.getOrInsert`
+   - `WeakMap.prototype.getOrInsertComputed`
+2. Added a pdf.js worker wrapper that installs the same compatibility layer before loading `pdf.worker`.
+3. Updated `DocumentPreviewModal` to install compatibility in the main preview thread and use the wrapper worker.
+4. Added a focused source-level regression test to prevent direct worker import or missing compatibility setup.
+
+Checks run:
+- `npx tsx scripts/pdfjsPreviewCompatibilityTest.ts` — passed
+- `npm run lint` — passed
+- `npm run build` — passed
+- Built asset marker check — compatibility marker found in generated preview assets
+
+**Next**:
+- Rebuild the installer from this source and replace the installed CRM build.
+
+**Risks/TODOs**:
+- The fix intentionally patches only missing runtime APIs required by current `pdfjs-dist`.
+- If Electron or `pdfjs-dist` is upgraded later, re-run the contract preview flow and remove compatibility code only after confirming it is no longer needed.
