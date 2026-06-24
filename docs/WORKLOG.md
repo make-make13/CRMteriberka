@@ -1414,3 +1414,28 @@ Checks run:
 
 **Risks/TODOs**:
 - None. Document is complete and reflects current state of feature/chessboard-restyle branch.
+
+### 2026-06-24 — Redesign Dashboard/Summary and fix email/logout issues
+
+Files changed:
+- `src/components/dashboard/Dashboard.tsx`
+- `src/services/localApi.ts`
+- `src/services/emailService.ts`
+- `src/components/chessboard/Chessboard.tsx`
+- `src/App.tsx`
+
+**Task**: Fix SMTP client auth header & logout delays, and overhaul hotel CRM Dashboard / Summary.
+
+**Approach**:
+1. Fixed SMTP authorization error "Требуется авторизация" by exporting `apiRequest` from `localApi.ts` and using it in `emailService.ts` and `Chessboard.tsx` to automatically send the Authorization token header.
+2. Resolved slow logout block by launching the database shutdown cloud backup asynchronously in the background. The user is logged out immediately and notified via a background backup toast. Completed tasks archiving is run in parallel with logout session clearing using `Promise.all`.
+3. Rebuilt the Dashboard section:
+   - Added period picker state: "Сегодня", "7 дней", "Месяц", "Произвольный период" (with two date input fields).
+   - Formulated dynamic metrics: loading/occupancy rate (based on occupied room-nights vs available room-nights), arrivals, departures, active contracts, total revenue, payments paid/remainder, leads count, and conversion.
+   - Designed a "Requires Attention" widget showing urgent tasks (new leads, confirmed leads without prebooking, prebookings without contracts, contracts with debt, today's arrivals/departures) using grammatically correct pluralization helpers.
+   - Designed an "Upcoming Events" grid for arrivals and departures (safely showing guest names, dates, and payment status badges).
+   - Formulated a clean management report containing textual conclusion summaries.
+   - Styled the dashboard with dark/light mode compatibility, modern layout grid, and aligned typography.
+
+**Next**:
+- Monitor operational metrics on the dashboard to verify stats accuracy.

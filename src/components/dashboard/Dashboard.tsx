@@ -1,11 +1,36 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React, { useEffect, useMemo, useState } from 'react';
-import { BedDouble, Wallet, FileText, Inbox, TrendingUp, AlertCircle, CalendarCheck, type LucideIcon } from 'lucide-react';
+import {
+  BedDouble,
+  Wallet,
+  FileText,
+  Inbox,
+  TrendingUp,
+  AlertCircle,
+  CalendarCheck,
+  CheckCircle2,
+  Calendar,
+  type LucideIcon
+} from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { startOfMonth, endOfMonth, parseISO, isWithinInterval, format } from 'date-fns';
+import {
+  startOfMonth,
+  endOfMonth,
+  parseISO,
+  isWithinInterval,
+  format,
+  startOfDay,
+  endOfDay,
+  subDays
+} from 'date-fns';
 import { ru } from 'date-fns/locale';
-import type { Client, Contract } from '../../types';
-import { CC_OBJECTS } from '../../constants';
+import type { Client, Contract, Lead } from '../../types';
+import { CC_OBJECTS, GB_OBJECTS } from '../../constants';
 import { leadApi } from '../../services/localApi';
 
 function cn(...inputs: ClassValue[]) {
@@ -24,107 +49,310 @@ function safeDate(value?: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+function plural(count: number, one: string, two: string, five: string) {
+  const n = Math.abs(count) % 100;
+  const n1 = n % 10;
+  if (n > 10 && n < 20) return five;
+  if (n1 > 1 && n1 < 5) return two;
+  if (n1 === 1) return one;
+  return five;
+}
+
+function getClientShortName(clientId: string, clients: Client[]): string {
+  const client = clients.find(c => c.id === clientId);
+  if (!client) return '—';
+  if (client.type === 'physical') {
+    const last = client.lastName || '';
+    const first = client.firstName || '';
+    const initial = first ? ` ${first[0]}.` : '';
+    return `${last}${initial}`.trim() || 'Физическое лицо';
+  } else {
+    return client.organizationName || 'Юридическое лицо';
+  }
+}
+
+function getObjectName(objectId: string): string {
+  const obj = [...CC_OBJECTS, ...GB_OBJECTS].find(o => o.id === objectId);
+  return obj ? obj.name : objectId;
+}
+
+function formatEventDate(dateStr: string): string {
+  const d = safeDate(dateStr);
+  if (!d) return '—';
+  return format(d, 'd MMM', { locale: ru });
+}
+
 interface DashboardProps {
   isDarkMode: boolean;
   contracts: Contract[];
   clients: Client[];
 }
 
-interface LeadStats {
-  total: number;
-  fresh: number;
-  converted: number;
-}
+type PeriodMode = 'today' | '7days' | 'month' | 'custom';
 
 export default function Dashboard({ isDarkMode, contracts, clients }: DashboardProps) {
-  const [leadStats, setLeadStats] = useState<LeadStats | null>(null);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('7days');
+  
+  const [customStart, setCustomStart] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().split('T')[0];
+  });
+  
+  const [customEnd, setCustomEnd] = useState<string>(() => {
+    return new Date().toISOString().split('T')[0];
+  });
 
   useEffect(() => {
     let cancelled = false;
     leadApi
       .list()
-      .then(leads => {
-        if (cancelled) return;
-        setLeadStats({
-          total: leads.length,
-          fresh: leads.filter(l => l.status === 'new').length,
-          converted: leads.filter(l => Boolean(l.contractId)).length,
-        });
+      .then(fetchedLeads => {
+        if (!cancelled) setLeads(fetchedLeads);
       })
       .catch(() => {
-        if (!cancelled) setLeadStats({ total: 0, fresh: 0, converted: 0 });
+        if (!cancelled) setLeads([]);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const stats = useMemo(() => {
-    const totalRooms = CC_OBJECTS.length;
+  // Расчёт временного интервала для отчёта
+  const dateInterval = useMemo(() => {
     const now = new Date();
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
+    let start = new Date();
+    let end = new Date();
 
-    const active = contracts.filter(c => c.status !== 'cancelled' && c.status !== 'pre_booking');
+    if (periodMode === 'today') {
+      start = startOfDay(now);
+      end = endOfDay(now);
+    } else if (periodMode === '7days') {
+      start = startOfDay(subDays(now, 6));
+      end = endOfDay(now);
+    } else if (periodMode === 'month') {
+      start = startOfMonth(now);
+      end = endOfMonth(now);
+    } else if (periodMode === 'custom') {
+      start = startOfDay(safeDate(customStart) || subDays(now, 7));
+      end = endOfDay(safeDate(customEnd) || now);
+    }
 
-    // Загрузка сегодня: номера с непогашенной бронью, перекрывающей текущий момент.
-    const occupiedRooms = new Set<string>();
-    for (const c of contracts) {
-      if (c.status === 'cancelled') continue;
-      for (const b of c.bookings || []) {
-        const start = safeDate(b.startTime);
-        const end = safeDate(b.endTime);
-        if (start && end && start <= now && now <= end) occupiedRooms.add(b.objectId);
+    return { start, end };
+  }, [periodMode, customStart, customEnd]);
+
+  // Вычисление ключевых показателей по выбранному периоду
+  const periodStats = useMemo(() => {
+    const totalRooms = CC_OBJECTS.length + GB_OBJECTS.length; // 20 + 11 = 31
+
+    // Получаем массив дней в интервале
+    const daysInInterval: Date[] = [];
+    const current = new Date(dateInterval.start);
+    while (current <= dateInterval.end) {
+      daysInInterval.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Все бронирования комнат (основные) без учета отмененных
+    const mainBookings = contracts
+      .filter(c => c.status !== 'cancelled')
+      .flatMap(c => (c.bookings || []).filter(b => b.type === 'main'));
+
+    // Подсчет занятых номеро-ночей
+    let occupiedNightsCount = 0;
+    for (const d of daysInInterval) {
+      const dStr = format(d, 'yyyy-MM-dd');
+      for (const b of mainBookings) {
+        const bStartStr = b.startTime.split('T')[0];
+        const bEndStr = b.endTime.split('T')[0];
+        if (dStr >= bStartStr && dStr < bEndStr) {
+          occupiedNightsCount++;
+        }
       }
     }
-    const occupancyPct = totalRooms ? Math.round((occupiedRooms.size / totalRooms) * 100) : 0;
 
-    // Деньги за текущий месяц — по дате заезда основной брони договора.
-    let revenueMonth = 0;
-    let prepaidMonth = 0;
-    for (const c of active) {
+    const totalAvailableNights = daysInInterval.length * totalRooms;
+    const occupancyPct = totalAvailableNights > 0 
+      ? Math.round((occupiedNightsCount / totalAvailableNights) * 100) 
+      : 0;
+
+    // Договоры, у которых дата заезда (или дата создания) попадает в период
+    const contractsInPeriod = contracts.filter(c => {
       const main = (c.bookings || []).find(b => b.type === 'main') || (c.bookings || [])[0];
-      const checkIn = main ? safeDate(main.startTime) : null;
-      if (checkIn && isWithinInterval(checkIn, { start: monthStart, end: monthEnd })) {
-        revenueMonth += Number(c.totalAmount || 0);
-        prepaidMonth += Number(c.prepayment || 0);
-      }
-    }
+      const checkIn = main ? safeDate(main.startTime) : safeDate(c.createdAt);
+      return checkIn && isWithinInterval(checkIn, { start: dateInterval.start, end: dateInterval.end });
+    });
 
-    const debt = active.reduce((sum, c) => sum + Number(c.remainder || 0), 0);
+    const activeContractsInPeriod = contractsInPeriod.filter(c => c.status !== 'cancelled' && c.status !== 'pre_booking');
+
+    const arrivalsInPeriod = mainBookings.filter(b => {
+      const start = safeDate(b.startTime);
+      return start && isWithinInterval(start, { start: dateInterval.start, end: dateInterval.end });
+    });
+
+    const departuresInPeriod = mainBookings.filter(b => {
+      const end = safeDate(b.endTime);
+      return end && isWithinInterval(end, { start: dateInterval.start, end: dateInterval.end });
+    });
+
+    // Финансовые показатели по договорам за период
+    const revenuePeriod = activeContractsInPeriod.reduce((sum, c) => sum + Number(c.totalAmount || 0), 0);
+    const prepaidPeriod = activeContractsInPeriod.reduce((sum, c) => sum + Number(c.prepayment || 0), 0);
+    const debtPeriod = activeContractsInPeriod.reduce((sum, c) => sum + Number(c.remainder || 0), 0);
+
+    // Заявки за период
+    const leadsInPeriod = leads.filter(l => {
+      const d = safeDate(l.createdAt);
+      return d && isWithinInterval(d, { start: dateInterval.start, end: dateInterval.end });
+    });
+
+    const totalLeads = leadsInPeriod.length;
+    const convertedLeads = leadsInPeriod.filter(l => Boolean(l.contractId) || ['client_created', 'prebooking_created', 'contract_created'].includes(l.status)).length;
+    const conversionPct = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
 
     return {
-      totalRooms,
-      occupied: occupiedRooms.size,
       occupancyPct,
-      activeCount: active.length,
-      revenueMonth,
-      prepaidMonth,
-      debt,
-      byStatus: {
-        signed_not_paid: active.filter(c => c.status === 'signed_not_paid').length,
-        partial_paid: active.filter(c => c.status === 'partial_paid').length,
-        paid: active.filter(c => c.status === 'paid').length,
-      },
-      monthLabel: format(now, 'LLLL yyyy', { locale: ru }),
+      occupiedNightsCount,
+      totalAvailableNights,
+      arrivalsCount: arrivalsInPeriod.length,
+      departuresCount: departuresInPeriod.length,
+      contractsCount: contractsInPeriod.length,
+      activeContractsCount: activeContractsInPeriod.length,
+      revenuePeriod,
+      prepaidPeriod,
+      debtPeriod,
+      totalLeads,
+      convertedLeads,
+      conversionPct,
+      leadsInPeriodNew: leadsInPeriod.filter(l => l.status === 'new').length
     };
+  }, [contracts, leads, dateInterval]);
+
+  // Данные для блока "Требует внимания" (актуальное состояние на сегодня)
+  const attentionItems = useMemo(() => {
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
+
+    const newLeads = leads.filter(l => l.status === 'new');
+    const confirmedLeadsNoPre = leads.filter(l => l.status === 'confirmed' && !l.prebookingId && !l.contractId);
+    const prebookingsWithoutContract = contracts.filter(c => c.status === 'pre_booking');
+    const contractsWithDebt = contracts.filter(c => c.status !== 'cancelled' && c.status !== 'pre_booking' && c.status !== 'paid' && c.remainder > 0);
+
+    const arrivalsToday = contracts
+      .filter(c => c.status !== 'cancelled')
+      .flatMap(c => (c.bookings || []).filter(b => b.type === 'main'))
+      .filter(b => {
+        const start = safeDate(b.startTime);
+        return start && isWithinInterval(start, { start: todayStart, end: todayEnd });
+      });
+
+    const departuresToday = contracts
+      .filter(c => c.status !== 'cancelled')
+      .flatMap(c => (c.bookings || []).filter(b => b.type === 'main'))
+      .filter(b => {
+        const end = safeDate(b.endTime);
+        return end && isWithinInterval(end, { start: todayStart, end: todayEnd });
+      });
+
+    return [
+      {
+        id: 'new-leads',
+        count: newLeads.length,
+        text: `${plural(newLeads.length, 'новая заявка требует', 'новые заявки требуют', 'новых заявок требуют')} обработки`,
+        color: 'blue',
+        icon: Inbox
+      },
+      {
+        id: 'confirmed-no-pre',
+        count: confirmedLeadsNoPre.length,
+        text: `${plural(confirmedLeadsNoPre.length, 'подтвержденная заявка', 'подтвержденные заявки', 'подтвержденных заявок')} без брони`,
+        color: 'amber',
+        icon: AlertCircle
+      },
+      {
+        id: 'pre-no-contract',
+        count: prebookingsWithoutContract.length,
+        text: `${plural(prebookingsWithoutContract.length, 'предбронь', 'предброни', 'предброней')} без оформленного договора`,
+        color: 'amber',
+        icon: FileText
+      },
+      {
+        id: 'debt',
+        count: contractsWithDebt.length,
+        text: `${plural(contractsWithDebt.length, 'активный договор', 'активных договора', 'активных договоров')} с задолженностью`,
+        color: 'red',
+        icon: Wallet
+      },
+      {
+        id: 'arrivals',
+        count: arrivalsToday.length,
+        text: `${plural(arrivalsToday.length, 'заезд ожидается', 'заезда ожидаются', 'заездов ожидаются')} сегодня`,
+        color: 'green',
+        icon: BedDouble
+      },
+      {
+        id: 'departures',
+        count: departuresToday.length,
+        text: `${plural(departuresToday.length, 'выезд запланирован', 'выезда запланированы', 'выездов запланированы')} сегодня`,
+        color: 'indigo',
+        icon: CalendarCheck
+      }
+    ].filter(item => item.count > 0);
+  }, [contracts, leads]);
+
+  // Ближайшие заезды и выезды (следующие 5 событий начиная с сегодняшнего дня)
+  const upcomingArrivals = useMemo(() => {
+    const todayLimit = startOfDay(new Date());
+    return contracts
+      .filter(c => c.status !== 'cancelled')
+      .flatMap(c => (c.bookings || []).filter(b => b.type === 'main').map(b => ({ b, c })))
+      .filter(({ b }) => {
+        const d = safeDate(b.startTime);
+        return d && d >= todayLimit;
+      })
+      .sort((a, b) => (safeDate(a.b.startTime)?.getTime() || 0) - (safeDate(b.b.startTime)?.getTime() || 0))
+      .slice(0, 5);
   }, [contracts]);
 
-  const conversionPct =
-    leadStats && leadStats.total > 0 ? Math.round((leadStats.converted / leadStats.total) * 100) : 0;
+  const upcomingDepartures = useMemo(() => {
+    const todayLimit = startOfDay(new Date());
+    return contracts
+      .filter(c => c.status !== 'cancelled')
+      .flatMap(c => (c.bookings || []).filter(b => b.type === 'main').map(b => ({ b, c })))
+      .filter(({ b }) => {
+        const d = safeDate(b.endTime);
+        return d && d >= todayLimit;
+      })
+      .sort((a, b) => (safeDate(a.b.endTime)?.getTime() || 0) - (safeDate(b.b.endTime)?.getTime() || 0))
+      .slice(0, 5);
+  }, [contracts]);
+
+  // Формулирование вывода отчёта за период
+  const reportText = useMemo(() => {
+    const cCount = periodStats.activeContractsCount;
+    const lCount = periodStats.totalLeads;
+    const debtStr = money(periodStats.debtPeriod);
+    
+    const contractsText = `${cCount} ${plural(cCount, 'активный договор', 'активных договора', 'активных договоров')}`;
+    const leadsText = `${lCount} ${plural(lCount, 'заявка', 'заявки', 'заявок')}`;
+    
+    return `За выбранный период создано ${contractsText}, поступило ${leadsText}, остаток к оплате составляет ${debtStr}.`;
+  }, [periodStats]);
 
   const cardClass = cn(
-    'rounded-2xl border p-5',
-    isDarkMode ? 'bg-[#111111] border-[#232323]' : 'bg-white border-gray-200',
+    'rounded-2xl border p-5 transition-all duration-200',
+    isDarkMode ? 'bg-[#111111] border-[#232323]' : 'bg-white border-gray-200 shadow-sm',
   );
   const labelClass = cn(
-    'text-[11px] font-bold uppercase tracking-wider',
+    'text-[10px] font-bold uppercase tracking-wider',
     isDarkMode ? 'text-[#8F9894]' : 'text-gray-500',
   );
   const valueClass = cn('mt-1 text-2xl font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900');
   const subClass = cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400');
 
-  const Kpi = ({
+  const KpiCard = ({
     icon: Icon,
     label,
     value,
@@ -140,77 +368,349 @@ export default function Dashboard({ isDarkMode, contracts, clients }: DashboardP
     <div className={cardClass}>
       <div className="flex items-center justify-between">
         <span className={labelClass}>{label}</span>
-        <Icon size={18} className={accent || (isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')} />
+        <div className={cn(
+          'p-1.5 rounded-lg text-xs',
+          accent || (isDarkMode ? 'bg-[#1c1c1c] text-gray-400' : 'bg-gray-50 text-gray-500')
+        )}>
+          <Icon size={16} />
+        </div>
       </div>
       <div className={valueClass}>{value}</div>
       {sub && <div className={subClass}>{sub}</div>}
     </div>
   );
 
+  const periodButtons = [
+    { id: 'today', label: 'Сегодня' },
+    { id: '7days', label: '7 дней' },
+    { id: 'month', label: 'Месяц' },
+    { id: 'custom', label: 'Произвольный период' },
+  ];
+
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className={cn('text-xl font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>Сводка</h2>
-        <p className={subClass}>Ключевые показатели бутик-отеля на текущий момент</p>
+    <div className="space-y-6">
+      {/* Шапка дашборда */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 border-gray-100 dark:border-[#232323]">
+        <div>
+          <h2 className={cn('text-xl font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>Сводка</h2>
+          <p className={subClass}>Оперативная информация по бронированиям, заявкам и оплатам</p>
+        </div>
+
+        {/* Переключатель периода */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className={cn(
+            'flex rounded-xl p-0.5 border',
+            isDarkMode ? 'bg-[#181818] border-[#2c2c2c]' : 'bg-gray-100 border-gray-200'
+          )}>
+            {periodButtons.map(btn => (
+              <button
+                key={btn.id}
+                onClick={() => setPeriodMode(btn.id as PeriodMode)}
+                className={cn(
+                  'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all',
+                  periodMode === btn.id
+                    ? (isDarkMode ? 'bg-[#2D2D2D] text-[#F4F1EA] shadow-sm' : 'bg-white text-gray-900 shadow-sm')
+                    : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-900')
+                )}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+
+          {periodMode === 'custom' && (
+            <div className="flex items-center gap-2 mt-2 sm:mt-0">
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className={cn(
+                  'px-2 py-1 text-xs rounded-lg border outline-none focus:ring-1',
+                  isDarkMode
+                    ? 'bg-[#181818] border-[#2c2c2c] text-[#F4F1EA] focus:ring-orange-500'
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500'
+                )}
+              />
+              <span className={cn('text-xs', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>—</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className={cn(
+                  'px-2 py-1 text-xs rounded-lg border outline-none focus:ring-1',
+                  isDarkMode
+                    ? 'bg-[#181818] border-[#2c2c2c] text-[#F4F1EA] focus:ring-orange-500'
+                    : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500'
+                )}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Kpi
+      {/* Сетка карточек показателей */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
           icon={BedDouble}
-          label="Загрузка сейчас"
-          value={`${stats.occupied} / ${stats.totalRooms}`}
-          sub={`${stats.occupancyPct}% номеров занято`}
-          accent="text-[#F97316]"
+          label="Загрузка за период"
+          value={`${periodStats.occupancyPct}%`}
+          sub={`${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'ночь занята', 'ночи заняты', 'ночей занято')}`}
+          accent={isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-600'}
         />
-        <Kpi
+        <KpiCard
+          icon={CalendarCheck}
+          label="Заезды"
+          value={String(periodStats.arrivalsCount)}
+          sub="За выбранный период"
+          accent={isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}
+        />
+        <KpiCard
+          icon={CalendarCheck}
+          label="Выезды"
+          value={String(periodStats.departuresCount)}
+          sub="За выбранный период"
+          accent={isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}
+        />
+        <KpiCard
           icon={FileText}
           label="Активные договоры"
-          value={String(stats.activeCount)}
-          sub={`Оплачено: ${stats.byStatus.paid} · частично: ${stats.byStatus.partial_paid} · ждут оплаты: ${stats.byStatus.signed_not_paid}`}
+          value={String(periodStats.activeContractsCount)}
+          sub={`Всего создано: ${periodStats.contractsCount}`}
+          accent={isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}
         />
-        <Kpi
+        <KpiCard
           icon={Wallet}
-          label={`Выручка · ${stats.monthLabel}`}
-          value={money(stats.revenueMonth)}
-          sub={`Получено предоплат: ${money(stats.prepaidMonth)}`}
-          accent="text-emerald-500"
+          label="Выручка за период"
+          value={money(periodStats.revenuePeriod)}
+          sub={`Оплачено: ${money(periodStats.prepaidPeriod)}`}
+          accent={isDarkMode ? 'bg-teal-500/10 text-teal-400' : 'bg-teal-50 text-teal-600'}
         />
-        <Kpi
+        <KpiCard
           icon={AlertCircle}
-          label="Долг к оплате"
-          value={money(stats.debt)}
-          sub="Остаток по активным договорам"
-          accent="text-[#F3B2BF]"
+          label="Остаток к оплате"
+          value={money(periodStats.debtPeriod)}
+          sub="По договорам периода"
+          accent={isDarkMode ? 'bg-rose-500/10 text-rose-400' : 'bg-rose-50 text-rose-600'}
         />
-        <Kpi
+        <KpiCard
           icon={Inbox}
-          label="Заявки"
-          value={leadStats ? String(leadStats.total) : '—'}
-          sub={leadStats ? `Новых: ${leadStats.fresh}` : 'Загрузка…'}
-          accent="text-[#2D9CDB]"
+          label="Новые заявки"
+          value={String(periodStats.leadsInPeriodNew)}
+          sub={`Всего получено: ${periodStats.totalLeads}`}
+          accent={isDarkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}
         />
-        <Kpi
+        <KpiCard
           icon={TrendingUp}
           label="Конверсия заявок"
-          value={leadStats ? `${conversionPct}%` : '—'}
-          sub={leadStats ? `В договор: ${leadStats.converted} из ${leadStats.total}` : 'Загрузка…'}
-          accent="text-emerald-500"
+          value={`${periodStats.conversionPct}%`}
+          sub={`Договоров: ${periodStats.convertedLeads}`}
+          accent={isDarkMode ? 'bg-violet-500/10 text-violet-400' : 'bg-violet-50 text-violet-600'}
         />
       </div>
 
-      <div className={cn(cardClass, 'flex items-center gap-4')}>
-        <CalendarCheck size={20} className={isDarkMode ? 'text-[#8F9894]' : 'text-gray-400'} />
-        <div className="flex-1">
-          <div className={labelClass}>Заполненность номеров сегодня</div>
-          <div className={cn('mt-2 h-2.5 w-full overflow-hidden rounded-full', isDarkMode ? 'bg-[#232323]' : 'bg-gray-100')}>
-            <div
-              className="h-full rounded-full bg-[#F97316] transition-all"
-              style={{ width: `${Math.min(100, stats.occupancyPct)}%` }}
-            />
+      {/* Оперативные блоки */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Блок: Требует внимания */}
+        <div className={cardClass}>
+          <h3 className={cn('text-sm font-bold uppercase tracking-wider mb-4 border-b pb-2 border-gray-100 dark:border-[#232323]', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+            Требует внимания
+          </h3>
+          {attentionItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <CheckCircle2 className="text-emerald-500 mb-2" size={32} />
+              <p className={cn('text-sm font-semibold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>Нет срочных задач</p>
+              <p className={cn('text-xs mt-1', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Вся оперативная работа выполнена</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {attentionItems.map(item => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.id} className={cn(
+                    'flex items-center gap-3 p-3 rounded-xl border transition-all duration-150',
+                    isDarkMode ? 'bg-[#161616] border-[#242424]' : 'bg-gray-50 border-gray-100 hover:shadow-xs'
+                  )}>
+                    <div className={cn(
+                      'p-2 rounded-lg shrink-0',
+                      item.color === 'red' && (isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'),
+                      item.color === 'amber' && (isDarkMode ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600'),
+                      item.color === 'blue' && (isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'),
+                      item.color === 'green' && (isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'),
+                      item.color === 'indigo' && (isDarkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600')
+                    )}>
+                      <Icon size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className={cn('text-[9px] font-bold uppercase tracking-wider block', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
+                        {item.id === 'new-leads' && 'Новые заявки'}
+                        {item.id === 'confirmed-no-pre' && 'Ожидают действий'}
+                        {item.id === 'pre-no-contract' && 'Неоформленные брони'}
+                        {item.id === 'debt' && 'Задолженность'}
+                        {item.id === 'arrivals' && 'Заезды'}
+                        {item.id === 'departures' && 'Выезды'}
+                      </span>
+                      <p className={cn('text-xs font-semibold mt-0.5 truncate', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>
+                        {item.text}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      'px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0',
+                      item.color === 'red' && 'bg-red-500 text-white',
+                      item.color === 'amber' && 'bg-amber-500 text-white',
+                      item.color === 'blue' && 'bg-blue-500 text-white',
+                      item.color === 'green' && 'bg-emerald-500 text-white',
+                      item.color === 'indigo' && 'bg-indigo-500 text-white'
+                    )}>
+                      {item.count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Блок: Отчёт за период для руководства */}
+        <div className={cardClass}>
+          <div className="flex items-center justify-between border-b pb-2 mb-4 border-gray-100 dark:border-[#232323]">
+            <h3 className={cn('text-sm font-bold uppercase tracking-wider', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+              Отчёт за период
+            </h3>
+            <span className={cn('text-[10px] px-2.5 py-0.5 rounded-full font-bold', isDarkMode ? 'bg-[#181818] text-gray-300' : 'bg-gray-100 text-gray-600')}>
+              {format(dateInterval.start, 'dd.MM.yyyy')} — {format(dateInterval.end, 'dd.MM.yyyy')}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className={subClass}>Выручка</span>
+                <div className={cn('text-lg font-bold mt-0.5', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{money(periodStats.revenuePeriod)}</div>
+              </div>
+              <div>
+                <span className={subClass}>Оплачено</span>
+                <div className={cn('text-lg font-bold mt-0.5 text-emerald-500')}>{money(periodStats.prepaidPeriod)}</div>
+              </div>
+              <div>
+                <span className={subClass}>Остаток к оплате</span>
+                <div className={cn('text-lg font-bold mt-0.5 text-rose-400')}>{money(periodStats.debtPeriod)}</div>
+              </div>
+              <div>
+                <span className={subClass}>Загрузка номеров</span>
+                <div className={cn('text-lg font-bold mt-0.5', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</div>
+              </div>
+            </div>
+
+            {/* Прогресс-бар загрузки */}
+            <div className="space-y-1 pt-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className={subClass}>Средняя занятость</span>
+                <span className={cn('font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</span>
+              </div>
+              <div className={cn('h-2 w-full overflow-hidden rounded-full', isDarkMode ? 'bg-[#232323]' : 'bg-gray-100')}>
+                <div
+                  className="h-full rounded-full bg-orange-500 transition-all duration-300"
+                  style={{ width: `${Math.min(100, periodStats.occupancyPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="border-t pt-3 border-gray-100 dark:border-[#232323] space-y-1.5">
+              <span className={subClass}>Краткий вывод</span>
+              <p className={cn('text-xs leading-relaxed font-semibold', isDarkMode ? 'text-gray-300' : 'text-gray-700')}>
+                {reportText}
+              </p>
+            </div>
           </div>
         </div>
-        <div className={cn('text-2xl font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
-          {stats.occupancyPct}%
+      </div>
+
+      {/* Ближайшие события */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Ближайшие заезды */}
+        <div className={cardClass}>
+          <h3 className={cn('text-sm font-bold uppercase tracking-wider mb-4 border-b pb-2 border-gray-100 dark:border-[#232323]', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+            Ближайшие заезды
+          </h3>
+          {upcomingArrivals.length === 0 ? (
+            <p className={cn('text-xs py-6 text-center', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Нет запланированных заездов в ближайшее время</p>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-[#232323]">
+              {upcomingArrivals.map(({ b, c }) => (
+                <div key={b.id} className="py-2.5 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className={cn('text-xs font-bold truncate', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                      {getClientShortName(c.clientId, clients)}
+                    </p>
+                    <p className={cn('text-[10px] mt-0.5', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+                      {getObjectName(b.objectId)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={cn('text-xs font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                      {formatEventDate(b.startTime)}
+                    </p>
+                    <span className={cn(
+                      'inline-block px-2 py-0.5 rounded text-[8px] font-bold mt-1 uppercase tracking-wider',
+                      c.status === 'paid' && (isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700'),
+                      c.status === 'partial_paid' && (isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-700'),
+                      c.status === 'signed_not_paid' && (isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-700'),
+                      c.status === 'pre_booking' && (isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-700')
+                    )}>
+                      {c.status === 'paid' && 'Оплачен'}
+                      {c.status === 'partial_paid' && 'Частично'}
+                      {c.status === 'signed_not_paid' && 'Ждет оплаты'}
+                      {c.status === 'pre_booking' && 'Предбронь'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Ближайшие выезды */}
+        <div className={cardClass}>
+          <h3 className={cn('text-sm font-bold uppercase tracking-wider mb-4 border-b pb-2 border-gray-100 dark:border-[#232323]', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+            Ближайшие выезды
+          </h3>
+          {upcomingDepartures.length === 0 ? (
+            <p className={cn('text-xs py-6 text-center', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>Нет запланированных выездов в ближайшее время</p>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-[#232323]">
+              {upcomingDepartures.map(({ b, c }) => (
+                <div key={b.id} className="py-2.5 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className={cn('text-xs font-bold truncate', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                      {getClientShortName(c.clientId, clients)}
+                    </p>
+                    <p className={cn('text-[10px] mt-0.5', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
+                      {getObjectName(b.objectId)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={cn('text-xs font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
+                      {formatEventDate(b.endTime)}
+                    </p>
+                    <span className={cn(
+                      'inline-block px-2 py-0.5 rounded text-[8px] font-bold mt-1 uppercase tracking-wider',
+                      c.status === 'paid' && (isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700'),
+                      c.status === 'partial_paid' && (isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-700'),
+                      c.status === 'signed_not_paid' && (isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-700'),
+                      c.status === 'pre_booking' && (isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-700')
+                    )}>
+                      {c.status === 'paid' && 'Оплачен'}
+                      {c.status === 'partial_paid' && 'Частично'}
+                      {c.status === 'signed_not_paid' && 'Ждет оплаты'}
+                      {c.status === 'pre_booking' && 'Предбронь'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
