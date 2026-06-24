@@ -648,7 +648,7 @@ async function startServer() {
     res.json(localDb.saveEmailSettings(req.body));
   });
 
-  app.post('/api/email-settings/test-smtp', requireAdmin, async (req, res) => {
+  const handleEmailSmtpTest: express.RequestHandler = async (req, res) => {
     const smtpConfig = getSmtpConfig(req.body);
     if (!smtpConfig.senderEmail || !smtpConfig.appPassword) {
       return res.status(400).json({
@@ -669,7 +669,10 @@ async function startServer() {
     } catch (error) {
       res.status(500).json({ error: asEmailErrorMessage(error) });
     }
-  });
+  };
+
+  app.post('/api/email-settings/test-connection', requireAdmin, handleEmailSmtpTest);
+  app.post('/api/email-settings/test-smtp', requireAdmin, handleEmailSmtpTest);
 
   app.post('/api/backups', requireAdmin, async (_req, res) => {
     try {

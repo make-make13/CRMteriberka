@@ -1,5 +1,27 @@
 # WORKLOG
 
+### 2026-06-24 10:18:42 +03:00 - Email SMTP test endpoint 404 fix
+
+Files changed:
+- `server.ts`
+- `src/services/localApi.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Changed the Email settings SMTP check client URL to `/api/email-settings/test-connection`.
+- Added the matching backend route and kept `/api/email-settings/test-smtp` as a compatibility alias.
+- Reused the existing SMTP verify handler; it uses `nodemailer.verify()` and does not send a test email.
+- Confirmed the transporter still uses host/port/secure plus `auth.user` and `auth.pass`.
+
+Checks run:
+- `npm run lint` - passed.
+
+Next recommended step:
+- Restart the running CRM server/app so the new backend route is active, then run "Проверить соединение" after entering the external app password.
+
+Risks / TODO:
+- No DB, Supabase, contracts, templates, Graphify, migrations, deploy, or secret output changes were made.
+
 ### 2026-06-24 10:11:39 +03:00 - Email SMTP VK/Mail.ru authorization fix
 
 Files changed:

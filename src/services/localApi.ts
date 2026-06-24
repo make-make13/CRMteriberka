@@ -220,7 +220,7 @@ export const emailSettingsApi = {
     port: number;
     secure: boolean;
     user: string;
-  }>('/api/email-settings/test-smtp', {
+  }>('/api/email-settings/test-connection', {
     method: 'POST',
     body: JSON.stringify(settings),
   }),
