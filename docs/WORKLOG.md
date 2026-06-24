@@ -1948,3 +1948,27 @@ Checks run:
 - The installer now intentionally contains production secrets for a single-PC deployment. Do not distribute this installer outside the intended PC.
 - rclone binary is bundled, but cloud remotes still depend on rclone remote configuration names matching the backup settings.
 - Existing electron-builder warnings remain: package metadata is incomplete, asar is disabled, and dependency tree has duplicate/mixed React references.
+
+### 2026-06-24 20:39:55 +03:00 — Installed path smoke audit
+
+Files changed:
+- `docs/WORKLOG.md`
+
+**Task**: Check whether installed paths can break after setup on another PC.
+
+**Completed**:
+1. Verified packaged file layout under `release/win-unpacked/resources/app`.
+2. Started the packaged backend through the Electron executable with `ELECTRON_RUN_AS_NODE=1`, `cwd=resources/app`, temporary `CRM_DATA_DIR`, and explicit `CRM_DIST_DIR`.
+3. Confirmed `/api/health` responds, frontend `index.html` is served, SQLite database is created in the data directory, backup/template directories are created in the data directory, packaged defaults are found from `resources/app/build`, and local `tools/rclone/rclone.exe` exists in the package.
+4. Inspected the temporary SQLite database without printing secret values and confirmed Supabase, SMTP, and backup defaults were seeded.
+
+Checks run:
+- Packaged backend path smoke via `release/win-unpacked/Bolshaya Medveditsa CRM.exe` — passed
+- Package file checks: `dist`, `dist-server`, `dist-electron`, packaged defaults, and local rclone present; `.env.local` absent
+- SQLite seed check: Supabase URL/key present, SMTP user/password present, backup remotes/path present
+
+**Next**:
+- Install the generated NSIS installer on the target PC and repeat UI-level checks from the app: Supabase sync, SMTP test, PDF export, and rclone check.
+
+**Risks/TODOs**:
+- The smoke test validates unpacked package runtime paths, which match the NSIS app layout, but it does not replace a real install-and-run test on the target Windows user profile.
