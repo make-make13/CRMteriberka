@@ -1,5 +1,26 @@
 # WORKLOG
 
+### 2026-06-24 13:48:17 +03:00 - Commit local diagnostic room script
+
+Files changed:
+- `scripts/find_rooms.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Reviewed the untracked `scripts/find_rooms.ts` before committing.
+- Confirmed the script contains no environment secrets, Supabase keys, or frontend service-role exposure.
+- Noted that the script reads local `data/crm.sqlite` and can print booking/contract data when run, so it should remain a local diagnostic helper.
+
+Checks run:
+- `git status --short`
+- Manual file review of `scripts/find_rooms.ts`
+
+Next recommended step:
+- Continue contract preview diagnostics in the installed CRM after this checkpoint.
+
+Risks / TODO:
+- Do not run or share the script output publicly because local booking data may contain operational or personal information.
+
 ### 2026-06-24 12:41:00 +03:00 - Prepare final installer update and auto-seeding for Bolshaya Medveditsa CRM
 
 Files changed:
