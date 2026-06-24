@@ -1,5 +1,24 @@
 # WORKLOG
 
+### 2026-06-24 12:28:00 +03:00 - Bolshaya Medveditsa room inventory configuration for Dashboard
+
+Files changed:
+- `src/constants/bmRooms.ts`
+- `src/components/dashboard/Dashboard.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Created the explicit room inventory for the rebranded "Большая Медведица" hotel in [bmRooms.ts](file:///E:/AI_Workspace/Teriberka/02_crm-teriberka/CRM-main/CRM-main/src/constants/bmRooms.ts) containing the 20 active rooms (retaining standard room IDs cc-1 through cc-20 matching active database records).
+- The inventory is complete (IS_BM_ROOMS_COMPLETE = true) because it represents all active rooms mapped to the rebranded hotel (baseType: 'chunga-changa') in SQLite and the chessboard configuration.
+- Updated [Dashboard.tsx](file:///E:/AI_Workspace/Teriberka/02_crm-teriberka/CRM-main/CRM-main/src/components/dashboard/Dashboard.tsx) to import the new `BM_ROOMS` inventory. Removed all imports/references of legacy `CC_OBJECTS` and `GB_OBJECTS` from the dashboard calculation.
+- Occupancy is now calculated by filtering bookings matching the new `BM_ROOMS` inventory. Since the inventory is complete, the dashboard displays: `X номера сдано из Y возможных` (with proper Russian grammatical pluralization: "номер сдан", "номера сдано", "номеров сдано") and shows the average occupancy percentage alongside the visual loading progress bar in the period report summary.
+
+Checks run:
+- `npm run lint` - passed successfully (tsc compiler safe).
+
+Next recommended step:
+- Maintain `BM_ROOMS` in `src/constants/bmRooms.ts` whenever the physical rooms of the hotel are modified or expanded.
+
 ### 2026-06-24 12:25:00 +03:00 - Dashboard legacy room occupancy fix
 
 Files changed:

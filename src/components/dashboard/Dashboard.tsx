@@ -30,8 +30,8 @@ import {
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { Client, Contract, Lead, View } from '../../types';
-import { CC_OBJECTS, GB_OBJECTS } from '../../constants';
 import { leadApi } from '../../services/localApi';
+import { BM_ROOMS, IS_BM_ROOMS_COMPLETE } from '../../constants/bmRooms';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -72,7 +72,7 @@ function getClientShortName(clientId: string, clients: Client[]): string {
 }
 
 function getObjectName(objectId: string): string {
-  const obj = [...CC_OBJECTS, ...GB_OBJECTS].find(o => o.id === objectId);
+  const obj = BM_ROOMS.find(o => o.id === objectId);
   return obj ? obj.name : objectId;
 }
 
@@ -158,11 +158,16 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
       .filter(c => c.status !== 'cancelled')
       .flatMap(c => (c.bookings || []).filter(b => b.type === 'main'));
 
+    const activeBmRoomIds = new Set(
+      BM_ROOMS.filter(r => r.active && r.includeInOccupancy).map(r => r.id)
+    );
+
     // Подсчет занятых номеро-ночей
     let occupiedNightsCount = 0;
     for (const d of daysInInterval) {
       const dStr = format(d, 'yyyy-MM-dd');
       for (const b of mainBookings) {
+        if (!activeBmRoomIds.has(b.objectId)) continue;
         const bStartStr = b.startTime.split('T')[0];
         const bEndStr = b.endTime.split('T')[0];
         if (dStr >= bStartStr && dStr < bEndStr) {
@@ -170,6 +175,12 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
         }
       }
     }
+
+    const totalRooms = BM_ROOMS.filter(r => r.active && r.includeInOccupancy).length;
+    const totalAvailableNights = daysInInterval.length * totalRooms;
+    const occupancyPct = totalAvailableNights > 0 
+      ? Math.round((occupiedNightsCount / totalAvailableNights) * 100) 
+      : 0;
 
     // Договоры, у которых дата заезда (или дата создания) попадает в период
     const contractsInPeriod = contracts.filter(c => {
@@ -207,6 +218,8 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
 
     return {
       occupiedNightsCount,
+      totalAvailableNights,
+      occupancyPct,
       arrivalsCount: arrivalsInPeriod.length,
       departuresCount: departuresInPeriod.length,
       contractsCount: contractsInPeriod.length,
@@ -342,7 +355,11 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
     const contractsText = `${cCount} ${plural(cCount, 'активный договор', 'активных договора', 'активных договоров')}`;
     const leadsText = `${lCount} ${plural(lCount, 'заявка', 'заявки', 'заявок')}`;
     
-    return `За выбранный период создано ${contractsText}, поступило ${leadsText}, остаток к оплате составляет ${debtStr}.`;
+    let baseText = `За выбранный период создано ${contractsText}, поступило ${leadsText}, остаток к оплате составляет ${debtStr}.`;
+    if (IS_BM_ROOMS_COMPLETE) {
+      baseText += ` Средняя загрузка номерного фонда за период: ${periodStats.occupancyPct}%.`;
+    }
+    return baseText;
   }, [periodStats]);
 
   const cardClass = cn(
@@ -390,6 +407,14 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
     { id: 'month', label: 'Месяц' },
     { id: 'custom', label: 'Произвольный период' },
   ];
+
+  const occupancyValue = IS_BM_ROOMS_COMPLETE
+    ? `${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'номер сдан', 'номера сдано', 'номеров сдано')} из ${periodStats.totalAvailableNights} возможных`
+    : `${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'номер сдан', 'номера сдано', 'номеров сдано')}`;
+
+  const occupancySub = IS_BM_ROOMS_COMPLETE
+    ? `Загрузка: ${periodStats.occupancyPct}% за период`
+    : 'Номерной фонд требует уточнения';
 
   return (
     <div className="space-y-6">
@@ -457,8 +482,8 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
         <KpiCard
           icon={BedDouble}
           label="Загрузка за период"
-          value={`${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'номер-ночь', 'номер-ночи', 'номер-ночей')} занято`}
-          sub="За выбранный период"
+          value={occupancyValue}
+          sub={occupancySub}
           accent={isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-600'}
         />
         <KpiCard
@@ -628,9 +653,25 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
                 <span className="font-bold text-rose-400 text-sm">{money(periodStats.debtPeriod)}</span>
               </div>
               <div className="flex justify-between items-center py-0.5">
-                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Занято номер-ночей:</span>
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Номеров сдано:</span>
                 <span className={cn('font-bold text-sm text-orange-400')}>{periodStats.occupiedNightsCount}</span>
               </div>
+              {IS_BM_ROOMS_COMPLETE && (
+                <>
+                  <div className="flex justify-between items-center py-0.5 border-t border-gray-100 dark:border-[#242424] pt-2 mt-1">
+                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Средняя загрузка:</span>
+                    <span className={cn('font-bold text-sm text-orange-400')}>{periodStats.occupancyPct}%</span>
+                  </div>
+                  <div className="space-y-1 mt-2">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-[#232323]">
+                      <div
+                        className="h-full rounded-full bg-orange-500 transition-all duration-300"
+                        style={{ width: `${Math.min(100, periodStats.occupancyPct)}%` }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="border-t pt-3 border-gray-100 dark:border-[#232323] space-y-1.5">
