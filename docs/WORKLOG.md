@@ -1972,3 +1972,33 @@ Checks run:
 
 **Risks/TODOs**:
 - The smoke test validates unpacked package runtime paths, which match the NSIS app layout, but it does not replace a real install-and-run test on the target Windows user profile.
+
+### 2026-06-24 21:18:09 +03:00 — Installer shortcut icon update
+
+Files changed:
+- `assets/app-icon/icon-1024.png`
+- `assets/app-icon/icon.png`
+- `assets/app-icon/icon.ico`
+- `scripts/nsis-installer.nsh`
+- `scripts/installerShortcutIconTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Use the supplied Большая Медведица artwork as the installed program shortcut icon with transparent background behind the rounded rectangle.
+
+**Completed**:
+1. Regenerated the app PNG/ICO icons from the supplied artwork.
+2. Removed the failed protruding-object mask and kept a clean rounded-rectangle icon with transparent outside background.
+3. Updated the NSIS custom install macro to recreate desktop and start menu shortcuts with the packaged `assets/app-icon/icon.ico`, instead of relying only on the executable icon resource.
+4. Added a regression test for shortcut icon wiring.
+5. Rebuilt the NSIS installer: `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe`.
+
+Checks run:
+- Visual check of `assets/app-icon/icon-1024.png` — passed
+- `npx tsx scripts/installerShortcutIconTest.ts` — passed
+- `npm run electron:installer` — passed
+
+**Next**:
+- Install the rebuilt setup on the target PC and confirm the desktop/start menu shortcut visually updates. Windows may need icon cache refresh if an older shortcut icon is cached.
+
+**Risks/TODOs**:
+- The icon intentionally clips the key/card protrusion to the rounded rectangle to avoid mask artifacts and keep the background clean.
