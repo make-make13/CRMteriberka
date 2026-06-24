@@ -1,5 +1,39 @@
 # WORKLOG
 
+### 2026-06-24 14:05:32 +03:00 - Hotfix installed CRM PDF preview runtime
+
+Files changed:
+- `docs/WORKLOG.md`
+- Installed app asset: `C:\Users\Make\AppData\Local\Programs\Bolshaya Medveditsa CRM\resources\app\dist\assets\pdf.worker.min-C2ytWjel.js`
+- Installed app asset: `C:\Users\Make\AppData\Local\Programs\Bolshaya Medveditsa CRM\resources\app\dist\assets\pdfjs-DmTePBVm.js`
+
+Completed:
+- Stopped running installed CRM processes before patching installed assets.
+- Created backup copies next to the installed assets:
+  - `pdf.worker.min-C2ytWjel.js.bak-20260624-140121`
+  - `pdf.worker.min-C2ytWjel.js.bak-esnext-20260624-140245`
+  - `pdfjs-DmTePBVm.js.bak-esnext-20260624-140245`
+- Added a local compatibility hotfix to the installed pdf.js runtime for Electron 36 / Chrome 136:
+  - `Uint8Array.prototype.toHex`
+  - `Map.prototype.getOrInsert`
+  - `Map.prototype.getOrInsertComputed`
+  - `WeakMap.prototype.getOrInsert`
+  - `WeakMap.prototype.getOrInsertComputed`
+- Verified through the installed CRM frontend using DevTools protocol that the patched pdf.js chunk and worker were served with the hotfix, the BM contract PDF API returned `200 application/pdf`, pdf.js loaded 6 pages, and page 1 rendered into canvas without exceptions.
+- Restarted the installed CRM normally after verification.
+
+Checks run:
+- Installed app asset inspection.
+- Installed CRM process stop/start.
+- DevTools protocol runtime verification against `http://localhost:3003/`.
+
+Next recommended step:
+- Build a proper installer fix by pinning/downgrading `pdfjs-dist` to a compatible version or upgrading Electron, then replace this installed-asset hotfix with a clean release.
+
+Risks / TODO:
+- This is a direct hotfix inside the installed program folder. It will be overwritten by the next installer/update.
+- Project source code was not changed in this hotfix; only installed built assets were patched.
+
 ### 2026-06-24 13:58:57 +03:00 - Diagnose installed CRM PDF preview failure
 
 Files changed:
