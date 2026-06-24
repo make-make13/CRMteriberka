@@ -288,6 +288,11 @@ const AFTER_SIG   = 60;   // twips spacing after signature paragraph
 const IMAGES_TOTAL_TWP =
   STAMP_PX.height * 15 + AFTER_STAMP + SIG_PX.height * 15 + AFTER_SIG; // ≈ 1955
 
+// Empty Paragraph still contributes its own line height before spacing.after.
+// Subtracting it keeps the guest signature line level with the director line.
+const EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP = 240;
+const SIGNED_GUEST_SIGNATURE_SPACER = Math.max(0, IMAGES_TOTAL_TWP - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP);
+
 // Отступ для места живой подписи (print-режим) ≈ 1 дюйм.
 const HAND_SIG_AREA = 1440; // twips
 
@@ -334,7 +339,7 @@ function buildClientSignatureCell(vars: BmDocxVariables, isSigned: boolean): Tab
   // Отступ выровнен с левой колонкой:
   //   signed → spacer ≈ высоте изображений (печать + подпись)
   //   print  → spacer ≈ 1 дюйму для живой подписи гостя
-  const spacerAfter = isSigned ? IMAGES_TOTAL_TWP : HAND_SIG_AREA;
+  const spacerAfter = isSigned ? SIGNED_GUEST_SIGNATURE_SPACER : HAND_SIG_AREA;
   // client_short_name готовится в buildBmDocxVariables как «И. О. Фамилия».
   // Для template-генерации: если vars.client_short_name = '{client_short_name}',
   // то именно этот placeholder попадёт в DOCX → docxtemplater заменит его корректно.

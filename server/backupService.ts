@@ -19,6 +19,27 @@ const LOCAL_RCLONE_PATH = (() => {
   if (process.env.RCLONE_DIR)  return path.join(path.resolve(process.env.RCLONE_DIR), 'rclone.exe');
   return path.resolve(process.cwd(), 'tools', 'rclone', 'rclone.exe');
 })();
+
+function getRcloneCommandCandidates(): string[] {
+  const candidates = [
+    LOCAL_RCLONE_PATH,
+    process.env.LOCALAPPDATA
+      ? path.join(process.env.LOCALAPPDATA, 'Microsoft', 'WinGet', 'Links', 'rclone.exe')
+      : '',
+    process.env.ProgramFiles
+      ? path.join(process.env.ProgramFiles, 'Rclone', 'rclone.exe')
+      : '',
+    process.env.ProgramFiles
+      ? path.join(process.env.ProgramFiles, 'rclone', 'rclone.exe')
+      : '',
+    process.env['ProgramFiles(x86)']
+      ? path.join(process.env['ProgramFiles(x86)'], 'Rclone', 'rclone.exe')
+      : '',
+    'rclone',
+  ];
+
+  return Array.from(new Set(candidates.filter(Boolean)));
+}
 const MIN_RETENTION = 1;
 const MAX_RETENTION = 365;
 
@@ -284,19 +305,29 @@ function saveBackupStatusData(data: ReturnType<typeof getBackupStatusData>) {
 }
 
 async function checkRclone() {
-  try {
-    const command = fs.existsSync(LOCAL_RCLONE_PATH) ? LOCAL_RCLONE_PATH : 'rclone';
-    const { stdout } = await execFileAsync(command, ['version'], { timeout: 8000 });
-    return {
-      available: true,
-      version: stdout.split(/\r?\n/)[0] || 'rclone',
-    };
-  } catch (error) {
-    return {
-      available: false,
-      error: 'rclone не найден. Установите rclone и настройте два remote-хранилища.',
-    };
+  const errors: string[] = [];
+
+  for (const command of getRcloneCommandCandidates()) {
+    if (path.isAbsolute(command) && !fs.existsSync(command)) continue;
+
+    try {
+      const { stdout } = await execFileAsync(command, ['version'], { timeout: 8000 });
+      return {
+        available: true,
+        version: stdout.split(/\r?\n/)[0] || 'rclone',
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${command}: ${message}`);
+    }
   }
+
+  return {
+    available: false,
+    error: errors.length > 0
+      ? `rclone не найден или не запускается. Проверенные пути: ${errors.join(' | ')}`
+      : 'rclone не найден. Установите rclone и настройте два remote-хранилища.',
+  };
 }
 
 function truncateCommandOutput(value: unknown) {
@@ -316,10 +347,23 @@ async function installRclone(): Promise<RcloneCommandResult> {
   try {
     const { stdout, stderr } = await execFileAsync('winget', [
       'install',
+      '--id',
       'Rclone.Rclone',
+      '--exact',
+      '--source',
+      'winget',
       '--accept-package-agreements',
       '--accept-source-agreements',
     ], { timeout: 180000 });
+    const rclone = await checkRclone();
+    if (!rclone.available) {
+      return {
+        ok: false,
+        stdout: truncateCommandOutput(stdout),
+        stderr: truncateCommandOutput(stderr),
+        error: `Установка завершилась, но rclone пока не найден CRM. ${rclone.error || ''}`.trim(),
+      };
+    }
     return {
       ok: true,
       stdout: truncateCommandOutput(stdout),
@@ -341,7 +385,7 @@ async function installRclone(): Promise<RcloneCommandResult> {
 
 async function testRemote(remote: string, cloudPath: string): Promise<BackupRemoteResult> {
   try {
-    const command = fs.existsSync(LOCAL_RCLONE_PATH) ? LOCAL_RCLONE_PATH : 'rclone';
+    const command = getRcloneCommandCandidates().find(candidate => !path.isAbsolute(candidate) || fs.existsSync(candidate)) || 'rclone';
     await execFileAsync(command, ['lsd', `${remote}:${cloudPath}`], { timeout: 15000 });
     return { key: remote.endsWith('2') ? 'remote2' : 'remote1', remote, ok: true, message: 'Доступ есть' };
   } catch (error) {
@@ -353,7 +397,7 @@ async function testRemote(remote: string, cloudPath: string): Promise<BackupRemo
 async function uploadToRemote(key: RemoteKey, remote: string, cloudPath: string, archivePath: string): Promise<BackupRemoteResult> {
   const archiveName = path.basename(archivePath);
   try {
-    const command = fs.existsSync(LOCAL_RCLONE_PATH) ? LOCAL_RCLONE_PATH : 'rclone';
+    const command = getRcloneCommandCandidates().find(candidate => !path.isAbsolute(candidate) || fs.existsSync(candidate)) || 'rclone';
     await execFileAsync(command, ['copyto', archivePath, `${remote}:${cloudPath}/${archiveName}`], { timeout: 120000 });
     return { key, remote, ok: true, message: 'Загружено', uploadedAt: new Date().toISOString() };
   } catch (error) {

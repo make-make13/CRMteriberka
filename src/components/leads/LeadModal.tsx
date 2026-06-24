@@ -45,6 +45,7 @@ interface LeadModalProps {
   onUpdate: (id: string, patch: LeadUpdateInput) => Promise<void>;
   clients?: Client[];
   onCreateClient: (id: string) => Promise<void>;
+  onConfirmLead: (id: string) => Promise<void>;
   onCreatePrebookingFromLead: (lead: Lead) => void;
   onOpenClient?: (clientId: string) => void;
   /** Удаление входящей заявки. Если не передан — кнопка удаления не показывается. */
@@ -281,6 +282,7 @@ export default function LeadModal({
   onUpdate,
   clients = [],
   onCreateClient,
+  onConfirmLead,
   onCreatePrebookingFromLead,
   onOpenClient,
   onDelete,
@@ -350,6 +352,13 @@ export default function LeadModal({
     if (lead) {
       await onUpdate(lead.id, { status, managerNote: next.managerNote.trim() || undefined });
     }
+  };
+
+  const handleConfirmLead = async () => {
+    if (!lead) return;
+    const next = { ...form, status: 'confirmed' as LeadStatus };
+    setForm(next);
+    await onConfirmLead(lead.id);
   };
 
   const isClientCreateBlockedStatus = ['client_created', 'contract_created', 'rejected', 'duplicate'].includes(form.status);
@@ -491,7 +500,7 @@ export default function LeadModal({
                 <button
                   type="button"
                   disabled={isSaving || form.status === 'confirmed'}
-                  onClick={() => handleQuickStatus('confirmed')}
+                  onClick={handleConfirmLead}
                   className={cn("rounded-lg px-3 py-1.5 text-sm font-bold transition-colors border", isDarkMode ? "bg-emerald-400/10 border-emerald-400/25 text-emerald-300 hover:bg-emerald-400/20 disabled:opacity-50" : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50")}
                 >
                   Подтвердить

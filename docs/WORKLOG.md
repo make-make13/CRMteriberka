@@ -1831,3 +1831,41 @@ Checks run:
 **Risks/TODOs**:
 - The fix intentionally patches only missing runtime APIs required by current `pdfjs-dist`.
 - If Electron or `pdfjs-dist` is upgraded later, re-run the contract preview flow and remove compatibility code only after confirming it is no longer needed.
+
+### 2026-06-24 14:32:56 +03:00 — rclone install, lead confirmation prebooking, BM signature alignment
+
+Files changed:
+- `server/backupService.ts`
+- `src/components/leads/LeadModal.tsx`
+- `src/components/leads/Leads.tsx`
+- `src/utils/docx/bmDocxBuilder.ts`
+- `scripts/rcloneInstallCompatibilityTest.ts`
+- `scripts/leadConfirmCreatesPrebookingTest.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Fix rclone availability after installation, make confirmed dated leads open prebooking, and align guest/director signatures in BM contract section 15.
+
+**Completed**:
+1. rclone check now tries explicit Windows install locations, including the WinGet Links shim and Program Files paths, instead of relying only on the current process PATH.
+2. rclone install now uses exact WinGet package id/source and verifies `rclone version` after installation before reporting success.
+3. Lead confirmation now creates a client when needed and opens the prebooking modal when both requested dates are present.
+4. BM DOCX signed contract adjusts the guest signature spacer so the guest signature line aligns with the general director signature line.
+
+Checks run:
+- `npx tsx scripts/rcloneInstallCompatibilityTest.ts` — passed
+- `npx tsx scripts/leadConfirmCreatesPrebookingTest.ts` — passed
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npx tsx scripts/leadCreatePrebookingTest.ts` — passed
+- `npm run lint` — passed
+- `npm run build` — passed
+- `npm run build:server` — passed
+- `npx tsx scripts/test_bm_docx_generation.ts` — passed; print/signed DOCX and PDF generated, 6 pages each
+- Rendered `scratch/bm_contract_signed.pdf` page 6 with Poppler and visually checked signature alignment
+
+**Next**:
+- Build the installer and test rclone installation on a clean Windows user profile.
+
+**Risks/TODOs**:
+- rclone remote configuration is still a separate manual/admin setup step after rclone itself is available.
+- Lead confirmation opens the prebooking form; final save still goes through existing contract conflict validation.

@@ -198,6 +198,45 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
     }
   };
 
+  const handleConfirmLead = async (id: string) => {
+    setIsSaving(true);
+    try {
+      const sourceLead = leads.find(lead => lead.id === id) || editingLead;
+      if (!sourceLead) throw new Error('Заявка не найдена');
+
+      let leadForPrebooking = sourceLead;
+      let createdClient: Client | null = null;
+
+      if (!leadForPrebooking.clientId) {
+        const result = await leadApi.createClient(id);
+        leadForPrebooking = result.lead;
+        createdClient = result.client;
+        onClientSaved?.(result.client);
+      } else if (leadForPrebooking.status !== 'confirmed') {
+        leadForPrebooking = await leadApi.update(id, { status: 'confirmed' });
+      }
+
+      setLeads(prev => prev.map(lead => lead.id === leadForPrebooking.id ? leadForPrebooking : lead));
+      setEditingLead(leadForPrebooking);
+
+      if (createdClient) toast('Гость создан', 'success');
+
+      if (leadForPrebooking.desiredStartDate && leadForPrebooking.desiredEndDate) {
+        setIsModalOpen(false);
+        setEditingLead(null);
+        onCreatePrebookingFromLead?.(leadForPrebooking);
+        return;
+      }
+
+      toast('Заявка подтверждена. Укажите даты заезда и выезда, чтобы создать предбронь.', 'success');
+    } catch (error) {
+      console.error('Error confirming lead:', error);
+      toast(getErrorMessage(error, 'Ошибка при подтверждении заявки'), 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleDeleteLead = async (id: string) => {
     if (!window.confirm('Удалить эту заявку? Действие необратимо.')) return;
     setIsSaving(true);
@@ -563,6 +602,7 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
         onCreate={handleCreate}
         onUpdate={handleUpdate}
         onCreateClient={handleCreateClient}
+        onConfirmLead={handleConfirmLead}
         onCreatePrebookingFromLead={handleCreatePrebookingFromLead}
         onOpenClient={handleOpenClient}
         onDelete={handleDeleteLead}
