@@ -43,11 +43,6 @@ export default defineConfig({
     options.define = {
       ...options.define,
       'import.meta.url': '__cjsImportMetaUrl',
-      'process.env.SUPABASE_URL': JSON.stringify(process.env.SUPABASE_URL || ''),
-      'process.env.SUPABASE_SERVICE_ROLE_KEY': JSON.stringify(process.env.SUPABASE_SERVICE_ROLE_KEY || ''),
-      'process.env.SMTP_PASSWORD': JSON.stringify(process.env.SMTP_PASSWORD || ''),
-      'process.env.SUPABASE_LEADS_TABLE': JSON.stringify(process.env.SUPABASE_LEADS_TABLE || 'leads'),
-      'process.env.SUPABASE_LEAD_SYNC_LIMIT': JSON.stringify(process.env.SUPABASE_LEAD_SYNC_LIMIT || '50'),
     };
   },
 });

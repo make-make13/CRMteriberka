@@ -1906,3 +1906,45 @@ Checks run:
 **Risks/TODOs**:
 - `electron-builder` still reports existing packaging warnings: missing package metadata, asar disabled, and duplicate/mixed React dependency references. Packaging succeeds, but dependency cleanup is recommended separately.
 - Runtime integration success still depends on valid Supabase Service Role Key, SMTP app password, LibreOffice installation/path, and rclone remote configuration on the target PC.
+
+### 2026-06-24 20:34:02 +03:00 — Embed one-PC integration defaults into installer
+
+Files changed:
+- `package.json`
+- `electron-builder.yml`
+- `tsup.config.ts`
+- `server/localDatabase.ts`
+- `scripts/preparePackagedDefaults.mjs`
+- `scripts/packagedDefaultsEmbeddingTest.ts`
+- `scripts/installedIntegrationSettingsReadinessTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Make the installer self-contained for the single target PC: Supabase, SMTP, integration defaults, and local rclone should be inside the built installer.
+
+**Completed**:
+1. Added `prepare:packaged-defaults`, which reads local build-time environment values and writes ignored `build/packaged-default-settings.json` without printing secret values.
+2. Made `electron:pack` and `electron:installer` fail before packaging if required Supabase/SMTP values are missing.
+3. Included `build/packaged-default-settings.json` and local `tools/rclone/**` in the Electron package.
+4. Updated database startup seeding to read packaged defaults and fill only missing integration/email/backup settings, preserving existing user changes.
+5. Removed direct `tsup` inline defines for Supabase/SMTP secrets so the generated packaged defaults file is the explicit installer secret carrier.
+6. Built the NSIS installer: `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe`.
+
+Checks run:
+- `npm run prepare:packaged-defaults` — passed; no secret values printed
+- `npx tsx scripts/installedIntegrationSettingsReadinessTest.ts` — passed
+- `npx tsx scripts/packagedDefaultsEmbeddingTest.ts` — passed
+- `npx tsx scripts/rcloneInstallCompatibilityTest.ts` — passed
+- `npx tsx scripts/leadConfirmCreatesPrebookingTest.ts` — passed
+- `npx tsx scripts/pdfjsPreviewCompatibilityTest.ts` — passed
+- `npm run lint` — passed
+- `npm run electron:pack` — passed
+- `npm run electron:installer` — passed
+- Package checks: packaged defaults present, Supabase/SMTP required values present, `tools/rclone/rclone.exe` present, `.env.local` absent
+
+**Next**:
+- Install `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe` on the target PC and run Supabase sync, SMTP test, contract PDF export, and rclone check from the CRM UI.
+
+**Risks/TODOs**:
+- The installer now intentionally contains production secrets for a single-PC deployment. Do not distribute this installer outside the intended PC.
+- rclone binary is bundled, but cloud remotes still depend on rclone remote configuration names matching the backup settings.
+- Existing electron-builder warnings remain: package metadata is incomplete, asar is disabled, and dependency tree has duplicate/mixed React references.

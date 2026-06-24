@@ -43,6 +43,47 @@ export interface IntegrationSettingsInput {
   aiConsoleUrl?: string;
 }
 
+interface PackagedDefaultSettings {
+  integrations?: IntegrationSettingsInput;
+  email?: {
+    senderEmail?: string;
+    senderName?: string;
+    defaultMessage?: string;
+    host?: string;
+    port?: number;
+    secure?: boolean;
+    appPassword?: string;
+  };
+  backup?: {
+    remote1?: string;
+    remote2?: string;
+    cloudPath?: string;
+  };
+}
+
+function loadPackagedDefaultSettings(): PackagedDefaultSettings {
+  const candidates = [
+    process.env.CRM_PACKAGED_DEFAULTS_PATH || '',
+    path.resolve(process.cwd(), 'build', 'packaged-default-settings.json'),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    try {
+      if (!fs.existsSync(candidate)) continue;
+      const parsed = safeJsonParse<PackagedDefaultSettings>(
+        fs.readFileSync(candidate, 'utf8'),
+        {},
+      );
+      console.log('[DB] Loaded packaged default settings.');
+      return parsed || {};
+    } catch (error) {
+      console.warn(`[DB] Failed to load packaged default settings from ${candidate}:`, error);
+    }
+  }
+
+  return {};
+}
+
 /** Маскированный вид для frontend (секреты заменены маской) */
 export interface IntegrationSettingsMasked {
   supabaseUrl: string;
@@ -667,6 +708,7 @@ export class LocalDatabase {
     const clientsCount = (this.db.prepare('SELECT COUNT(*) as count FROM clients').get() as { count: number }).count;
     const contractsCount = (this.db.prepare('SELECT COUNT(*) as count FROM contracts').get() as { count: number }).count;
     const bookingsCount = (this.db.prepare('SELECT COUNT(*) as count FROM bookings').get() as { count: number }).count;
+    const packagedDefaults = loadPackagedDefaultSettings();
 
     if (clientsCount > 0 || contractsCount > 0 || bookingsCount > 0) {
       console.log(`[DB] Existing data found (clients: ${clientsCount}, contracts: ${contractsCount}, bookings: ${bookingsCount}). Ensuring only missing settings.`);
@@ -691,37 +733,80 @@ export class LocalDatabase {
 
     // 2. Seed integrations (Supabase sync) settings
     const currentIntegrations = this.getIntegrationSettingsFull();
+    const integrationDefaults = packagedDefaults.integrations || {};
+    const integrationSeed: IntegrationSettingsInput = {};
     if (!currentIntegrations.supabaseUrl) {
-      const url = process.env.SUPABASE_URL || '';
-      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-      const table = process.env.SUPABASE_LEADS_TABLE || 'leads';
-      const limit = Number(process.env.SUPABASE_LEAD_SYNC_LIMIT || 50);
-
-      this.saveIntegrationSettings({
-        supabaseUrl: url,
-        supabaseServiceKey: key,
-        supabaseTable: table,
-        supabaseSyncLimit: limit,
-        supabaseAutoSyncEnabled: false,
-        supabaseAutoSyncIntervalMinutes: 5,
-      });
+      integrationSeed.supabaseUrl = integrationDefaults.supabaseUrl || process.env.SUPABASE_URL || '';
+    }
+    if (!currentIntegrations.supabaseServiceKey) {
+      integrationSeed.supabaseServiceKey = integrationDefaults.supabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    }
+    if (!currentIntegrations.supabaseTable) {
+      integrationSeed.supabaseTable = integrationDefaults.supabaseTable || process.env.SUPABASE_LEADS_TABLE || 'leads';
+    }
+    if (!currentIntegrations.supabaseSyncLimit) {
+      integrationSeed.supabaseSyncLimit = integrationDefaults.supabaseSyncLimit || Number(process.env.SUPABASE_LEAD_SYNC_LIMIT || 50);
+    }
+    if (currentIntegrations.supabaseAutoSyncEnabled == null) {
+      integrationSeed.supabaseAutoSyncEnabled = integrationDefaults.supabaseAutoSyncEnabled ?? false;
+    }
+    if (!currentIntegrations.supabaseAutoSyncIntervalMinutes) {
+      integrationSeed.supabaseAutoSyncIntervalMinutes = integrationDefaults.supabaseAutoSyncIntervalMinutes || 5;
+    }
+    if (!currentIntegrations.libreOfficePath && integrationDefaults.libreOfficePath) {
+      integrationSeed.libreOfficePath = integrationDefaults.libreOfficePath;
+    }
+    if (!currentIntegrations.aiBackendUrl && integrationDefaults.aiBackendUrl) {
+      integrationSeed.aiBackendUrl = integrationDefaults.aiBackendUrl;
+    }
+    if (!currentIntegrations.aiBackendKey && integrationDefaults.aiBackendKey) {
+      integrationSeed.aiBackendKey = integrationDefaults.aiBackendKey;
+    }
+    if (!currentIntegrations.aiConsoleUrl && integrationDefaults.aiConsoleUrl) {
+      integrationSeed.aiConsoleUrl = integrationDefaults.aiConsoleUrl;
+    }
+    if (Object.keys(integrationSeed).length > 0) {
+      this.saveIntegrationSettings(integrationSeed);
       console.log('[DB] Seeded default integration settings (Supabase).');
     }
 
     // 3. Seed SMTP email settings
-    const currentEmail = this.getEmailSettings();
-    if (!currentEmail) {
-      const password = process.env.SMTP_PASSWORD || '';
-      this.saveEmailSettings({
-        senderEmail: 'medvedica.hotel@vk.com',
-        senderName: 'Большая Медведица',
-        defaultMessage: 'Спасибо, что обратились к нам',
-        host: 'smtp.mail.ru',
-        port: 465,
-        secure: true,
-        appPassword: password,
-      });
+    const currentEmail = this.getEmailSettings<{
+      senderEmail?: string;
+      senderName?: string;
+      defaultMessage?: string;
+      host?: string;
+      port?: number;
+      secure?: boolean;
+      appPassword?: string;
+    }>() || {};
+    const emailDefaults = packagedDefaults.email || {};
+    const emailSeed = { ...currentEmail };
+    let shouldSaveEmail = false;
+    const fillEmail = <K extends keyof typeof emailSeed>(key: K, value: (typeof emailSeed)[K]) => {
+      if (emailSeed[key] == null || emailSeed[key] === '') {
+        emailSeed[key] = value;
+        shouldSaveEmail = true;
+      }
+    };
+
+    fillEmail('senderEmail', emailDefaults.senderEmail || process.env.SMTP_USER || 'medvedica.hotel@vk.com');
+    fillEmail('senderName', emailDefaults.senderName || process.env.SMTP_FROM_NAME || 'Большая Медведица');
+    fillEmail('defaultMessage', emailDefaults.defaultMessage || 'Спасибо, что обратились к нам');
+    fillEmail('host', emailDefaults.host || process.env.SMTP_HOST || 'smtp.mail.ru');
+    fillEmail('port', emailDefaults.port || Number(process.env.SMTP_PORT || 465));
+    fillEmail('secure', emailDefaults.secure ?? (String(process.env.SMTP_SECURE || 'true') !== 'false'));
+    fillEmail('appPassword', emailDefaults.appPassword || process.env.SMTP_PASSWORD || '');
+
+    if (shouldSaveEmail) {
+      this.saveEmailSettings(emailSeed);
       console.log('[DB] Seeded default SMTP settings.');
+    }
+
+    // 4. Seed backup cloud remote names/path from packaged defaults when provided.
+    if (packagedDefaults.backup && !this.getSettings('backup')) {
+      this.saveSettings(packagedDefaults.backup, 'backup');
+      console.log('[DB] Seeded default backup settings.');
     }
   }
 

@@ -24,9 +24,10 @@ assert.match(dbSource, /raw\.smtpPort/, 'Legacy smtpPort must be mapped to port.
 assert.match(dbSource, /raw\.smtpSecure/, 'Legacy smtpSecure must be mapped to secure.');
 assert.match(dbSource, /raw\.authUser/, 'Legacy authUser must be mapped to senderEmail.');
 
-assert.match(dbSource, /host:\s*'smtp\.mail\.ru'/, 'Default SMTP seed must use the current host field.');
-assert.match(dbSource, /port:\s*465/, 'Default SMTP seed must use the current port field.');
-assert.match(dbSource, /secure:\s*true/, 'Default SMTP seed must use the current secure field.');
+assert.match(dbSource, /emailDefaults\.host/, 'Default SMTP seed must use packaged/default current host field.');
+assert.match(dbSource, /process\.env\.SMTP_HOST\s*\|\|\s*'smtp\.mail\.ru'/, 'Default SMTP seed must fallback to the current host field.');
+assert.match(dbSource, /emailDefaults\.port/, 'Default SMTP seed must use packaged/default current port field.');
+assert.match(dbSource, /emailDefaults\.secure/, 'Default SMTP seed must use packaged/default current secure field.');
 assert.doesNotMatch(dbSource, /smtpHost:\s*'smtp\.mail\.ru'/, 'Default SMTP seed must not use legacy smtpHost.');
 
 assert.match(
