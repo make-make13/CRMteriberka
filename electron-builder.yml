@@ -35,6 +35,7 @@ files:
   - dist-server/**/*
   - dist-electron/**/*
   - assets/app-icon/**/*
+  - public/pdfme-assets/**/*
   - build/packaged-default-settings.json
   - tools/rclone/**/*
   - package.json

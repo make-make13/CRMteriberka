@@ -15,6 +15,7 @@
  */
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import type { ContractData, Organization } from '../../types';
 import { buildBmDocxVariables, type BmDocxVariables } from './bmDocxData';
 import { buildBmContractDocx } from './bmDocxBuilder';
@@ -43,14 +44,19 @@ export interface GenerateBmContractOptions {
 }
 
 /** Корень проекта от расположения этого файла (src/utils/docx/). */
-function defaultAssetsRoot(): string {
+function defaultAssetRoots(): string[] {
   const here = path.dirname(fileURLToPath(import.meta.url));
-  return path.resolve(here, '..', '..', '..', 'public', 'pdfme-assets');
+  return [
+    path.resolve(process.cwd(), 'public', 'pdfme-assets'),
+    path.resolve(here, '..', 'public', 'pdfme-assets'),
+    path.resolve(here, '..', '..', '..', 'public', 'pdfme-assets'),
+  ];
 }
 
 function resolveAsset(name: 'stamp.png' | 'signature.png', override?: string): string {
   if (override) return override;
-  return path.resolve(defaultAssetsRoot(), name);
+  const candidates = defaultAssetRoots().map(root => path.resolve(root, name));
+  return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
 }
 
 /**

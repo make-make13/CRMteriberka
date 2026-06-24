@@ -2060,3 +2060,36 @@ Checks run:
 
 **Risks/TODOs**:
 - Existing user-uploaded active DOCX templates can still be stale; the main BM UI no longer depends on them for contract generation.
+
+### 2026-06-24 22:11:13 +03:00 — Fix BM send-version signature assets and alignment
+
+Files changed:
+- `electron-builder.yml`
+- `src/utils/docx/bmContractGenerator.ts`
+- `src/utils/docx/bmDocxBuilder.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Fix the same section 15 signature misalignment in the BM "send" version.
+
+**Completed**:
+1. Confirmed the send-version symptom happens when the signed generator reserves guest-side space for stamp/signature images but the executor images are not actually inserted.
+2. Added `public/pdfme-assets/**/*` to the Electron package so installed CRM includes `stamp.png` and `signature.png`.
+3. Made DOCX asset lookup work from both source and packaged app paths.
+4. Changed guest signature spacing to follow the executor images that actually exist, preventing invisible signed-mode spacer if assets are missing.
+5. Extended the signature alignment regression test to cover packaged assets and source/packaged asset lookup.
+6. Regenerated and visually checked `scratch/bm_contract_signed.pdf` page 6; stamp/signature are present and director/guest lines are aligned.
+
+Checks run:
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npm run lint` — passed
+- `npx tsx scripts/gen_bm_docx_standalone.ts` — passed
+- Rendered `scratch/bm_contract_signed.pdf` page 6 with Poppler and visually checked alignment — passed
+- `npm run electron:installer` — passed
+- Package check: `release/win-unpacked/resources/app/public/pdfme-assets/{stamp.png,signature.png}` present
+
+**Next**:
+- Install the rebuilt `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe` and regenerate the "На отправку" preview in the installed CRM.
+
+**Risks/TODOs**:
+- If an already-open installed CRM process is running, restart it after reinstalling so the server uses the new packaged code and asset paths.

@@ -296,6 +296,21 @@ const SIGNED_GUEST_SIGNATURE_SPACER = Math.max(0, IMAGES_TOTAL_TWP - EMPTY_SIGNA
 // Отступ для места живой подписи (print-режим) ≈ 1 дюйм.
 const HAND_SIG_AREA = 1440; // twips
 
+function hasStampAsset(opts: BmDocxBuildOptions): boolean {
+  return Boolean(opts.withStamp && opts.stampPath && fs.existsSync(opts.stampPath));
+}
+
+function hasSignatureAsset(opts: BmDocxBuildOptions): boolean {
+  return Boolean(opts.withSignature && opts.signaturePath && fs.existsSync(opts.signaturePath));
+}
+
+function getExecutorImageStackHeight(opts: BmDocxBuildOptions): number {
+  let total = 0;
+  if (hasStampAsset(opts)) total += STAMP_PX.height * 15 + AFTER_STAMP;
+  if (hasSignatureAsset(opts)) total += SIG_PX.height * 15 + AFTER_SIG;
+  return total;
+}
+
 function sigCell(children: Paragraph[], width: number): TableCell {
   return new TableCell({
     width: { size: width, type: WidthType.PERCENTAGE },
@@ -311,15 +326,15 @@ function buildExecutorSignatureCell(opts: BmDocxBuildOptions): TableCell {
 
   if (isSigned) {
     // Signed: печать (сверху) → подпись (снизу, ближе к линии) → линия → должность
-    if (opts.withStamp && opts.stampPath && fs.existsSync(opts.stampPath)) {
-      const stampBuf = fs.readFileSync(opts.stampPath);
+    if (hasStampAsset(opts)) {
+      const stampBuf = fs.readFileSync(opts.stampPath!);
       lines.push(new Paragraph({
         spacing: { before: 0, after: AFTER_STAMP },
         children: [new ImageRun({ data: stampBuf, transformation: STAMP_PX, type: 'png' } as any)],
       }));
     }
-    if (opts.withSignature && opts.signaturePath && fs.existsSync(opts.signaturePath)) {
-      const sigBuf = fs.readFileSync(opts.signaturePath);
+    if (hasSignatureAsset(opts)) {
+      const sigBuf = fs.readFileSync(opts.signaturePath!);
       lines.push(new Paragraph({
         spacing: { before: 0, after: AFTER_SIG },
         children: [new ImageRun({ data: sigBuf, transformation: SIG_PX, type: 'png' } as any)],
@@ -335,11 +350,10 @@ function buildExecutorSignatureCell(opts: BmDocxBuildOptions): TableCell {
   return sigCell(lines, 50);
 }
 
-function buildClientSignatureCell(vars: BmDocxVariables, isSigned: boolean): TableCell {
+function buildClientSignatureCell(vars: BmDocxVariables, spacerAfter: number): TableCell {
   // Отступ выровнен с левой колонкой:
   //   signed → spacer ≈ высоте изображений (печать + подпись)
   //   print  → spacer ≈ 1 дюйму для живой подписи гостя
-  const spacerAfter = isSigned ? SIGNED_GUEST_SIGNATURE_SPACER : HAND_SIG_AREA;
   // client_short_name готовится в buildBmDocxVariables как «И. О. Фамилия».
   // Для template-генерации: если vars.client_short_name = '{client_short_name}',
   // то именно этот placeholder попадёт в DOCX → docxtemplater заменит его корректно.
@@ -353,6 +367,10 @@ function buildClientSignatureCell(vars: BmDocxVariables, isSigned: boolean): Tab
 
 function buildRequisitesTable(vars: BmDocxVariables, opts: BmDocxBuildOptions): Table {
   const isSigned = opts.withStamp || opts.withSignature;
+  const executorImageStackHeight = getExecutorImageStackHeight(opts);
+  const clientSignatureSpacer = isSigned
+    ? Math.max(0, executorImageStackHeight - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP)
+    : HAND_SIG_AREA;
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: NO_BORDER as any,
@@ -370,7 +388,7 @@ function buildRequisitesTable(vars: BmDocxVariables, opts: BmDocxBuildOptions): 
       new TableRow({
         cantSplit: true,
         height: { value: 2160, rule: HeightRule.ATLEAST },
-        children: [buildExecutorSignatureCell(opts), buildClientSignatureCell(vars, isSigned)],
+        children: [buildExecutorSignatureCell(opts), buildClientSignatureCell(vars, clientSignatureSpacer)],
       }),
     ],
   });
