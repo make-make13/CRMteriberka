@@ -1,3 +1,5 @@
+import { apiRequest } from './localApi';
+
 export interface SendEmailParams {
   contractId: string;
   contractNumber: string;
@@ -89,11 +91,8 @@ export const emailService = {
       params.senderName,
     );
 
-    const response = await fetch('/api/send-email', {
+    await apiRequest('/api/send-email', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         toEmail: params.toEmail,
         subject: `${params.documentType} № ${params.contractNumber}`,
@@ -103,9 +102,5 @@ export const emailService = {
         senderName: params.senderName,
       }),
     });
-
-    if (!response.ok) {
-      throw new Error(await getEmailResponseError(response));
-    }
   },
 };

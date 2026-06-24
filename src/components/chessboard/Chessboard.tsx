@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import { useToast } from '../../context/ToastContext';
 import { getVisibleBookingSpan } from '../../utils/hotelCalendarGrid';
 import { useRoomCatalog } from '../../hooks/useRoomCatalog';
+import { apiRequest } from '../../services/localApi';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -199,9 +200,8 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
       const { wb, periodLabel } = buildReportWorkbook();
       const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
 
-      const response = await fetch('/api/send-email', {
+      await apiRequest('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           toEmail: settings.emailForReports,
           subject: `Шахматка номеров: ${periodLabel}`,
@@ -211,12 +211,7 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
         }),
       });
 
-      if (response.ok) {
-        toast('Отчет успешно отправлен на ' + settings.emailForReports);
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Ошибка при отправке');
-      }
+      toast('Отчет успешно отправлен на ' + settings.emailForReports);
     } catch (e: any) {
       toast('Ошибка при отправке: ' + e.message, 'error');
     } finally {

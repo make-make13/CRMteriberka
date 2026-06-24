@@ -6,7 +6,7 @@ export function setAuthToken(token: string | null) {
   authToken = token;
 }
 
-async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
+export async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...options,
     headers: {
