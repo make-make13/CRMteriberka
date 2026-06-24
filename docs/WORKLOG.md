@@ -2029,3 +2029,34 @@ Checks run:
 
 **Risks/TODOs**:
 - Windows can cache the old shortcut icon after reinstalling.
+
+### 2026-06-24 21:46:16 +03:00 — Fix BM contract signature alignment path
+
+Files changed:
+- `src/components/contracts/Contracts.tsx`
+- `src/components/contracts/ContractModal.tsx`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `scripts/gen_bm_docx_template.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Diagnose why the guest signature line in BM contract section 15 appears lower than the director signature line.
+
+**Completed**:
+1. Confirmed the UI used `engine=template-fallback`, so it preferred `storage/docx-templates/bm/active/signed.docx`.
+2. Inspected the active signed DOCX template and found stale blank signature paragraphs before the guest line.
+3. Switched BM contract generation from the contract list and contract modal to `engine=code`, which uses the aligned `bmDocxBuilder.ts` path.
+4. Added regression coverage so the main BM contract buttons keep using the aligned code generator.
+5. Updated the template generation helper note to avoid instructing a rollback to stale template fallback.
+
+Checks run:
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `rg -n "template-fallback" src\components\contracts scripts\gen_bm_docx_template.ts` — no matches
+- `npm run lint` — passed
+- `npm run build` — passed
+- `npm run electron:installer` — passed
+
+**Next**:
+- Install the rebuilt `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe` and recheck the BM contract preview.
+
+**Risks/TODOs**:
+- Existing user-uploaded active DOCX templates can still be stale; the main BM UI no longer depends on them for contract generation.

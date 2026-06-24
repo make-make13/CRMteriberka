@@ -20,8 +20,7 @@
  * После генерации:
  *   1. Открыть файлы в Word/LibreOffice, поправить визуал.
  *   2. Загрузить через CRM → Настройки → DOCX-шаблоны БМ.
- *   3. Вернуть engine обратно с 'code' на 'template-fallback' в Contracts.tsx
- *      и ContractModal.tsx.
+ *   3. Main UI generation should stay on engine='code' unless active templates are verified again.
  */
 import fs from 'fs';
 import path from 'path';
@@ -159,8 +158,7 @@ async function main() {
        scratch/bm_template_signed.docx
   2. Загрузи через CRM → Настройки → DOCX-шаблоны БМ
        (отдельно: print.docx и signed.docx)
-  3. После загрузки верни engine: 'code' → 'template-fallback'
-       в Contracts.tsx и ContractModal.tsx
+  3. Main UI generation should stay on engine='code' unless active templates are verified again.
 `);
 }
 

@@ -746,10 +746,10 @@ export default function ContractModal({
           toast('Сначала сохраните договор, затем сформируйте документ.', 'info');
           return;
         }
-        // Сохранённый БМ-договор: active DOCX-шаблон → fallback на code generator.
+        // Saved BM contract: code generator keeps signatures aligned; active templates can be stale.
         const bmMode = type === 'send' ? 'signed' : 'print';
         const { blob: contractBlob } = await bmDocxApi.downloadBmContract(
-          String(initialData.id), bmMode, 'pdf', 'template-fallback',
+          String(initialData.id), bmMode, 'pdf', 'code',
         );
         if (type === 'send') {
           // «На отправку»: договор (DOCX) + счёт + акт
