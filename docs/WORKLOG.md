@@ -1,5 +1,32 @@
 # WORKLOG
 
+### 2026-06-24 13:58:57 +03:00 - Diagnose installed CRM PDF preview failure
+
+Files changed:
+- `docs/WORKLOG.md`
+
+Completed:
+- Diagnosed the installed CRM at `C:\Users\Make\AppData\Local\Programs\Bolshaya Medveditsa CRM`.
+- Confirmed the installed app was serving frontend/backend on localhost ports and that static `pdf.worker` assets returned `200 application/javascript`.
+- Confirmed contract PDF generation itself works: `/api/bm-docx/contract/tt113b4t9?mode=print&output=pdf&engine=template-fallback` returned `200 application/pdf`, `%PDF-1.7`, 137214 bytes, engine `code-fallback`.
+- Reproduced the preview renderer failure inside the installed Electron page via DevTools protocol: both a static PDF and the generated contract PDF fail with `UnknownErrorException: a.toHex is not a function`.
+- Identified root cause as runtime/library incompatibility: `pdfjs-dist` 5.6.205 uses `Uint8Array.prototype.toHex` in the pdf.js worker path, but installed Electron 36.9.5 / Chrome 136 does not provide that method.
+- Confirmed this is not caused by the contract data, DOCX/PDF generation, LibreOffice, HTTP auth, missing worker file, or missing PDF bytes.
+
+Checks run:
+- `git status --short`
+- Installed app process/port inspection.
+- HTTP checks for `/api/health`, `/assets/pdf.worker...js`, `/documents/return-application.pdf`, and BM contract PDF API.
+- DevTools protocol runtime evaluation in the installed Electron window.
+- Package version checks for `pdfjs-dist` and `electron`.
+
+Next recommended step:
+- Fix preview compatibility by either downgrading/pinning `pdfjs-dist` to a version compatible with Electron 36/Chrome 136, or by upgrading Electron to a Chromium version that supports the required TypedArray Base64/Hex APIs. Prefer the lower-risk fix: pin `pdfjs-dist` to the last compatible 4.x line and rebuild installer.
+
+Risks / TODO:
+- No application code was changed during diagnostics.
+- A separate installed CRM instance was launched with `--remote-debugging-port=9333` for diagnostics.
+
 ### 2026-06-24 13:48:17 +03:00 - Commit local diagnostic room script
 
 Files changed:
