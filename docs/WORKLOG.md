@@ -1,5 +1,27 @@
 # WORKLOG
 
+### 2026-06-24 08:52:53 +03:00 - Contracts cleanup pass
+
+Files changed:
+- `src/lib/utils.ts`
+- `docs/WORKLOG.md`
+
+Completed:
+- Confirmed `generateContractHTML` had no repo call sites.
+- Removed the unused HTML contract generator and helper/type dependencies used only by it.
+- Left live PDFMe/DOCX contract templates unchanged.
+
+Checks run:
+- `git status --short`
+- `rg -n "generateContractHTML"`
+- `npm run lint` - passed.
+
+Next recommended step:
+- Continue contracts cleanup only with a separate scoped task.
+
+Risks / TODO:
+- No DB, Supabase, env, migrations, deploy, Graphify, legal templates, PDFMe, or DOCX template changes were made.
+
 ### 2026-06-24 05:18:38 +03:00 - Leads runtime safety pass
 
 Files changed:
