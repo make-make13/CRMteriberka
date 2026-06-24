@@ -145,8 +145,6 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
 
   // Вычисление ключевых показателей по выбранному периоду
   const periodStats = useMemo(() => {
-    const totalRooms = CC_OBJECTS.length + GB_OBJECTS.length; // 20 + 11 = 31
-
     // Получаем массив дней в интервале
     const daysInInterval: Date[] = [];
     const current = new Date(dateInterval.start);
@@ -172,11 +170,6 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
         }
       }
     }
-
-    const totalAvailableNights = daysInInterval.length * totalRooms;
-    const occupancyPct = totalAvailableNights > 0 
-      ? Math.round((occupiedNightsCount / totalAvailableNights) * 100) 
-      : 0;
 
     // Договоры, у которых дата заезда (или дата создания) попадает в период
     const contractsInPeriod = contracts.filter(c => {
@@ -213,9 +206,7 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
     const conversionPct = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
 
     return {
-      occupancyPct,
       occupiedNightsCount,
-      totalAvailableNights,
       arrivalsCount: arrivalsInPeriod.length,
       departuresCount: departuresInPeriod.length,
       contractsCount: contractsInPeriod.length,
@@ -466,8 +457,8 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
         <KpiCard
           icon={BedDouble}
           label="Загрузка за период"
-          value={`${periodStats.occupancyPct}%`}
-          sub={`${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'номер-ночь занята', 'номер-ночи заняты', 'номер-ночей занято')} из ${periodStats.totalAvailableNights} доступных`}
+          value={`${periodStats.occupiedNightsCount} ${plural(periodStats.occupiedNightsCount, 'номер-ночь', 'номер-ночи', 'номер-ночей')} занято`}
+          sub="За выбранный период"
           accent={isDarkMode ? 'bg-orange-500/10 text-orange-400' : 'bg-orange-50 text-orange-600'}
         />
         <KpiCard
@@ -637,28 +628,14 @@ export default function Dashboard({ isDarkMode, contracts, clients, onViewChange
                 <span className="font-bold text-rose-400 text-sm">{money(periodStats.debtPeriod)}</span>
               </div>
               <div className="flex justify-between items-center py-0.5">
-                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Средняя загрузка:</span>
-                <span className={cn('font-bold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</span>
+                <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>Занято номер-ночей:</span>
+                <span className={cn('font-bold text-sm text-orange-400')}>{periodStats.occupiedNightsCount}</span>
               </div>
             </div>
 
-            {/* Прогресс-бар загрузки */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-xs">
-                <span className={subClass}>Средняя загрузка фонда</span>
-                <span className={cn('font-bold', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>{periodStats.occupancyPct}%</span>
-              </div>
-              <div className={cn('h-2.5 w-full overflow-hidden rounded-full', isDarkMode ? 'bg-[#232323]' : 'bg-gray-100')}>
-                <div
-                  className="h-full rounded-full bg-orange-500 transition-all duration-300"
-                  style={{ width: `${Math.min(100, periodStats.occupancyPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="border-t pt-3 border-gray-100 dark:border-[#232323] space-y-1">
+            <div className="border-t pt-3 border-gray-100 dark:border-[#232323] space-y-1.5">
               <span className={subClass}>Выводы по периоду</span>
-              <p className={cn('text-xs leading-relaxed font-medium', isDarkMode ? 'text-gray-300' : 'text-gray-700')}>
+              <p className={cn('text-xs leading-relaxed font-semibold', isDarkMode ? 'text-gray-300' : 'text-gray-700')}>
                 {reportText}
               </p>
             </div>

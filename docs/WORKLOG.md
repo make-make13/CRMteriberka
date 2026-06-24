@@ -1,5 +1,26 @@
 # WORKLOG
 
+### 2026-06-24 12:25:00 +03:00 - Dashboard legacy room occupancy fix
+
+Files changed:
+- `src/components/dashboard/Dashboard.tsx`
+- `docs/WORKLOG.md`
+
+Completed:
+- Removed legacy room stock totals (CC_OBJECTS and GB_OBJECTS, which summed to 31) from the Dashboard occupancy calculations, as they are not accurate for the "Большая Медведица" CRM.
+- Display absolute values for occupied room-nights: `X номер-ночей занято` (e.g. `0 номер-ночей занято`) instead of `из 31 доступных`.
+- Removed the occupancy percentage logic and the progress bar since there is no explicit room inventory configuration for "Большая Медведица" in constants.
+- Noted that a future explicit room inventory configuration is required to support accurate occupancy percentage calculations.
+
+Checks run:
+- `npm run lint` - passed.
+
+Next recommended step:
+- If a room inventory configuration for "Большая Медведица" becomes available, it can be defined in `src/constants.ts` to restore occupancy percentage metrics.
+
+Risks / TODO:
+- No database changes, migrations, Supabase configurations, or contracts/templates were modified.
+
 ### 2026-06-24 10:18:42 +03:00 - Email SMTP test endpoint 404 fix
 
 Files changed:
