@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { parseJsonSafe } from '../src/components/leads/leadDisplay.ts';
+
 const rootPath = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 function read(file: string) {
@@ -41,5 +43,12 @@ assert.match(badgeSource, /LEAD_STATUS_LABELS\[[^\]]+\]\s*\|\|/, 'LeadStatusBadg
 assert.match(leadsSource, /formatLeadSource/, 'Leads list must render formatted source labels');
 assert.match(modalSource, /formatLeadSource/, 'Lead modal must render formatted source labels');
 assert.match(modalSource, /getLeadOriginLabel/, 'Lead modal must render Supabase/local origin labels');
+
+const parsedArray = parseJsonSafe('[{"role":"user","text":"ok"}]');
+assert.equal(Array.isArray(parsedArray), true, 'valid JSON arrays must still parse');
+assert.deepEqual(parseJsonSafe(null), null, 'null JSON value must return fallback');
+assert.deepEqual(parseJsonSafe(undefined), null, 'undefined JSON value must return fallback');
+assert.deepEqual(parseJsonSafe(''), null, 'empty JSON value must return fallback');
+assert.deepEqual(parseJsonSafe('{bad json'), null, 'invalid JSON value must return fallback');
 
 console.log('leads runtime safety tests passed');

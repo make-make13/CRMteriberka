@@ -13,7 +13,16 @@ import EmptyState from '../common/EmptyState';
 import LeadModal from './LeadModal';
 import LeadStatusBadge from './LeadStatusBadge';
 import ClientModal from '../clients/ClientModal';
-import { cleanText, formatDateValue, formatLeadSource, isAiSource } from './leadDisplay';
+import {
+  cleanText,
+  formatDateValue,
+  formatLeadContactValue,
+  formatLeadGuestName,
+  formatLeadObjectType,
+  formatLeadOptionalValue,
+  formatLeadSource,
+  isAiSource,
+} from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -475,18 +484,18 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
                     </td>
                     <td className="px-5 py-3.5">
                       <div className={cn('font-bold text-sm leading-snug', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-900')}>
-                        {cleanText(lead.guestName, 'Без имени')}
+                        {formatLeadGuestName(lead.guestName)}
                       </div>
                       <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
-                        {cleanText(lead.objectType || lead.objectId, 'Номер не выбран')}
+                        {formatLeadObjectType(lead.objectType)}
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <div className={cn('font-semibold text-sm', isDarkMode ? 'text-[#F4F1EA]' : 'text-gray-800')}>
-                        {cleanText(lead.phone, '—')}
+                        {formatLeadContactValue(lead.phone)}
                       </div>
                       <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
-                        {cleanText(lead.email, '—')}
+                        {formatLeadContactValue(lead.email)}
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
@@ -494,7 +503,7 @@ export default function Leads({ isDarkMode, clients, onClientSaved, onCreatePreb
                         {formatDateRange(lead)}
                       </div>
                       <div className={cn('mt-0.5 text-xs', isDarkMode ? 'text-[#8F9894]' : 'text-gray-400')}>
-                        {cleanText(lead.desiredTime, '')}
+                        {formatLeadOptionalValue(lead.desiredTime)}
                       </div>
                     </td>
                     <td className="px-5 py-3.5">

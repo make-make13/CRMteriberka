@@ -326,6 +326,49 @@ function cleanOptionalString(value: unknown) {
   return text || undefined;
 }
 
+// ── Ремонт mojibake в текстовых полях заявок ─────────────────────────────────
+// Восстанавливает классический mojibake: UTF-8-байты, ошибочно прочитанные как
+// Windows-1251 (например, «РЎС‚Р°РЅРґР°СЂС‚» -> «Стандарт»). Карта кодирования cp1251
+// строится из встроенного TextDecoder, без сторонних зависимостей.
+// Strict-guard: преобразование применяется ТОЛЬКО если результат — валидный UTF-8
+// с кириллицей. Чистый UTF-8 и уже разрушенные значения ('?'/U+FFFD) не трогаются.
+// Применяется только к НЕперсональному полю object_type на входе (см. createLead*).
+let _cp1251Encode: Map<string, number> | null = null;
+function cp1251EncodeMap(): Map<string, number> {
+  if (_cp1251Encode) return _cp1251Encode;
+  const map = new Map<string, number>();
+  const dec = new TextDecoder('windows-1251');
+  for (let b = 0; b < 256; b++) map.set(dec.decode(Uint8Array.of(b)), b);
+  _cp1251Encode = map;
+  return map;
+}
+
+function repairTextMojibake(value: string | undefined): string | undefined {
+  if (!value) return value;
+  if (value.includes('?') || value.includes('\uFFFD')) return value;
+  // Быстрый фильтр: если нет символов из диапазона 0x80..0x4FF — это не наш mojibake.
+  let suspect = false;
+  for (let i = 0; i < value.length; i++) {
+    const cc = value.charCodeAt(i);
+    if (cc >= 0x80 && cc <= 0x4ff) { suspect = true; break; }
+  }
+  if (!suspect) return value;
+  const enc = cp1251EncodeMap();
+  const bytes = new Uint8Array(value.length);
+  for (let i = 0; i < value.length; i++) {
+    const b = enc.get(value[i]);
+    if (b === undefined) return value; // символ вне cp1251 → это не данный вид mojibake
+    bytes[i] = b;
+  }
+  try {
+    const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    if (decoded !== value && /[А-Яа-яЁё]/.test(decoded)) return decoded;
+  } catch {
+    // байты не складываются в валидный UTF-8 → исходник был чистым UTF-8, не трогаем
+  }
+  return value;
+}
+
 function generateLocalId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -922,7 +965,7 @@ export class LocalDatabase {
       desiredEndDate: cleanOptionalString(input.desiredEndDate),
       desiredTime: cleanOptionalString(input.desiredTime),
       guestsCount: input.guestsCount === undefined || input.guestsCount === null ? undefined : Number(input.guestsCount),
-      objectType: cleanOptionalString(input.objectType),
+      objectType: repairTextMojibake(cleanOptionalString(input.objectType)),
       objectId: cleanOptionalString(input.objectId),
       message: cleanOptionalString(input.message),
       utmJson: cleanOptionalString(input.utmJson),
@@ -985,7 +1028,7 @@ export class LocalDatabase {
       desiredEndDate: cleanOptionalString(row.desired_end_date),
       desiredTime: cleanOptionalString(row.desired_time),
       guestsCount: row.guests_count === undefined || row.guests_count === null ? undefined : Number(row.guests_count),
-      objectType: cleanOptionalString(row.object_type),
+      objectType: repairTextMojibake(cleanOptionalString(row.object_type)),
       objectId: cleanOptionalString(row.object_id),
       message: cleanOptionalString(row.message),
       utmJson: Object.keys(cleanUtm).length ? JSON.stringify(cleanUtm) : undefined,

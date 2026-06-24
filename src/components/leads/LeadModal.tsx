@@ -5,7 +5,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Client, Lead, LeadCreateInput, LeadStatus, LeadUpdateInput } from '../../types';
 import LeadStatusBadge, { LEAD_STATUS_LABELS } from './LeadStatusBadge';
-import { CHANNEL_LABELS, formatLeadSource, getLeadOriginLabel, isAiSource, normalizeLeadStatus } from './leadDisplay';
+import { CHANNEL_LABELS, formatLeadSource, getLeadOriginLabel, isAiSource, normalizeLeadStatus, parseJsonSafe } from './leadDisplay';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -100,11 +100,8 @@ function formatChannel(channel: string | undefined): string {
 
 function parseTranscript(raw: string | undefined): AiMessage[] | null {
   if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as AiMessage[];
-  } catch { /* ignore */ }
-  return null;
+  const parsed = parseJsonSafe(raw);
+  return Array.isArray(parsed) ? parsed as AiMessage[] : null;
 }
 
 function AiConciergeBlock({ lead, isDarkMode, cn: cls, aiConsoleUrl }: {

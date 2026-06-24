@@ -1,5 +1,144 @@
 # WORKLOG
 
+### 2026-06-24 05:18:38 +03:00 - Leads runtime safety pass
+
+Files changed:
+- `src/components/leads/LeadModal.tsx`
+- `scripts/leadsRuntimeSafetyTest.ts`
+- `docs/WORKLOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CRM_TERIBERKA_TODO.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CURRENT_STATE.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\NEXT_ACTIONS.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CHANGELOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\AGENT_HANDOFF.md`
+
+Completed:
+- Reproduced the pre-existing `scripts/leadsRuntimeSafetyTest.ts` failure: `LeadModal.tsx` still called `JSON.parse` directly.
+- Reused the guarded `parseJsonSafe()` helper from `leadDisplay.ts` for `LeadModal.tsx` transcript parsing.
+- Kept fallback behavior display-only/runtime-only: invalid, empty, null, or undefined transcript JSON returns `null` and does not save fallback text to lead data.
+- Left editable LeadModal form values raw.
+- Kept SQLite data, Supabase, backend, contracts/templates, chessboard, baseType, enum/zod, and DB schema unchanged.
+- Expanded `scripts/leadsRuntimeSafetyTest.ts` with behavioral safe-parse cases.
+
+Checks run:
+- `npx tsx scripts/leadsRuntimeSafetyTest.ts` - passed.
+- `npx tsx scripts/leadObjectTypeDisplayTest.ts` - passed.
+- `npm run lint` - passed.
+- `npm run dev` - started for browser verification, then stopped.
+- Browser check: opened Leads, opened an existing lead modal, opened the New Lead modal and cancelled; no new data was saved; console errors 0.
+
+Next recommended step:
+- Decide the next leads-only polish task, or move to another module review/fix.
+
+Risks / TODO:
+- No migrations, deploy, Graphify, Supabase changes, data cleanup, contracts, templates, or schema changes were made.
+- The first dev-server start attempt used `Start-Process npm` and opened Notepad due to Windows file association; it was closed and the server was started with `npm.cmd`.
+
+### 2026-06-24 05:07:12 +03:00 - Leads display polish for damaged visible fields
+
+Files changed:
+- `src/components/leads/leadDisplay.ts`
+- `src/components/leads/Leads.tsx`
+- `scripts/leadObjectTypeDisplayTest.ts`
+- `docs/WORKLOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CRM_TERIBERKA_TODO.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CURRENT_STATE.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\NEXT_ACTIONS.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CHANGELOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\AGENT_HANDOFF.md`
+
+Completed:
+- Added display-only helpers for damaged visible lead fields: guest name, contact values, optional values, and object type.
+- Applied helpers only in the Leads list display for `guestName`, `phone`, `email`, `desiredTime`, and `objectType`.
+- Kept editable LeadModal fields raw to avoid saving fallback text into real lead data.
+- Kept SQLite data, Supabase, backend, contracts/templates, chessboard, baseType, enum/zod, and DB schema unchanged.
+- Expanded `scripts/leadObjectTypeDisplayTest.ts` to cover damaged guest/contact/optional display fallbacks.
+
+Checks run:
+- `npx tsx scripts/leadObjectTypeDisplayTest.ts` - passed.
+- `npm run lint` - passed.
+- `npm run dev` - started for browser verification, then stopped.
+- Browser check on active and archive Leads rows: U+FFFD count 0, `????` count 0, console errors 0.
+
+Next recommended step:
+- Decide whether to fix the pre-existing `scripts/leadsRuntimeSafetyTest.ts` failure around direct `JSON.parse` in `LeadModal.tsx`.
+
+Risks / TODO:
+- No new data was created or saved during browser verification.
+- No migrations, deploy, Graphify, Supabase changes, data cleanup, contracts, templates, or schema changes were made.
+
+### 2026-06-24 04:37:59 +03:00 - Leads UI object_type fallback
+
+Files changed:
+- `src/components/leads/leadDisplay.ts`
+- `src/components/leads/Leads.tsx`
+- `scripts/leadObjectTypeDisplayTest.ts`
+- `docs/WORKLOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CRM_TERIBERKA_TODO.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CURRENT_STATE.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\NEXT_ACTIONS.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CHANGELOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\AGENT_HANDOFF.md`
+
+Completed:
+- Added `formatLeadObjectType()` display helper for Leads UI only.
+- Replaced the Leads list object type line with the new display helper.
+- Kept SQLite data, Supabase, backend mojibake helper, contracts/templates, baseType, enum/zod, and DB schema unchanged.
+- Added a targeted script test for clean values, empty values, U+FFFD, and repeated-question-mark damaged values.
+- Verified the Leads list object-type row no longer renders U+FFFD or `????` for visible rows.
+
+Checks run:
+- `npx tsx scripts/leadObjectTypeDisplayTest.ts` - passed.
+- `npm run lint` - passed.
+- `npm run dev` - started for browser verification, then stopped.
+- Browser check on Leads list object-type row: replacement count 0, question-run count 0, console errors 0.
+
+Next recommended step:
+- Decide separately whether to add a safe display fallback for damaged PII fields such as guest name; one visible U+FFFD remains in the guest-name row and was not changed by this object_type-only task.
+
+Risks / TODO:
+- Existing `scripts/leadsRuntimeSafetyTest.ts` still has a pre-existing failure on `LeadModal.tsx` direct `JSON.parse`; not fixed in this task.
+- No migrations, deploy, Graphify, Supabase changes, data cleanup, contracts, or templates were touched.
+
+### 2026-06-24 04:26:41 +03:00 - Controlled smoke-check after leads.object_type fix
+
+Files changed:
+- `server/localDatabase.ts` (existing pending code fix, not changed during smoke-check)
+- `docs/WORKLOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CURRENT_STATE.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\NEXT_ACTIONS.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CHANGELOG.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\AGENT_HANDOFF.md`
+- `E:\AI_Workspace\Teriberka\00_AGENT_CONTEXT\CRM_TERIBERKA_TODO.md`
+
+Completed:
+- Installed dependencies with `npm ci` because `package-lock.json` exists.
+- Ran TypeScript lint gate after the `repairTextMojibake()` guard fix.
+- Started web-dev mode with `npm run dev` on port 3002 and verified `/api/health`.
+- Logged into the CRM and smoke-checked the main UI sections: Leads, Chessboard, Contracts, Guests, Settings.
+- Opened an existing lead modal and opened the New Lead modal, then cancelled without saving new data.
+- Opened a chessboard cell modal, then cancelled without saving new data.
+- Checked visible lead encoding markers without printing PII.
+- Stopped the dev server after the smoke-check.
+
+Checks run:
+- `git status --short`
+- `npm ci`
+- `npm run lint` - passed.
+- `npm run dev` - started successfully.
+- Browser smoke-check: login, Leads, New Lead modal, existing Lead modal, Chessboard, chessboard cell modal, Contracts, Guests, Settings.
+- Browser console errors: 0.
+- SQLite aggregate check for remaining destroyed `object_type` values: one row with `?`, one row with U+FFFD.
+
+Next recommended step:
+- First fix candidate: add a safe Leads UI fallback/label for destroyed `object_type` values (`?`/U+FFFD`) so managers do not see replacement characters; keep actual data repair/edit as a separate user-approved data-cleanup task.
+
+Risks / TODO:
+- `npm ci` reported dependency audit issues and peer dependency override warnings; no audit/fix was run.
+- Remaining `?`/U+FFFD values are known destroyed data and intentionally not repaired by the helper.
+- Conversion lead -> prebooking was not executed to avoid creating extra data; the sampled existing lead did not expose conversion actions.
+- No build/test/migrations/deploy/Graphify were run.
+
 ### 2026-06-02 17:00:58 +03:00 - Archive RC installer, clean workspace, fix window title
 
 Files changed:
