@@ -2121,3 +2121,33 @@ Checks run:
 
 **Risks/TODOs**:
 - The exact user path was intermittent and not directly reproduced; this fixes the strongest common focus-retention cause found in code.
+
+### 2026-06-25 12:16:20 +03:00 — Compact BM send signature block
+
+Files changed:
+- `src/utils/docx/bmDocxBuilder.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Fix the visual issue in the BM "На отправку" section 15 where the stamp/signature block made the signature area too tall.
+
+**Completed**:
+1. Reduced the signed-mode stamp and director signature image sizes.
+2. Reduced spacing between the stamped images and the director signature line.
+3. Kept guest signature spacing derived from the actual executor image stack height, so both signature lines remain aligned.
+4. Extended the regression test to keep the signed stamp/signature assets compact.
+5. Rendered `scratch/bm_contract_signed.pdf` page 6 and visually checked the result.
+6. Rebuilt the NSIS installer.
+
+Checks run:
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npm run lint` — passed
+- `npx tsx scripts/gen_bm_docx_standalone.ts` — passed
+- Rendered `scratch/bm_contract_signed.pdf` page 6 with Poppler and visually checked layout — passed
+- `npm run electron:installer` — passed
+
+**Next**:
+- Install the rebuilt setup and regenerate the "На отправку" preview from the installed CRM.
+
+**Risks/TODOs**:
+- The stamp/signature are intentionally smaller in signed mode to keep section 15 compact.

@@ -279,10 +279,10 @@ function buildClientRequisitesCell(vars: BmDocxVariables): TableCell {
 //
 // 1 px (в docx.js ImageRun.transformation) ≈ 15 twips при 96 dpi.
 
-const STAMP_PX  = { width: 85,  height: 85  } as const;
-const SIG_PX    = { width: 90,  height: 36  } as const;
-const AFTER_STAMP = 80;   // twips spacing after stamp paragraph
-const AFTER_SIG   = 60;   // twips spacing after signature paragraph
+const STAMP_PX  = { width: 58,  height: 58  } as const;
+const SIG_PX    = { width: 72,  height: 28  } as const;
+const AFTER_STAMP = 0;    // twips spacing after stamp paragraph
+const AFTER_SIG   = 20;   // twips spacing after signature paragraph
 
 // Общая высота изображений (twips) для расчёта отступа в правой колонке.
 const IMAGES_TOTAL_TWP =

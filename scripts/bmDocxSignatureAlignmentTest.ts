@@ -14,6 +14,8 @@ assert.match(source, /SIGNED_GUEST_SIGNATURE_SPACER/, 'DOCX builder must use a d
 assert.match(source, /IMAGES_TOTAL_TWP - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP/, 'signed guest spacer must be shorter than the raw image stack height.');
 assert.match(source, /getExecutorImageStackHeight/, 'signed spacer must be based on images that actually exist.');
 assert.match(source, /Math\.max\(0,\s*executorImageStackHeight - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP\)/, 'guest spacer must follow the actual executor image stack height.');
+assert.match(source, /STAMP_PX\s*=\s*\{\s*width:\s*58,\s*height:\s*58\s*\}/, 'signed stamp must stay compact so it does not push signatures down.');
+assert.match(source, /SIG_PX\s*=\s*\{\s*width:\s*72,\s*height:\s*28\s*\}/, 'signed director signature image must stay compact.');
 assert.doesNotMatch(source, /const spacerAfter = isSigned \? SIGNED_GUEST_SIGNATURE_SPACER : HAND_SIG_AREA/, 'guest spacer must not assume signed images exist.');
 assert.match(generatorSource, /process\.cwd\(\),\s*'public',\s*'pdfme-assets'/, 'asset lookup must work from packaged app cwd.');
 assert.match(generatorSource, /candidate => fs\.existsSync\(candidate\)/, 'asset lookup must choose an existing packaged/source asset path.');
