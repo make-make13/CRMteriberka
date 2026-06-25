@@ -2151,3 +2151,37 @@ Checks run:
 
 **Risks/TODOs**:
 - The stamp/signature are intentionally smaller in signed mode to keep section 15 compact.
+
+### 2026-06-25 12:45:17 +03:00 — Place BM send stamp below signature line
+
+Files changed:
+- `src/utils/docx/bmDocxBuilder.ts`
+- `src/utils/docx/bmContractGenerator.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `public/pdfme-assets/executor-signature-block.png`
+- `docs/WORKLOG.md`
+
+**Task**: Match the BM "На отправку" executor signature block to the reference: director signature above the line, director name at the line, stamp below the line, guest line aligned.
+
+**Completed**:
+1. Added a fixed transparent executor signature block asset with the signature, line, director name, and stamp in controlled positions.
+2. Wired the BM DOCX generator to use the packaged fixed block, with fallback to separate stamp/signature assets if the block is missing.
+3. Kept guest signature spacing tied to the line position inside the fixed block.
+4. Added regression checks for the fixed block asset and to prevent floating images in this layout.
+5. Rendered the signed PDF page 6 and visually checked the result.
+6. Rebuilt the NSIS installer and confirmed the fixed block asset is present in `release/win-unpacked/resources/app/public/pdfme-assets/`.
+
+Checks run:
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npm run lint` — passed
+- `npm run build` — passed
+- `npx tsx scripts/gen_bm_docx_standalone.ts` — passed
+- Rendered `scratch/bm_contract_signed.pdf` page 6 with Poppler and visually checked layout — passed
+- `npm run electron:installer` — passed
+- Package check: `release/win-unpacked/resources/app/public/pdfme-assets/executor-signature-block.png` present
+
+**Next**:
+- Install the rebuilt `release/Bolshaya-Medveditsa-CRM-Setup-0.1.3.exe` and regenerate the "На отправку" PDF from the installed CRM.
+
+**Risks/TODOs**:
+- The fixed block contains the current director short name `/Е. А. Сташ/`; update this block if the director/signature changes.

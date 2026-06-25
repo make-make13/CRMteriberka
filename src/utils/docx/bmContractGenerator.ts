@@ -41,6 +41,7 @@ export interface GenerateBmContractOptions {
    */
   stampPath?: string;
   signaturePath?: string;
+  executorSignatureBlockPath?: string;
 }
 
 /** Корень проекта от расположения этого файла (src/utils/docx/). */
@@ -53,7 +54,7 @@ function defaultAssetRoots(): string[] {
   ];
 }
 
-function resolveAsset(name: 'stamp.png' | 'signature.png', override?: string): string {
+function resolveAsset(name: 'stamp.png' | 'signature.png' | 'executor-signature-block.png', override?: string): string {
   if (override) return override;
   const candidates = defaultAssetRoots().map(root => path.resolve(root, name));
   return candidates.find(candidate => fs.existsSync(candidate)) || candidates[0];
@@ -76,6 +77,7 @@ export async function generateBmContractDocx(
     withSignature: isSigned,
     stampPath: resolveAsset('stamp.png', options.stampPath),
     signaturePath: resolveAsset('signature.png', options.signaturePath),
+    executorSignatureBlockPath: resolveAsset('executor-signature-block.png', options.executorSignatureBlockPath),
   });
 
   if (options.output === 'docx') return docxBuffer;

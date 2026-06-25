@@ -112,6 +112,7 @@ export interface BmDocxBuildOptions {
   withSignature: boolean;
   stampPath?: string;
   signaturePath?: string;
+  executorSignatureBlockPath?: string;
 }
 
 // --- Стилевые константы ---
@@ -281,8 +282,10 @@ function buildClientRequisitesCell(vars: BmDocxVariables): TableCell {
 
 const STAMP_PX  = { width: 58,  height: 58  } as const;
 const SIG_PX    = { width: 72,  height: 28  } as const;
-const AFTER_STAMP = 0;    // twips spacing after stamp paragraph
-const AFTER_SIG   = 20;   // twips spacing after signature paragraph
+const EXECUTOR_SIGNATURE_BLOCK_PX = { width: 190, height: 80 } as const;
+const EXECUTOR_SIGNATURE_BLOCK_LINE_TWP = 26 * 15;
+const AFTER_STAMP = 20;   // twips spacing after stamp paragraph
+const AFTER_SIG   = 0;    // twips spacing after signature paragraph
 
 // Общая высота изображений (twips) для расчёта отступа в правой колонке.
 const IMAGES_TOTAL_TWP =
@@ -304,11 +307,13 @@ function hasSignatureAsset(opts: BmDocxBuildOptions): boolean {
   return Boolean(opts.withSignature && opts.signaturePath && fs.existsSync(opts.signaturePath));
 }
 
-function getExecutorImageStackHeight(opts: BmDocxBuildOptions): number {
-  let total = 0;
-  if (hasStampAsset(opts)) total += STAMP_PX.height * 15 + AFTER_STAMP;
-  if (hasSignatureAsset(opts)) total += SIG_PX.height * 15 + AFTER_SIG;
-  return total;
+function hasExecutorSignatureBlockAsset(opts: BmDocxBuildOptions): boolean {
+  return Boolean(opts.withSignature && opts.executorSignatureBlockPath && fs.existsSync(opts.executorSignatureBlockPath));
+}
+
+function getExecutorPreLineStackHeight(opts: BmDocxBuildOptions): number {
+  if (hasExecutorSignatureBlockAsset(opts)) return EXECUTOR_SIGNATURE_BLOCK_LINE_TWP;
+  return 0;
 }
 
 function sigCell(children: Paragraph[], width: number): TableCell {
@@ -324,8 +329,31 @@ function buildExecutorSignatureCell(opts: BmDocxBuildOptions): TableCell {
   const isSigned = opts.withStamp || opts.withSignature;
   const lines: Paragraph[] = [];
 
-  if (isSigned) {
-    // Signed: печать (сверху) → подпись (снизу, ближе к линии) → линия → должность
+  if (isSigned && hasExecutorSignatureBlockAsset(opts)) {
+    const blockBuf = fs.readFileSync(opts.executorSignatureBlockPath!);
+    lines.push(new Paragraph({
+      spacing: { before: 0, after: 40 },
+      children: [new ImageRun({
+        data: blockBuf,
+        transformation: EXECUTOR_SIGNATURE_BLOCK_PX,
+        type: 'png',
+      } as any)],
+    }));
+  } else if (isSigned) {
+    const directorLineChildren: Array<TextRun | ImageRun> = [];
+    if (hasSignatureAsset(opts)) {
+      const sigBuf = fs.readFileSync(opts.signaturePath!);
+      directorLineChildren.push(new ImageRun({
+        data: sigBuf,
+        transformation: SIG_PX,
+        type: 'png',
+      } as any));
+    }
+    directorLineChildren.push(new TextRun({ text: '_______________________   /Е. А. Сташ/', font: FONT, size: FONT_SIZE_SMALL }));
+    lines.push(new Paragraph({
+      spacing: { before: 0, after: 40 },
+      children: directorLineChildren,
+    }));
     if (hasStampAsset(opts)) {
       const stampBuf = fs.readFileSync(opts.stampPath!);
       lines.push(new Paragraph({
@@ -333,19 +361,11 @@ function buildExecutorSignatureCell(opts: BmDocxBuildOptions): TableCell {
         children: [new ImageRun({ data: stampBuf, transformation: STAMP_PX, type: 'png' } as any)],
       }));
     }
-    if (hasSignatureAsset(opts)) {
-      const sigBuf = fs.readFileSync(opts.signaturePath!);
-      lines.push(new Paragraph({
-        spacing: { before: 0, after: AFTER_SIG },
-        children: [new ImageRun({ data: sigBuf, transformation: SIG_PX, type: 'png' } as any)],
-      }));
-    }
   } else {
-    // Print: место для живой подписи руководителя
     lines.push(new Paragraph({ spacing: { before: 0, after: HAND_SIG_AREA }, children: [] }));
+    lines.push(p('_______________________   /Е. А. Сташ/', { size: FONT_SIZE_SMALL, spaceAfter: 40 }));
   }
 
-  lines.push(p('_______________________   /Е. А. Сташ/', { size: FONT_SIZE_SMALL, spaceAfter: 40 }));
   lines.push(p('Генеральный директор', { size: FONT_SIZE_SMALL, spaceAfter: 0 }));
   return sigCell(lines, 50);
 }
@@ -367,9 +387,9 @@ function buildClientSignatureCell(vars: BmDocxVariables, spacerAfter: number): T
 
 function buildRequisitesTable(vars: BmDocxVariables, opts: BmDocxBuildOptions): Table {
   const isSigned = opts.withStamp || opts.withSignature;
-  const executorImageStackHeight = getExecutorImageStackHeight(opts);
+  const executorPreLineStackHeight = getExecutorPreLineStackHeight(opts);
   const clientSignatureSpacer = isSigned
-    ? Math.max(0, executorImageStackHeight - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP)
+    ? Math.max(0, executorPreLineStackHeight - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP)
     : HAND_SIG_AREA;
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
