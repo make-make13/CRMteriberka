@@ -2093,3 +2093,31 @@ Checks run:
 
 **Risks/TODOs**:
 - If an already-open installed CRM process is running, restart it after reinstalling so the server uses the new packaged code and asset paths.
+
+### 2026-06-25 12:10:24 +03:00 — Restore focus after document preview
+
+Files changed:
+- `src/components/common/DocumentPreviewModal.tsx`
+- `scripts/documentPreviewFocusTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Investigate intermittent cases where text input stopped working after the CRM was otherwise functioning.
+
+**Completed**:
+1. Checked global keyboard/focus handlers and form input patterns.
+2. Identified the document preview print path as a plausible shared cause: printing focuses a hidden PDF iframe and did not explicitly return focus to the main app.
+3. Added focus restoration on preview close and after PDF iframe printing.
+4. Added a regression test for the preview focus behavior.
+5. Rebuilt the NSIS installer.
+
+Checks run:
+- `npx tsx scripts/documentPreviewFocusTest.ts` — passed
+- `npm run lint` — passed
+- `npm run build` — passed
+- `npm run electron:installer` — passed
+
+**Next**:
+- Install the rebuilt setup and check text entry after opening/printing/closing document previews.
+
+**Risks/TODOs**:
+- The exact user path was intermittent and not directly reproduced; this fixes the strongest common focus-retention cause found in code.

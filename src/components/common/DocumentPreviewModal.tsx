@@ -51,6 +51,22 @@ export default function DocumentPreviewModal({
   const [isPdfRendering, setIsPdfRendering] = useState(false);
   const [pdfRenderError, setPdfRenderError] = useState<string | null>(null);
 
+  const restoreAppFocus = () => {
+    pdfFrameRef.current?.blur();
+    window.focus();
+    requestAnimationFrame(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      document.body.focus({ preventScroll: true });
+    });
+  };
+
+  const handleClose = () => {
+    restoreAppFocus();
+    onClose();
+  };
+
   useEffect(() => {
     if (!isOpen || !pdfBlob) {
       setPdfUrl(null);
@@ -185,6 +201,7 @@ export default function DocumentPreviewModal({
     if (pdfFrameRef.current?.contentWindow) {
       pdfFrameRef.current.contentWindow.focus();
       pdfFrameRef.current.contentWindow.print();
+      restoreAppFocus();
       return;
     }
 
@@ -290,7 +307,7 @@ export default function DocumentPreviewModal({
                 </button>
               )}
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="p-2 rounded-xl hover:bg-white/5 text-gray-500 transition-colors"
               >
                 <X size={20} />
