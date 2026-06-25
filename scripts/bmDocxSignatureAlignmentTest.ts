@@ -17,8 +17,8 @@ assert.match(source, /getExecutorPreLineStackHeight/, 'signed spacer must be bas
 assert.match(source, /Math\.max\(0,\s*executorPreLineStackHeight - EMPTY_SIGNATURE_PARAGRAPH_LINE_TWP\)/, 'guest spacer must follow only the executor pre-line image stack height.');
 assert.ok(fs.existsSync(executorSignatureBlockPath), 'executor signature block asset must exist.');
 assert.match(source, /executorSignatureBlockPath\?: string/, 'DOCX builder must accept the fixed executor signature block asset.');
-assert.match(source, /EXECUTOR_SIGNATURE_BLOCK_PX\s*=\s*\{\s*width:\s*280,\s*height:\s*118\s*\}/, 'executor signature block must preserve readable signature, stamp, and line sizes.');
-assert.match(source, /EXECUTOR_SIGNATURE_BLOCK_LINE_TWP\s*=\s*39\s*\*\s*15/, 'guest line alignment must follow the line position inside the fixed executor block.');
+assert.match(source, /EXECUTOR_SIGNATURE_BLOCK_PX\s*=\s*\{\s*width:\s*280,\s*height:\s*144\s*\}/, 'executor signature block must preserve readable signature, stamp, and line sizes.');
+assert.match(source, /EXECUTOR_SIGNATURE_BLOCK_LINE_TWP\s*=\s*20\s*\*\s*15/, 'guest line alignment must follow the line position inside the fixed executor block.');
 assert.match(source, /hasExecutorSignatureBlockAsset/, 'signed layout must prefer the fixed executor signature block when packaged.');
 assert.match(source, /transformation:\s*EXECUTOR_SIGNATURE_BLOCK_PX/, 'signed layout must render the fixed executor signature block.');
 assert.doesNotMatch(source, /floating:/, 'BM DOCX signature layout must not use floating images because LibreOffice conversion can hang.');

@@ -2216,3 +2216,36 @@ Checks run:
 
 **Risks/TODOs**:
 - The layout now uses a larger fixed image block; if long guest requisites push section 15 down, check page 6 manually.
+
+### 2026-06-25 13:11:13 +03:00 — Keep BM stamp below the signature line
+
+Files changed:
+- `public/pdfme-assets/executor-signature-block.png`
+- `src/utils/docx/bmDocxBuilder.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Correct the remaining visual skew in the BM "На отправку" executor/guest signature row.
+
+**Completed**:
+1. Regenerated the fixed executor signature block so the stamp starts below the horizontal signature line instead of overlapping it.
+2. Adjusted the fixed block render height to `280x144`.
+3. Reduced the guest signature spacer so the guest line aligns with the executor signature line.
+4. Updated the regression checks for the new block dimensions and alignment constant.
+5. Rendered the signed PDF page 6 and visually checked that the stamp is below the line and the guest/executor lines are level.
+6. Rebuilt the NSIS installer and confirmed the fixed asset is packaged.
+
+Checks run:
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npm run lint` — passed
+- `npx tsx scripts/gen_bm_docx_standalone.ts` — passed
+- Rendered `scratch/bm_contract_signed.pdf` page 6 with Poppler and visually checked layout — passed
+- `npm run build` — passed
+- `npm run electron:installer` — passed
+- Package check: `release/win-unpacked/resources/app/public/pdfme-assets/executor-signature-block.png` present
+
+**Next**:
+- Launch the rebuilt packaged CRM and regenerate the "На отправку" PDF in the app for final user check.
+
+**Risks/TODOs**:
+- The signature block is a fixed image asset; if director signature/name changes, regenerate `executor-signature-block.png`.
