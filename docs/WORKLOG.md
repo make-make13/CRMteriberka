@@ -2185,3 +2185,34 @@ Checks run:
 
 **Risks/TODOs**:
 - The fixed block contains the current director short name `/Е. А. Сташ/`; update this block if the director/signature changes.
+
+### 2026-06-25 12:57:46 +03:00 — Restore BM send signature block scale
+
+Files changed:
+- `src/utils/docx/bmDocxBuilder.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Fix the BM "На отправку" signature block after the fixed block was rendered too small.
+
+**Completed**:
+1. Increased the fixed executor signature block render size from `190x80` to `280x118`.
+2. Updated guest signature spacer alignment to the new line position inside the larger block.
+3. Updated the regression check so the too-small size is not locked in again.
+4. Rendered the signed PDF page 6 and visually checked that the line, signature, and stamp are readable and the stamp stays below the line.
+5. Rebuilt the NSIS installer; the first attempt was blocked by the running CRM exe, then succeeded after closing the CRM process.
+
+Checks run:
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npm run lint` — passed
+- `npx tsx scripts/gen_bm_docx_standalone.ts` — passed
+- Rendered `scratch/bm_contract_signed.pdf` page 6 with Poppler and visually checked layout — passed
+- `npm run build` — passed
+- `npm run electron:installer` — passed after closing the running packaged CRM process
+- Package check: `release/win-unpacked/resources/app/public/pdfme-assets/executor-signature-block.png` present
+
+**Next**:
+- Install the rebuilt setup and regenerate the "На отправку" PDF from the installed CRM.
+
+**Risks/TODOs**:
+- The layout now uses a larger fixed image block; if long guest requisites push section 15 down, check page 6 manually.

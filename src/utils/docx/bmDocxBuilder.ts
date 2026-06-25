@@ -282,8 +282,8 @@ function buildClientRequisitesCell(vars: BmDocxVariables): TableCell {
 
 const STAMP_PX  = { width: 58,  height: 58  } as const;
 const SIG_PX    = { width: 72,  height: 28  } as const;
-const EXECUTOR_SIGNATURE_BLOCK_PX = { width: 190, height: 80 } as const;
-const EXECUTOR_SIGNATURE_BLOCK_LINE_TWP = 26 * 15;
+const EXECUTOR_SIGNATURE_BLOCK_PX = { width: 280, height: 118 } as const;
+const EXECUTOR_SIGNATURE_BLOCK_LINE_TWP = 39 * 15;
 const AFTER_STAMP = 20;   // twips spacing after stamp paragraph
 const AFTER_SIG   = 0;    // twips spacing after signature paragraph
 
