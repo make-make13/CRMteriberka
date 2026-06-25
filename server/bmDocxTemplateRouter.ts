@@ -424,6 +424,10 @@ const SERVER_STORAGE_ROOT = (() => {
 
 const serverStorage = createBmTemplateStorage(SERVER_STORAGE_ROOT);
 
+function getDefaultTemplatePath(mode: TemplateMode): string {
+  return path.join(ROOT, 'templates', 'docx', 'bm', `${mode}.docx`);
+}
+
 // ---------------------------------------------------------------------------
 // HTTP-маршруты
 // ---------------------------------------------------------------------------
@@ -492,14 +496,16 @@ export function registerBmDocxTemplateRoutes(
     if (!mode) return res.status(400).json({ error: 'mode must be print or signed' });
 
     const activeFile = getActivePath(mode);
-    if (!fs.existsSync(activeFile)) {
-      return res.status(404).json({ error: `Активный шаблон не найден: mode=${mode}` });
+    const defaultFile = getDefaultTemplatePath(mode);
+    const fileToSend = fs.existsSync(activeFile) ? activeFile : defaultFile;
+    if (!fs.existsSync(fileToSend)) {
+      return res.status(404).json({ error: `DOCX-шаблон не найден: mode=${mode}` });
     }
 
     const filename = `bm_contract_template_${mode}.docx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', contentDispositionAttachment(filename));
-    res.sendFile(activeFile);
+    res.sendFile(fileToSend);
   });
 
   // ── POST /upload ───────────────────────────────────────────────────────────

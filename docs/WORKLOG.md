@@ -2249,3 +2249,39 @@ Checks run:
 
 **Risks/TODOs**:
 - The signature block is a fixed image asset; if director signature/name changes, regenerate `executor-signature-block.png`.
+
+### 2026-06-25 13:33:16 +03:00 — Enable downloading editable BM DOCX templates
+
+Files changed:
+- `server/bmDocxTemplateRouter.ts`
+- `src/components/settings/BmDocxTemplatesTab.tsx`
+- `src/components/contracts/Contracts.tsx`
+- `src/components/contracts/ContractModal.tsx`
+- `electron-builder.yml`
+- `scripts/bmDocxTemplateDownloadTest.ts`
+- `scripts/bmDocxSignatureAlignmentTest.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Make BM DOCX templates downloadable/editable from Settings and ensure edited templates are actually used by contract generation.
+
+**Completed**:
+1. Changed the BM template download endpoint to return the active template when present, otherwise the packaged default template.
+2. Made the Settings button visible even when no active template exists; it now downloads the base template.
+3. Included `templates/docx/bm/**/*` in the Electron package so installed CRM can download base DOCX templates.
+4. Switched BM contract buttons to `template-fallback`, so active editable templates are used and code generation remains the fallback.
+5. Updated the Settings helper text to match the new behavior.
+6. Added regression checks for default template download, installer packaging, and template-fallback usage.
+
+Checks run:
+- `npx tsx scripts/bmDocxTemplateDownloadTest.ts` — passed
+- `npx tsx scripts/bmDocxSignatureAlignmentTest.ts` — passed
+- `npm run lint` — passed
+- `npm run build` — passed
+- `npm run electron:installer` — passed
+- Package check: `release/win-unpacked/resources/app/templates/docx/bm/{print.docx,signed.docx}` present
+
+**Next**:
+- Open the rebuilt CRM and use `Настройки → Шаблоны → DOCX-шаблоны договора БМ → Скачать базовый шаблон`.
+
+**Risks/TODOs**:
+- If a user uploads a broken DOCX template, generation should fall back to the code generator; still test edited templates after upload before activation.

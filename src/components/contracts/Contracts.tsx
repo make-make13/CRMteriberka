@@ -257,10 +257,10 @@ export default function Contracts({ isDarkMode, contracts, setContracts, clients
       let pdfBlob: Blob;
 
       if (contract.baseType === 'chunga-changa') {
-        // БМ-договор: code generator keeps signatures aligned; active templates can be stale.
+        // BM contract: use editable DOCX template when available; fall back to code generator if template fails.
         const bmMode = type === 'send' ? 'signed' : 'print';
         const { blob: contractBlob } = await bmDocxApi.downloadBmContract(
-          String(contract.id), bmMode, 'pdf', 'code',
+          String(contract.id), bmMode, 'pdf', 'template-fallback',
         );
         if (type === 'send') {
           // «На отправку»: договор (DOCX) + счёт + акт

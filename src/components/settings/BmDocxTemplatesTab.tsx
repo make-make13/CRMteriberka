@@ -69,6 +69,7 @@ interface CardState {
   testing: boolean;
   testResult: BmTemplateTestResult | null;
   downloadingTestPdf: boolean;
+  downloadingTemplate: boolean;
   activating: boolean;
 }
 
@@ -97,7 +98,7 @@ export default function BmDocxTemplatesTab({ isDarkMode }: BmDocxTemplatesTabPro
         <h3 className="text-xl font-bold">DOCX-шаблоны договора БМ</h3>
         <p className={cn('text-xs mt-1', isDarkMode ? 'text-slate-400' : 'text-slate-500')}>
           Загружайте и активируйте собственные Word-шаблоны договора «Большая Медведица».
-          Текущая кнопка «DOCX БМ» в договорах работает независимо.
+          Кнопки договора используют активный шаблон, а при ошибке откатываются на встроенную генерацию.
         </p>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -119,6 +120,7 @@ function BmTemplateCard({ mode, isDarkMode }: { mode: TemplateMode; isDarkMode: 
     uploading: false,
     testing: false, testResult: null,
     downloadingTestPdf: false,
+    downloadingTemplate: false,
     activating: false,
   });
 
@@ -215,15 +217,18 @@ function BmTemplateCard({ mode, isDarkMode }: { mode: TemplateMode; isDarkMode: 
 
   // ── Download active ─────────────────────────────────────────────────────────
 
-  async function handleDownloadActive() {
+  async function handleDownloadTemplate() {
+    patch({ downloadingTemplate: true });
     try {
       const blob = await bmDocxTemplateApi.downloadActive(mode);
       downloadBlob(blob, `bm_договор_шаблон_${mode}.docx`);
+      toast(hasActive ? 'Активный шаблон скачан' : 'Базовый шаблон скачан');
     } catch (e) {
       toast(e instanceof Error ? e.message : String(e), 'error');
+    } finally {
+      patch({ downloadingTemplate: false });
     }
   }
-
   // ── Activate ────────────────────────────────────────────────────────────────
 
   async function handleActivate() {
@@ -251,7 +256,7 @@ function BmTemplateCard({ mode, isDarkMode }: { mode: TemplateMode; isDarkMode: 
 
   // ── Derived ─────────────────────────────────────────────────────────────────
 
-  const { status, loading, statusError, uploading, testing, testResult, downloadingTestPdf, activating } = st;
+  const { status, loading, statusError, uploading, testing, testResult, downloadingTestPdf, downloadingTemplate, activating } = st;
 
   const hasActive = Boolean(status?.active);
   const hasDraft  = Boolean(status?.draft);
@@ -259,7 +264,7 @@ function BmTemplateCard({ mode, isDarkMode }: { mode: TemplateMode; isDarkMode: 
 
   const canTest     = hasActive || hasDraft;
   const canActivate = hasDraft;
-  const busy        = uploading || testing || downloadingTestPdf || activating;
+  const busy        = uploading || testing || downloadingTestPdf || downloadingTemplate || activating;
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -494,23 +499,25 @@ function BmTemplateCard({ mode, isDarkMode }: { mode: TemplateMode; isDarkMode: 
           </motion.button>
         )}
 
-        {/* Download active */}
-        {hasActive && (
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleDownloadActive}
-            disabled={busy}
-            className={cn(
-              'flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50',
-              isDarkMode
-                ? 'bg-white/4 hover:bg-white/8 text-slate-400'
-                : 'bg-gray-50 hover:bg-gray-100 text-gray-500',
-            )}
-          >
-            <Download size={13} />
-            Скачать активный шаблон
-          </motion.button>
-        )}
+        {/* Download active/default */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleDownloadTemplate}
+          disabled={busy}
+          className={cn(
+            'flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50',
+            isDarkMode
+              ? 'bg-white/4 hover:bg-white/8 text-slate-400'
+              : 'bg-gray-50 hover:bg-gray-100 text-gray-500',
+          )}
+        >
+          {downloadingTemplate ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+          {downloadingTemplate
+            ? 'Скачиваем...'
+            : hasActive
+              ? 'Скачать активный шаблон'
+              : 'Скачать базовый шаблон'}
+        </motion.button>
       </div>
     </div>
   );

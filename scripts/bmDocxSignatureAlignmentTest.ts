@@ -28,7 +28,7 @@ assert.match(generatorSource, /candidate => fs\.existsSync\(candidate\)/, 'asset
 assert.match(generatorSource, /executor-signature-block\.png/, 'BM contract generator must resolve the fixed executor signature block asset.');
 assert.match(generatorSource, /executorSignatureBlockPath:\s*resolveAsset\('executor-signature-block\.png'/, 'BM contract generator must pass the fixed executor signature block asset to the DOCX builder.');
 assert.match(electronBuilderConfig, /public\/pdfme-assets\/\*\*\//, 'installer must include stamp/signature assets.');
-assert.match(contractsSource, /downloadBmContract\(\s*String\(contract\.id\),\s*bmMode,\s*'pdf',\s*'code'/, 'contracts list must use the aligned code generator, not stale active templates.');
-assert.match(contractModalSource, /downloadBmContract\(\s*String\(initialData\.id\),\s*bmMode,\s*'pdf',\s*'code'/, 'contract modal must use the aligned code generator, not stale active templates.');
+assert.match(contractsSource, /downloadBmContract\(\s*String\(contract\.id\),\s*bmMode,\s*'pdf',\s*'template-fallback'/, 'contracts list must use editable BM DOCX templates with code fallback.');
+assert.match(contractModalSource, /downloadBmContract\(\s*String\(initialData\.id\),\s*bmMode,\s*'pdf',\s*'template-fallback'/, 'contract modal must use editable BM DOCX templates with code fallback.');
 
 console.log('BM DOCX signature alignment source checks passed.');
