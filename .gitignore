@@ -50,3 +50,6 @@ bolshaya_medveditsa_crm_icon_pack/
 dist-server/
 dist-electron/
 release/
+
+# Local Git worktrees
+.worktrees/
