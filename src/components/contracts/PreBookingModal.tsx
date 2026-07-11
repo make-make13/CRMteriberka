@@ -5,8 +5,9 @@ import { format, addHours, addDays } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { BaseType, Contract, ContractStatus, LeadPrebookingPrefill } from '../../types';
-import { CC_OBJECTS, GB_OBJECTS, GB_SERVICES } from '../../constants';
+import { GB_OBJECTS, GB_SERVICES } from '../../constants';
 import { validateBookingPeriod } from '../../utils/bookingValidation';
+import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -49,6 +50,7 @@ export default function PreBookingModal({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const { objects: ccObjects } = useRoomCatalog();
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
@@ -247,7 +249,7 @@ export default function PreBookingModal({
 
   const currentObjectId = initialData ? initialData.bookings[0]?.objectId : selectedObjectId;
   const currentBaseType = initialData ? initialData.baseType : leadPrefill?.baseType || prefilledBooking?.baseType;
-  const objectOptions = currentBaseType === 'golubaya-bukhta' ? [...GB_OBJECTS, ...GB_SERVICES] : CC_OBJECTS;
+  const objectOptions = currentBaseType === 'golubaya-bukhta' ? [...GB_OBJECTS, ...GB_SERVICES] : ccObjects;
 
   const isGBCottage = GB_OBJECTS.some(obj => obj.id === currentObjectId);
   const isCC = currentBaseType === 'chunga-changa';

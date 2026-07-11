@@ -1,30 +1,28 @@
 /**
  * Карточка «Стоимость номеров» в настройках.
- * Хранит цены в /api/settings/room-prices (settingsApi.saveById).
- * Формат: { 'cc-1': 27000, 'cc-2': 35000, ... }
+ * Хранит цены в /api/settings/room-prices и вид на море в /api/settings/room-sea-view.
+ * Формат цен: { 'cc-1': 27000, 'cc-2': 35000, ... }
+ * Формат вида на море: { 'cc-1': true, 'cc-2': false, ... }
  */
 import React, { useEffect, useState } from 'react';
-import { BedDouble, Save, Loader2 } from 'lucide-react';
+import { BedDouble, Save, Loader2, Waves } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { CC_OBJECTS } from '../../constants';
 import { settingsApi } from '../../services/localApi';
 import { useToast } from '../../context/ToastContext';
+import {
+  ROOM_PRICES_SETTINGS_ID,
+  ROOM_SEA_VIEW_SETTINGS_ID,
+  getDefaultRoomPrices,
+  getDefaultRoomSeaView,
+} from '../../utils/roomCatalog';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const ROOM_PRICES_SETTINGS_ID = 'room-prices';
-
-/** Возвращает дефолтные цены из CC_OBJECTS (используется как fallback). */
-export function getDefaultRoomPrices(): Record<string, number> {
-  const result: Record<string, number> = {};
-  CC_OBJECTS.forEach(obj => {
-    result[obj.id] = obj.pricePerNight ?? 0;
-  });
-  return result;
-}
+export { ROOM_PRICES_SETTINGS_ID, getDefaultRoomPrices };
 
 interface RoomPricesCardProps {
   isDarkMode: boolean;
@@ -33,15 +31,18 @@ interface RoomPricesCardProps {
 export default function RoomPricesCard({ isDarkMode }: RoomPricesCardProps) {
   const { toast } = useToast();
   const [prices, setPrices] = useState<Record<string, number>>(getDefaultRoomPrices);
+  const [seaViews, setSeaViews] = useState<Record<string, boolean>>(getDefaultRoomSeaView);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    settingsApi.getById<Record<string, number>>(ROOM_PRICES_SETTINGS_ID).then(saved => {
-      if (saved && typeof saved === 'object') {
-        // Мёрджим сохранённые поверх дефолтных (на случай, если добавили новые номера)
-        setPrices({ ...getDefaultRoomPrices(), ...saved });
-      }
+    Promise.all([
+      settingsApi.getById<Record<string, number>>(ROOM_PRICES_SETTINGS_ID),
+      settingsApi.getById<Record<string, boolean>>(ROOM_SEA_VIEW_SETTINGS_ID),
+    ]).then(([savedPrices, savedSeaViews]) => {
+      // Мёрджим сохранённое поверх дефолтных (на случай, если добавили новые номера)
+      setPrices({ ...getDefaultRoomPrices(), ...(savedPrices || {}) });
+      setSeaViews({ ...getDefaultRoomSeaView(), ...(savedSeaViews || {}) });
     }).finally(() => setLoading(false));
   }, []);
 
@@ -50,11 +51,18 @@ export default function RoomPricesCard({ isDarkMode }: RoomPricesCardProps) {
     setPrices(prev => ({ ...prev, [id]: isNaN(num) ? 0 : num }));
   };
 
+  const handleSeaViewToggle = (id: string) => {
+    setSeaViews(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      await settingsApi.saveById(ROOM_PRICES_SETTINGS_ID, prices);
-      toast('Стоимость номеров сохранена', 'success');
+      await Promise.all([
+        settingsApi.saveById(ROOM_PRICES_SETTINGS_ID, prices),
+        settingsApi.saveById(ROOM_SEA_VIEW_SETTINGS_ID, seaViews),
+      ]);
+      toast('Стоимость и вид номеров сохранены', 'success');
     } catch {
       toast('Не удалось сохранить стоимость номеров', 'error');
     } finally {
@@ -75,7 +83,7 @@ export default function RoomPricesCard({ isDarkMode }: RoomPricesCardProps) {
         <div>
           <h3 className="font-bold text-lg">Стоимость номеров</h3>
           <p className={cn('text-[11px] mt-0.5', isDarkMode ? 'text-gray-500' : 'text-gray-400')}>
-            Цена за сутки используется для автоподстановки стоимости проживания в договоре.
+            Цена за сутки и вид на море используются в шахматке, предброни и автоподстановке стоимости в договоре.
           </p>
         </div>
       </div>
@@ -96,8 +104,24 @@ export default function RoomPricesCard({ isDarkMode }: RoomPricesCardProps) {
               <div className="w-10 font-bold text-sm">{obj.name}</div>
               {/* Категория */}
               <div className={cn('flex-1 text-xs truncate', isDarkMode ? 'text-gray-400' : 'text-gray-500')}>
-                {obj.category}{obj.seaView ? ' · вид на море' : ''}
+                {obj.category}
               </div>
+              {/* Переключатель вида на море */}
+              <label className={cn(
+                'flex items-center gap-2 text-xs font-medium cursor-pointer select-none whitespace-nowrap',
+                seaViews[obj.id]
+                  ? 'text-[#2D9CDB]'
+                  : (isDarkMode ? 'text-gray-500' : 'text-gray-400'),
+              )}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(seaViews[obj.id])}
+                  onChange={() => handleSeaViewToggle(obj.id)}
+                  className="w-4 h-4 rounded accent-[#2D9CDB] cursor-pointer"
+                />
+                <Waves size={14} />
+                Вид на море
+              </label>
               {/* Поле цены */}
               <div className="flex items-center gap-2">
                 <input

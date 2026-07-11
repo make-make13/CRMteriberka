@@ -12,7 +12,7 @@ export const CC_OBJECTS: ObjectDefinition[] = [
   { id: 'cc-4', name: '№4', category: 'Двухместный стандарт', capacity: 2, pricePerNight: 25000, baseType: 'chunga-changa', type: 'house' },
   { id: 'cc-5', name: '№5', category: 'Двухместный стандарт', capacity: 2, pricePerNight: 25000, baseType: 'chunga-changa', type: 'house' },
   { id: 'cc-6', name: '№6', category: 'Джуниор сьют', capacity: 2, pricePerNight: 33000, baseType: 'chunga-changa', type: 'house' },
-  { id: 'cc-7', name: '№7', category: 'Одноместный стандарт', capacity: 1, pricePerNight: 17000, baseType: 'chunga-changa', type: 'house' },
+  { id: 'cc-7', name: '№7', category: 'Одноместный стандарт', capacity: 1, seaView: true, pricePerNight: 20000, baseType: 'chunga-changa', type: 'house' },
   { id: 'cc-8', name: '№8', category: 'Одноместный стандарт', capacity: 1, seaView: true, pricePerNight: 20000, baseType: 'chunga-changa', type: 'house' },
   { id: 'cc-9', name: '№9', category: 'Двухместный стандарт', capacity: 2, seaView: true, pricePerNight: 27000, baseType: 'chunga-changa', type: 'house' },
   { id: 'cc-10', name: '№10', category: 'Двухместный стандарт', capacity: 2, pricePerNight: 25000, baseType: 'chunga-changa', type: 'house' },

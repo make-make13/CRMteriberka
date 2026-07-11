@@ -7,12 +7,12 @@ import { ru } from 'date-fns/locale';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Contract, Client, Settings, BaseType, ContractStatus, Booking } from '../../types';
-import { CC_OBJECTS, GB_OBJECTS, GB_SERVICES } from '../../constants';
+import { GB_OBJECTS, GB_SERVICES } from '../../constants';
 import { formatVisibleContractNumber, getNextContractNumberValue, resolveContractNumberCategory, type ContractNumberCategory } from '../../utils/contractNumbers';
 import DocumentPreviewModal, { type DocumentPreviewMode } from '../common/DocumentPreviewModal';
 import { emailService } from '../../services/emailService';
-import { emailSettingsApi, bmDocxApi, settingsApi } from '../../services/localApi';
-import { ROOM_PRICES_SETTINGS_ID, getDefaultRoomPrices } from '../settings/RoomPricesCard';
+import { emailSettingsApi, bmDocxApi } from '../../services/localApi';
+import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 import { buildClientContractHistory } from '../../utils/clientHistory';
 import { prepareContractDataFromContract } from '../../utils/contractDocumentData';
 import { phoneMatchesSearch } from '../../utils/phoneSearch';
@@ -195,8 +195,6 @@ export default function ContractModal({
 
   const [showCcCottageDropdown, setShowCcCottageDropdown] = useState(false);
   const [showGbCottageDropdown, setShowGbCottageDropdown] = useState(false);
-  // Цены номеров из настроек (room-prices)
-  const [roomPrices, setRoomPrices] = useState<Record<string, number>>({});
   const clientDropdownRef = useRef<HTMLDivElement>(null);
   const ccDropdownRef = useRef<HTMLDivElement>(null);
   const gbDropdownRef = useRef<HTMLDivElement>(null);
@@ -249,10 +247,11 @@ export default function ContractModal({
     }
   };
 
+  const { objects: ccObjects } = useRoomCatalog();
   const initialMainBooking = initialData?.bookings.find(b => b.type === 'main');
   const ccObjectOptions = useMemo(() => {
-    if (!initialMainBooking || CC_OBJECTS.some(object => object.id === initialMainBooking.objectId)) {
-      return CC_OBJECTS;
+    if (!initialMainBooking || ccObjects.some(object => object.id === initialMainBooking.objectId)) {
+      return ccObjects;
     }
     return [
       {
@@ -261,9 +260,9 @@ export default function ContractModal({
         baseType: 'chunga-changa' as BaseType,
         type: 'house' as const,
       },
-      ...CC_OBJECTS,
+      ...ccObjects,
     ];
-  }, [initialMainBooking]);
+  }, [ccObjects, initialMainBooking]);
 
   const getCcObjectLabel = (objectId: string) => {
     const object = ccObjectOptions.find(o => o.id === objectId);
@@ -419,17 +418,12 @@ export default function ContractModal({
     gbDaysCount: getValues('gbDaysCount')
   });
 
-  // Загружаем цены номеров из настроек при открытии модалки
-  useEffect(() => {
-    settingsApi.getById<Record<string, number>>(ROOM_PRICES_SETTINGS_ID).then(saved => {
-      if (saved && typeof saved === 'object') {
-        setRoomPrices({ ...getDefaultRoomPrices(), ...saved });
-      } else {
-        setRoomPrices(getDefaultRoomPrices());
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Цены номеров — из того же каталога (ccObjects), что и шахматка/предбронь,
+  // чтобы изменения в Настройки → Стоимость номеров были видны везде одинаково.
+  const roomPrices = useMemo(
+    () => Object.fromEntries(ccObjects.map(o => [o.id, o.pricePerNight ?? 0])),
+    [ccObjects],
+  );
 
   // Автоподстановка стоимости: пересчитываем при смене номера или дат
   const prevAutoPriceKey = useRef('');

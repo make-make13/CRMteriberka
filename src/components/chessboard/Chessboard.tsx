@@ -10,11 +10,11 @@ import { ru } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { CC_OBJECTS } from '../../constants';
 import { Booking, Contract, BaseType, Client, Settings, ObjectDefinition } from '../../types';
 import * as XLSX from 'xlsx';
 import { useToast } from '../../context/ToastContext';
 import { getVisibleBookingSpan } from '../../utils/hotelCalendarGrid';
+import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -47,9 +47,10 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
   const clientsById = useMemo(() => new Map(clients.map(client => [client.id, client])), [clients]);
   const contractsById = useMemo(() => new Map(activeContracts.map(contract => [contract.id, contract])), [activeContracts]);
 
+  const { objects: ccObjects } = useRoomCatalog();
   const roomObjects = useMemo(
-    () => CC_OBJECTS.filter(object => object.baseType === activeBase),
-    [activeBase],
+    () => ccObjects.filter(object => object.baseType === activeBase),
+    [ccObjects, activeBase],
   );
 
   const visibleObjects = useMemo(
