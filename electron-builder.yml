@@ -11,6 +11,16 @@ productName: "Большая Медведица CRM"
 copyright: "© 2025 Большая Медведица"
 compression: store
 
+# ── Auto-update publishing ───────────────────────────────────────────────────
+# electron-updater читает app-update.yml, который electron-builder создаёт из
+# этой секции. Публикация выполняется отдельной командой:
+#   npm run electron:release:github
+# Для загрузки релиза нужен GH_TOKEN в локальном окружении разработчика.
+publish:
+  provider: github
+  owner: make-make13
+  repo: CRMteriberka
+
 # ── Директории ────────────────────────────────────────────────────────────────
 directories:
   output: release

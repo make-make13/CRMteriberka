@@ -1,7 +1,7 @@
 {
   "name": "bolshaya-medveditsa-crm",
   "private": true,
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "main": "dist-electron/main.cjs",
   "scripts": {
@@ -21,6 +21,7 @@
     "electron:pack": "npm run prepare:packaged-defaults && npm run build && npm run build:server && npm run build:electron && electron-builder --dir",
     "electron:installer": "npm run prepare:packaged-defaults && npm run build && npm run build:server && npm run build:electron && electron-builder --win nsis",
     "electron:installer:win": "set ELECTRON_CACHE=D:\\Temp\\electron-cache&& npm run electron:installer",
+    "electron:release:github": "set ELECTRON_CACHE=D:\\Temp\\electron-cache&& npm run prepare:packaged-defaults && npm run build && npm run build:server && npm run build:electron && electron-builder --win nsis --publish always",
     "rebuild:dev": "npm rebuild better-sqlite3",
     "test:audit-fixes": "node scripts/checkEncoding.mjs && tsx scripts/auditFixesTest.ts",
     "test:legacy-import-analysis": "tsx scripts/legacyImportAnalysisTest.ts",
@@ -50,6 +51,8 @@
     "docx": "^9.7.1",
     "docxtemplater": "^3.68.7",
     "dotenv": "^17.2.3",
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.9",
     "express": "^4.21.2",
     "idb": "^8.0.3",
     "jspdf": "^4.2.1",

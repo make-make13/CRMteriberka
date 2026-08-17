@@ -1,5 +1,51 @@
 # WORKLOG
 
+### 2026-06-26 10:14:14 +03:00 - Find FuckUp folder on local PC
+
+Files changed:
+- `docs/WORKLOG.md`
+
+Completed:
+- Searched available filesystem drives for a folder named `FuckUp`.
+- Checked common user/workspace locations first, then searched `C:`, `D:`, `E:`, and `F:`.
+- Found a case-insensitive match: `F:\Копия с E\Fuck Up new\fuckUP`.
+
+Checks run:
+- `git status --short`
+- PowerShell directory searches across local filesystem drives.
+- Verified the found folder exists with `Get-Item`.
+
+Next recommended step:
+- Open or inspect `F:\Копия с E\Fuck Up new\fuckUP` if its contents are needed.
+
+Risks / TODO:
+- Full recursive search on `F:` timed out after 10 minutes, so there could be additional matches elsewhere on `F:`.
+- No code changes were made; lint/build were not run.
+
+### 2026-06-26 01:49:41 +03:00 - Study Print.docx reference formatting
+
+Files changed:
+- `docs/WORKLOG.md`
+
+Completed:
+- Inspected `C:\Users\Make\Documents\Print.docx` as a reference formatting document.
+- Extracted DOCX structure, page setup, paragraph/table style usage, placeholders, and text flow from OOXML.
+- Exported the document to PDF through Microsoft Word COM and rendered PNG pages for visual review.
+- Confirmed the document is a compact contract template with an additional agreement, narrow margins, Akrobat-based typography, centered bold section headings, borderless two-column tables, and signature/requisites blocks.
+
+Checks run:
+- `git status --short`
+- DOCX OOXML inspection via bundled Python.
+- Word COM PDF export and Poppler PNG rendering.
+- Visual review of rendered pages.
+
+Next recommended step:
+- Use this formatting profile as the baseline when adjusting CRM DOCX contract templates.
+
+Risks / TODO:
+- LibreOffice `soffice` was not available, so rendering used Microsoft Word COM instead of the packaged LibreOffice renderer.
+- The Word export produced a fourth blank page; preserve or remove intentionally depending on how the template should print.
+
 ### 2026-06-24 14:05:32 +03:00 - Hotfix installed CRM PDF preview runtime
 
 Files changed:
@@ -2285,3 +2331,115 @@ Checks run:
 
 **Risks/TODOs**:
 - If a user uploads a broken DOCX template, generation should fall back to the code generator; still test edited templates after upload before activation.
+
+### 2026-06-30 01:03:11 +03:00 — Design HyperFrames kinetic collage
+
+Files changed:
+- `docs/superpowers/specs/2026-06-30-maybe-partying-kinetic-collage-design.md`
+- `docs/WORKLOG.md`
+
+**Task**: Define the approved motion and visual design for the “MAYBE PARTYING WILL HELP” HyperFrames composition.
+
+**Completed**:
+1. Reviewed the supplied reference GIF as a contact sheet.
+2. Selected the approved hybrid kinetic collage direction.
+3. Defined the 4.6-second timing, visual identity, deterministic motion rules, file isolation, and acceptance criteria.
+
+Checks run:
+- Specification self-review for placeholders, contradictions, ambiguity, and scope — passed
+
+**Next**:
+- Obtain user review of the written specification, then create the implementation plan.
+
+**Risks/TODOs**:
+- The source GIF is a screen capture with player chrome; only its kinetic typography language is used as the motion reference.
+
+### 2026-06-30 01:53:21 +03:00 — Redesign party reel intro bumper
+
+Files changed:
+- `docs/superpowers/specs/2026-06-30-party-reel-intro-bumper-design.md`
+- `docs/WORKLOG.md`
+
+**Task**: Redesign the HyperFrames composition as a short opening hook for `IMG_2144.MP4`.
+
+**Completed**:
+1. Inspected the source reel dimensions, duration, opening frames, and full-reel color/motion contact sheets.
+2. Replaced the standalone 4.6-second direction with an approved silent 2.7-second reel bumper design.
+3. Defined the reel-matched palette, separate word timing, quote choreography, and dark cut transition.
+
+Checks run:
+- Specification self-review for placeholders, contradictions, ambiguity, and scope — passed
+
+**Next**:
+- Obtain user review of the written specification, then update the implementation plan and composition.
+
+**Risks/TODOs**:
+- The bumper is intentionally silent; final reel assembly must preserve or add audio in the editing timeline.
+
+### 2026-08-18 02:22:28 +03:00 — Add Electron auto-update foundation
+
+Files changed:
+- `electron/main.ts`
+- `electron-builder.yml`
+- `package.json`
+- `package-lock.json`
+- `docs/update-policy.md`
+- `docs/installer-release-guide.md`
+- `docs/WORKLOG.md`
+
+**Task**: Prepare the CRM so installed Windows builds can receive program updates without manually sending a new installer each time.
+
+**Completed**:
+1. Added `electron-updater` and `electron-log`.
+2. Added packaged-only updater startup in Electron main process after backend and BrowserWindow are ready.
+3. Configured update download logging and a system dialog for `Перезапустить сейчас` / `Позже`.
+4. Added GitHub Releases publish config for `make-make13/CRMteriberka`.
+5. Added `npm run electron:release:github` for release build + publish.
+6. Updated update/release documentation with the new workflow and remaining production-hardening items.
+
+Checks run:
+- Context7 lookup for current electron-builder/electron-updater behavior.
+- `npm run build:electron` — passed.
+- `npm run lint` — passed.
+- `npm run build` — passed; Vite large chunk warnings remain expected.
+- `npm run electron:installer:win` — passed; generated `release/Bolshaya-Medveditsa-CRM-Setup-0.1.4.exe` and `release/latest.yml`.
+
+**Next**:
+- Test the real update path: install an older version, publish a higher semver GitHub Release, launch the old CRM, download/update, then verify data in userData.
+
+**Risks/TODOs**:
+- GitHub Releases must be reachable by installed clients; private release access needs a separate strategy or a `generic` HTTPS update host.
+- Code signing is still disabled, so Windows SmartScreen warnings remain.
+- Rollback and React-level update status UI are not implemented.
+
+### 2026-08-18 02:42:34 +03:00 — Commit current CRM changes
+
+Files changed:
+- `docs/WORKLOG.md`
+- `docs/installer-release-guide.md`
+- `docs/update-policy.md`
+- `electron-builder.yml`
+- `electron/main.ts`
+- `package-lock.json`
+- `package.json`
+- `src/components/chessboard/Chessboard.tsx`
+- `src/components/contracts/ContractModal.tsx`
+- `src/components/contracts/PreBookingModal.tsx`
+- `src/components/settings/RoomPricesCard.tsx`
+- `src/constants.ts`
+- `src/utils/roomOverrides.ts`
+
+**Task**: Commit all current working tree changes before starting the next booking/contract behavior task.
+
+**Completed**:
+1. Confirmed the current diff scope.
+2. Prepared all tracked and untracked project changes for a single checkpoint commit.
+
+Checks run:
+- `git diff --stat`
+
+**Next**:
+- Start the requested booking and contract workflow fixes from a clean committed baseline.
+
+**Risks/TODOs**:
+- The commit includes pre-existing UI/room override changes that were already in the working tree before the auto-update task.

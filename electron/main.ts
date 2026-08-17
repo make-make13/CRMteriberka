@@ -21,6 +21,8 @@ import { app, BrowserWindow, dialog } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 
 // В CJS-бандле (tsup format: cjs) __dirname доступен нативно.
 // PROJECT_ROOT — корень проекта (dist-electron/ находится внутри него).
@@ -29,6 +31,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 let backendProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
 let appPort = 3002;
+let updateCheckStarted = false;
 const BACKEND_HEALTH_TIMEOUT_MS = 60_000;
 
 // ── Пути ─────────────────────────────────────────────────────────────────────
@@ -134,6 +137,71 @@ function killBackend(): void {
   }
 }
 
+// ── Auto-update ──────────────────────────────────────────────────────────────
+
+function setupAutoUpdater(): void {
+  if (!app.isPackaged) {
+    console.log('[electron:update] Auto-update skipped in dev/unpacked mode');
+    return;
+  }
+
+  if (updateCheckStarted) {
+    return;
+  }
+  updateCheckStarted = true;
+
+  log.transports.file.level = 'info';
+  autoUpdater.logger = log;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    log.info('[electron:update] checking for update');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    log.info('[electron:update] update available', info.version);
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    log.info('[electron:update] update not available', info.version);
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    log.info('[electron:update] download progress', `${Math.round(progress.percent)}%`);
+  });
+
+  autoUpdater.on('update-downloaded', async (info) => {
+    log.info('[electron:update] update downloaded', info.version);
+
+    const result = await dialog.showMessageBox(mainWindow ?? undefined, {
+      type: 'info',
+      buttons: ['Перезапустить сейчас', 'Позже'],
+      defaultId: 0,
+      cancelId: 1,
+      title: 'Обновление CRM загружено',
+      message: `Готово обновление CRM до версии ${info.version}.`,
+      detail: 'Для установки нужно перезапустить программу. Если выбрать «Позже», обновление установится при следующем закрытии CRM.',
+      noLink: true,
+    });
+
+    if (result.response === 0) {
+      killBackend();
+      autoUpdater.quitAndInstall(false, true);
+    }
+  });
+
+  autoUpdater.on('error', (error) => {
+    log.error('[electron:update] update error', error);
+  });
+
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((error) => {
+      log.error('[electron:update] check failed', error);
+    });
+  }, 10_000);
+}
+
 // ── Window ───────────────────────────────────────────────────────────────────
 
 async function createWindow(port: number): Promise<void> {
@@ -188,6 +256,9 @@ async function main(): Promise<void> {
 
     // 4. Открываем окно
     await createWindow(appPort);
+
+    // 5. Проверяем обновления после готовности основного окна и backend.
+    setupAutoUpdater();
 
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
