@@ -2443,3 +2443,43 @@ Checks run:
 
 **Risks/TODOs**:
 - The commit includes pre-existing UI/room override changes that were already in the working tree before the auto-update task.
+
+### 2026-08-18 02:54:41 +03:00 — Booking turnover and contract form fixes
+
+Files changed:
+- `server/localDatabase.ts`
+- `src/components/contracts/ContractModal.tsx`
+- `src/components/contracts/PreBookingModal.tsx`
+- `src/utils/bookingValidation.ts`
+- `src/utils/hotelCalendarGrid.ts`
+- `src/utils/money.ts`
+- `tests/bookingWorkflow.test.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Fix booking/contract workflow issues: allow same-day turnover after checkout, carry guest data from prebooking to contract, edit guest count in contract, support kopecks, and default hotel times to 14:00/12:00.
+
+**Completed**:
+1. Added shared default check-in/check-out constants: `14:00` and `12:00`.
+2. Added shared booking overlap helper and reused it in backend conflict checks.
+3. Changed chessboard span rendering so checkout day is not treated as occupied for multi-day bookings.
+4. Made contract occupied-room filtering use full date+time instead of date-only ranges.
+5. Prebooking creation now defaults room stays to `14:00` check-in and `12:00` next-day checkout.
+6. Contract creation now defaults Chunga-Changa and Golubaya Bukhta room stays to `14:00`/`12:00`.
+7. Contract conversion from prebooking parses guest name/phone/email from the prebooking comment and pre-fills client search; an existing client is auto-selected by phone.
+8. Added editable guest count field to the Chunga-Changa contract form.
+9. Added money parsing/formatting for amounts with two decimals, including comma input such as `8 542,37`.
+10. Added regression tests for same-day checkout/check-in, checkout-day chessboard rendering, and decimal money input.
+
+Checks run:
+- `npx vitest run tests/bookingWorkflow.test.ts tests/validation.test.ts` — passed after fixing test expectation for non-breaking `ru-RU` space.
+- `npx vitest run tests/bookingWorkflow.test.ts` — passed.
+- `npm run lint` — passed.
+- `npm test` — passed.
+- `npm run build:server` — passed.
+- `npm run build` — passed; expected Vite large chunk warnings remain.
+
+**Next**:
+- Manually smoke test: create booking ending 18 August 12:00, then create another for same room starting 18 August 14:00; convert a prebooking to a contract and verify guest/search, guests count, decimal amount, and generated document values.
+
+**Risks/TODOs**:
+- If a prebooking has no linked client and no existing client matches its phone, the contract form can prefill search text but still requires selecting/creating a client before saving.

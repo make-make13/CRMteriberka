@@ -36,7 +36,8 @@ export function getVisibleBookingSpan(startTime: Date, endTime: Date, visibleDay
   const periodStart = startOfLocalDay(visibleDays[0]);
   const periodEnd = startOfLocalDay(visibleDays[visibleDays.length - 1]);
   const bookingStart = startOfLocalDay(startTime);
-  const bookingEnd = startOfLocalDay(endTime);
+  const rawBookingEnd = startOfLocalDay(endTime);
+  const bookingEnd = rawBookingEnd > bookingStart ? addLocalDays(rawBookingEnd, -1) : bookingStart;
 
   if (bookingEnd < periodStart || bookingStart > periodEnd) return null;
 

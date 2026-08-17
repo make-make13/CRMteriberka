@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import type { Database as DatabaseConnection } from 'better-sqlite3';
+import { doBookingPeriodsOverlap } from '../src/utils/bookingValidation';
 
 const require = createRequire(import.meta.url);
 const BetterSqlite3 = require('better-sqlite3');
@@ -1342,8 +1343,7 @@ export class LocalDatabase {
       const current = parsedBookings[index];
       const conflict = parsedBookings.slice(index + 1).find(candidate => (
         candidate.booking.objectId === current.booking.objectId
-        && current.start < candidate.end
-        && current.end > candidate.start
+        && doBookingPeriodsOverlap(current.start, current.end, candidate.start, candidate.end)
       ));
 
       if (conflict) {
@@ -1358,7 +1358,7 @@ export class LocalDatabase {
         if (normalizeServiceObjectId(row.object_id) !== booking.objectId) return false;
         const existingStart = new Date(row.start_time).getTime();
         const existingEnd = new Date(row.end_time).getTime();
-        return newStart < existingEnd && newEnd > existingStart;
+        return doBookingPeriodsOverlap(newStart, newEnd, existingStart, existingEnd);
       });
 
       if (conflict) {

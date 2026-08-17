@@ -16,6 +16,8 @@ import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 import { buildClientContractHistory } from '../../utils/clientHistory';
 import { prepareContractDataFromContract } from '../../utils/contractDocumentData';
 import { phoneMatchesSearch } from '../../utils/phoneSearch';
+import { DEFAULT_CHECK_IN_TIME, DEFAULT_CHECK_OUT_TIME, doBookingPeriodsOverlap } from '../../utils/bookingValidation';
+import { formatMoney, parseMoneyInput } from '../../utils/money';
 import { useToast } from '../../context/ToastContext';
 
 function cn(...inputs: ClassValue[]) {
@@ -23,8 +25,30 @@ function cn(...inputs: ClassValue[]) {
 }
 
 function formatContractAmount(value: unknown, locales?: Intl.LocalesArgument) {
-  const amount = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(amount) ? amount.toLocaleString(locales) : '0';
+  return formatMoney(value, locales || 'ru-RU');
+}
+
+function parsePreBookingGuestComment(comment?: string | null) {
+  const lines = String(comment || '').split(/\r?\n/);
+  const result = { name: '', phone: '', email: '' };
+
+  for (const line of lines) {
+    if (line.startsWith('Имя: ')) result.name = line.slice(5).trim();
+    if (line.startsWith('Телефон: ')) result.phone = line.slice(9).trim();
+    if (line.startsWith('Email: ')) result.email = line.slice(7).trim();
+  }
+
+  return result;
+}
+
+function getClientDisplayName(client: Client) {
+  return client.type === 'physical'
+    ? `${client.lastName} ${client.firstName} ${client.middleName || ''}`.trim()
+    : client.organizationName;
+}
+
+function buildPreBookingClientSearch(guest: ReturnType<typeof parsePreBookingGuestComment>) {
+  return [guest.name, guest.phone].filter(Boolean).join(' ').trim();
 }
 
 interface ContractModalProps {
@@ -173,13 +197,14 @@ export default function ContractModal({
   const baseType = 'chunga-changa' as BaseType;
   const isLegacyGbContract = initialData?.baseType === 'golubaya-bukhta';
   const isConvertingPreBooking = Boolean(isPrebookingConversion && initialData?.status === 'pre_booking');
+  const preBookingGuest = isConvertingPreBooking ? parsePreBookingGuestComment(initialData?.comment) : null;
   const [status, setStatus] = useState<ContractStatus>(
     isConvertingPreBooking
       ? getStatusFromPayment(initialData?.prepayment || 0, initialData?.totalAmount || 0)
       : initialData?.status || 'signed_not_paid'
   );
   const [mode, setMode] = useState<'view' | 'edit'>(initialMode);
-  const [clientSearch, setClientSearch] = useState('');
+  const [clientSearch, setClientSearch] = useState(preBookingGuest ? buildPreBookingClientSearch(preBookingGuest) : '');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(initialData?.clientId || null);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -276,7 +301,7 @@ export default function ContractModal({
       dateSigned: initialData?.dateSigned || format(new Date(), 'yyyy-MM-dd'),
       totalAmount: initialData?.totalAmount || 0,
       prepayment: initialData?.prepayment || 0,
-      guestsCount: initialData?.guestsCount || 0,
+      guestsCount: initialData?.guestsCount || 1,
       comment: initialData?.comment || '',
 
       // CC
@@ -293,9 +318,9 @@ export default function ContractModal({
         return false;
       })(),
       ccCheckInDate: initialMainBooking ? safeFormat(initialMainBooking.startTime, "yyyy-MM-dd", format(new Date(), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'chunga-changa' ? format(prefilledBooking.date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")),
-      ccCheckInTime: initialMainBooking ? safeFormat(initialMainBooking.startTime, "HH:mm", "14:00") : (prefilledBooking?.baseType === 'chunga-changa' ? format(prefilledBooking.date, "HH:mm") : "14:00"),
-      ccCheckOutDate: initialMainBooking ? safeFormat(initialMainBooking.endTime, "yyyy-MM-dd", format(addDays(new Date(), 1), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'chunga-changa' ? format(addHours(prefilledBooking.date, 3), "yyyy-MM-dd") : format(addDays(new Date(), 1), "yyyy-MM-dd")),
-      ccCheckOutTime: initialMainBooking ? safeFormat(initialMainBooking.endTime, "HH:mm", "17:00") : (prefilledBooking?.baseType === 'chunga-changa' ? format(addHours(prefilledBooking.date, 3), "HH:mm") : "17:00"),
+      ccCheckInTime: initialMainBooking ? safeFormat(initialMainBooking.startTime, "HH:mm", DEFAULT_CHECK_IN_TIME) : DEFAULT_CHECK_IN_TIME,
+      ccCheckOutDate: initialMainBooking ? safeFormat(initialMainBooking.endTime, "yyyy-MM-dd", format(addDays(new Date(), 1), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'chunga-changa' ? format(addDays(prefilledBooking.date, 1), "yyyy-MM-dd") : format(addDays(new Date(), 1), "yyyy-MM-dd")),
+      ccCheckOutTime: initialMainBooking ? safeFormat(initialMainBooking.endTime, "HH:mm", DEFAULT_CHECK_OUT_TIME) : DEFAULT_CHECK_OUT_TIME,
       
       // GB
       gbHasCottage: initialData?.baseType === 'golubaya-bukhta'
@@ -307,9 +332,9 @@ export default function ContractModal({
         ? initialData.bookings.find(b => b.type === 'main')!.objectId
         : (prefilledBooking?.baseType === 'golubaya-bukhta' && !['gb-bath', 'gb-furako'].includes(prefilledBooking.objectId) ? prefilledBooking.objectId : ''),
       gbCheckInDate: initialData?.baseType === 'golubaya-bukhta' && initialData.bookings.find(b => b.type === 'main') ? safeFormat(initialData.bookings.find(b => b.type === 'main')!.startTime, "yyyy-MM-dd", format(new Date(), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'golubaya-bukhta' ? format(prefilledBooking.date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")),
-      gbCheckInTime: initialData?.baseType === 'golubaya-bukhta' && initialData.bookings.find(b => b.type === 'main') ? safeFormat(initialData.bookings.find(b => b.type === 'main')!.startTime, "HH:mm", "17:00") : "17:00",
+      gbCheckInTime: initialData?.baseType === 'golubaya-bukhta' && initialData.bookings.find(b => b.type === 'main') ? safeFormat(initialData.bookings.find(b => b.type === 'main')!.startTime, "HH:mm", DEFAULT_CHECK_IN_TIME) : DEFAULT_CHECK_IN_TIME,
       gbCheckOutDate: initialData?.baseType === 'golubaya-bukhta' && initialData.bookings.find(b => b.type === 'main') ? safeFormat(initialData.bookings.find(b => b.type === 'main')!.endTime, "yyyy-MM-dd", format(addDays(new Date(), 1), "yyyy-MM-dd")) : (prefilledBooking?.baseType === 'golubaya-bukhta' ? format(addDays(prefilledBooking.date, 1), "yyyy-MM-dd") : format(addDays(new Date(), 1), "yyyy-MM-dd")),
-      gbCheckOutTime: initialData?.baseType === 'golubaya-bukhta' && initialData.bookings.find(b => b.type === 'main') ? safeFormat(initialData.bookings.find(b => b.type === 'main')!.endTime, "HH:mm", "14:00") : "14:00",
+      gbCheckOutTime: initialData?.baseType === 'golubaya-bukhta' && initialData.bookings.find(b => b.type === 'main') ? safeFormat(initialData.bookings.find(b => b.type === 'main')!.endTime, "HH:mm", DEFAULT_CHECK_OUT_TIME) : DEFAULT_CHECK_OUT_TIME,
       gbDaysCount: (() => {
         if (initialData?.baseType === 'golubaya-bukhta') {
           const mainBooking = initialData.bookings.find(b => b.type === 'main');
@@ -343,15 +368,16 @@ export default function ContractModal({
   });
 
   const contractNumber = watch('number') || initialContractNumber;
-  const totalAmount = watch('totalAmount') || 0;
-  const prepayment = watch('prepayment') || 0;
-  const remainder = totalAmount - prepayment;
+  const totalAmount = parseMoneyInput(watch('totalAmount'));
+  const prepayment = parseMoneyInput(watch('prepayment'));
+  const remainder = Math.round((totalAmount - prepayment) * 100) / 100;
 
   const ccCottageId = watch('ccCottageId');
   const ccIsDaily = watch('ccIsDaily');
   const ccCheckInDate = watch('ccCheckInDate');
   const ccCheckInTime = watch('ccCheckInTime');
   const ccCheckOutDate = watch('ccCheckOutDate');
+  const ccCheckOutTime = watch('ccCheckOutTime');
 
   // Количество ночей — производное от дат заезда/выезда
   const [ccNights, setCcNights] = useState<number>(() => {
@@ -366,9 +392,9 @@ export default function ContractModal({
 
   // Занятые номера ЧЧ для выбранных дат (исключаем отменённые и текущий договор)
   const occupiedRoomIds = useMemo<Set<string>>(() => {
-    if (!ccCheckInDate || !ccCheckOutDate) return new Set();
-    const newStart = parseISO(ccCheckInDate);
-    const newEnd = parseISO(ccCheckOutDate);
+    if (!ccCheckInDate || !ccCheckOutDate || !ccCheckInTime || !ccCheckOutTime) return new Set();
+    const newStart = parseISO(`${ccCheckInDate}T${ccCheckInTime}`);
+    const newEnd = parseISO(`${ccCheckOutDate}T${ccCheckOutTime}`);
     if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime()) || newEnd <= newStart) return new Set();
 
     const occupied = new Set<string>();
@@ -381,14 +407,13 @@ export default function ContractModal({
         const existStart = parseISO(booking.startTime);
         const existEnd = parseISO(booking.endTime);
         if (isNaN(existStart.getTime()) || isNaN(existEnd.getTime())) continue;
-        // День выезда не считается занятым: existStart < newEnd && existEnd > newStart
-        if (existStart < newEnd && existEnd > newStart) {
+        if (doBookingPeriodsOverlap(newStart, newEnd, existStart, existEnd)) {
           occupied.add(booking.objectId);
         }
       }
     }
     return occupied;
-  }, [ccCheckInDate, ccCheckOutDate, contracts, initialData]);
+  }, [ccCheckInDate, ccCheckInTime, ccCheckOutDate, ccCheckOutTime, contracts, initialData]);
 
   const gbHasCottage = watch('gbHasCottage');
   const gbCottageId = watch('gbCottageId');
@@ -469,7 +494,7 @@ export default function ContractModal({
     setCcNights(newNights);
     const checkOut = addDays(checkIn, newNights);
     setValue('ccCheckOutDate', format(checkOut, 'yyyy-MM-dd'));
-    setValue('ccCheckOutTime', '12:00');
+    setValue('ccCheckOutTime', DEFAULT_CHECK_OUT_TIME);
   };
 
   useEffect(() => {
@@ -505,10 +530,10 @@ export default function ContractModal({
 
     if (ccCheckInDate) {
       if (ccIsDaily) {
-        if (getValues('ccCheckInTime') !== '13:00') {
-          setValue('ccCheckInTime', '13:00');
+        if (getValues('ccCheckInTime') !== DEFAULT_CHECK_IN_TIME) {
+          setValue('ccCheckInTime', DEFAULT_CHECK_IN_TIME);
         }
-        const checkInDateObj = parseISO(`${ccCheckInDate}T13:00`);
+        const checkInDateObj = parseISO(`${ccCheckInDate}T${DEFAULT_CHECK_IN_TIME}`);
         if (!isNaN(checkInDateObj.getTime())) {
           let daysToAdd = 1;
           if (isCheckInDateChanged && !isDailyChanged) {
@@ -528,8 +553,8 @@ export default function ContractModal({
           if (getValues('ccCheckOutDate') !== formattedOutDate) {
             setValue('ccCheckOutDate', formattedOutDate);
           }
-          if (getValues('ccCheckOutTime') !== '12:00') {
-            setValue('ccCheckOutTime', '12:00');
+          if (getValues('ccCheckOutTime') !== DEFAULT_CHECK_OUT_TIME) {
+            setValue('ccCheckOutTime', DEFAULT_CHECK_OUT_TIME);
           }
         }
       } else if (ccCheckInTime) {
@@ -635,6 +660,29 @@ export default function ContractModal({
     () => buildClientContractHistory(contracts, selectedClientId),
     [contracts, selectedClientId],
   );
+
+  useEffect(() => {
+    if (!isConvertingPreBooking || !preBookingGuest) return;
+
+    const searchText = buildPreBookingClientSearch(preBookingGuest);
+    if (!selectedClientId && searchText && !clientSearch) {
+      setClientSearch(searchText);
+    }
+
+    if (selectedClientId || !preBookingGuest.phone) return;
+    const matchedClient = clients.find(client => phoneMatchesSearch(client.phone, preBookingGuest.phone));
+    if (matchedClient) {
+      setSelectedClientId(matchedClient.id);
+      setClientSearch('');
+    }
+  }, [
+    clients,
+    clientSearch,
+    isConvertingPreBooking,
+    preBookingGuest?.phone,
+    preBookingGuest?.name,
+    selectedClientId,
+  ]);
 
   const buildPreviewEmailPayload = (
     contract: Contract,
@@ -1051,7 +1099,7 @@ export default function ContractModal({
                   <input 
                     type="text"
                     placeholder="Поиск по ФИО или телефону..."
-                    value={selectedClient ? (selectedClient.type === 'physical' ? `${selectedClient.lastName} ${selectedClient.firstName} ${selectedClient.middleName || ''}` : selectedClient.organizationName) : clientSearch}
+                    value={selectedClient ? getClientDisplayName(selectedClient) : clientSearch}
                     disabled={mode === 'view'}
                     onChange={(e) => {
                       if (mode === 'view') return;
@@ -1213,6 +1261,22 @@ export default function ContractModal({
 
                   <div className={cn("w-px h-6 self-center", isDarkMode ? "bg-white/10" : "bg-gray-200")} />
 
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-xs font-bold uppercase", isDarkMode ? "text-gray-500" : "text-gray-500")}>Гостей</span>
+                    <input
+                      type="number"
+                      min={1}
+                      {...register('guestsCount', { valueAsNumber: true })}
+                      disabled={mode === 'view'}
+                      className={cn(
+                        "w-16 px-2 py-2 rounded-xl text-sm text-center outline-none border",
+                        isDarkMode ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
+                      )}
+                    />
+                  </div>
+
+                  <div className={cn("w-px h-6 self-center", isDarkMode ? "bg-white/10" : "bg-gray-200")} />
+
                   {/* Счётчик ночей */}
                   <div className="flex items-center gap-1">
                     <button
@@ -1308,6 +1372,7 @@ export default function ContractModal({
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Гостей</label>
                             <input 
                               type="number"
+                              min={1}
                               {...register('guestsCount', { valueAsNumber: true })}
                               disabled={mode === 'view'}
                               className={cn(
@@ -1444,8 +1509,9 @@ export default function ContractModal({
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Стоимость проживания (₽) *</label>
                     <input 
-                      type="number"
-                      {...register('totalAmount', { required: true, valueAsNumber: true })}
+                      type="text"
+                      inputMode="decimal"
+                      {...register('totalAmount', { required: true, setValueAs: parseMoneyInput })}
                       disabled={mode === 'view'}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",
@@ -1456,8 +1522,9 @@ export default function ContractModal({
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Внесена предоплата (₽)</label>
                     <input 
-                      type="number"
-                      {...register('prepayment', { valueAsNumber: true })}
+                      type="text"
+                      inputMode="decimal"
+                      {...register('prepayment', { setValueAs: parseMoneyInput })}
                       disabled={mode === 'view'}
                       className={cn(
                         "w-full px-4 py-2.5 rounded-xl text-sm outline-none border transition-all",

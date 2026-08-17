@@ -6,7 +6,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { BaseType, Contract, ContractStatus, LeadPrebookingPrefill } from '../../types';
 import { GB_OBJECTS, GB_SERVICES } from '../../constants';
-import { validateBookingPeriod } from '../../utils/bookingValidation';
+import { DEFAULT_CHECK_IN_TIME, DEFAULT_CHECK_OUT_TIME, validateBookingPeriod } from '../../utils/bookingValidation';
+import { parseMoneyInput } from '../../utils/money';
 import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 
 function cn(...inputs: ClassValue[]) {
@@ -178,7 +179,7 @@ export default function PreBookingModal({
         setName(parsedName);
         setPhone(parsedPhone);
         setEmail(parsedEmail);
-        setGuestsCount(initialData.guestsCount.toString());
+        setGuestsCount(String(initialData.guestsCount || 1));
         setComment(parsedComment);
         setBookingPrice(String(initialData.bookings[0]?.price || initialData.totalAmount || 0));
         setSelectedObjectId(initialData.bookings[0]?.objectId || '');
@@ -209,8 +210,8 @@ export default function PreBookingModal({
         setError(null);
         setStartDate(leadPrefill.desiredStartDate || format(start, 'yyyy-MM-dd'));
         setEndDate(leadPrefill.desiredEndDate || format(fallbackEnd, 'yyyy-MM-dd'));
-        setStartTime(leadPrefill.desiredTime || '14:00');
-        setEndTime('12:00');
+        setStartTime(leadPrefill.desiredTime || DEFAULT_CHECK_IN_TIME);
+        setEndTime(DEFAULT_CHECK_OUT_TIME);
       } else if (prefilledBooking) {
         setName('');
         setPhone('+7 ');
@@ -228,14 +229,17 @@ export default function PreBookingModal({
         if (isGBCottage) {
           setStartDate(format(prefilledBooking.date, 'yyyy-MM-dd'));
           setEndDate(format(addDays(prefilledBooking.date, 1), 'yyyy-MM-dd'));
+          setStartTime(DEFAULT_CHECK_IN_TIME);
+          setEndTime(DEFAULT_CHECK_OUT_TIME);
+        } else if (isCC) {
+          setStartDate(format(prefilledBooking.date, 'yyyy-MM-dd'));
+          setEndDate(format(addDays(prefilledBooking.date, 1), 'yyyy-MM-dd'));
+          setStartTime(DEFAULT_CHECK_IN_TIME);
+          setEndTime(DEFAULT_CHECK_OUT_TIME);
         } else {
           const start = prefilledBooking.date;
           let end = new Date(start);
-          if (isCC) {
-            end = addHours(start, 3);
-          } else {
-            end = addHours(start, 1);
-          }
+          end = addHours(start, 1);
           setStartDate(format(start, 'yyyy-MM-dd'));
           setEndDate(format(end, 'yyyy-MM-dd'));
           setStartTime(format(start, 'HH:mm'));
@@ -287,7 +291,7 @@ export default function PreBookingModal({
     }
 
     const contractId = initialData ? initialData.id : Math.random().toString(36).substr(2, 9);
-    const price = Number(bookingPrice) || 0;
+    const price = parseMoneyInput(bookingPrice);
 
     const newContract: Contract = {
       id: contractId,
@@ -312,7 +316,7 @@ export default function PreBookingModal({
           type: isGBCottage ? 'main' : (isCC ? 'main' : 'service'),
           startTime: bookingPeriod.startDateTime,
           endTime: bookingPeriod.endDateTime,
-          price: initialData?.bookings?.[0]?.price || price
+          price: initialData?.bookings?.[0]?.price ?? price
         }
       ]
     };
@@ -494,7 +498,8 @@ export default function PreBookingModal({
             <div className="col-span-2">
               <label className="block text-xs font-bold mb-1.5">Цена</label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 min="0"
                 value={bookingPrice}
                 onChange={e => setBookingPrice(e.target.value)}

@@ -7,6 +7,9 @@ export interface BookingPeriodInput {
   endTime: string;
 }
 
+export const DEFAULT_CHECK_IN_TIME = '14:00';
+export const DEFAULT_CHECK_OUT_TIME = '12:00';
+
 export type BookingPeriodResult =
   | { ok: true; startDateTime: string; endDateTime: string }
   | { ok: false; error: string };
@@ -77,6 +80,24 @@ function parseLocalDateTime(date: string, time: string) {
   return result;
 }
 
+export function doBookingPeriodsOverlap(
+  firstStart: string | number | Date,
+  firstEnd: string | number | Date,
+  secondStart: string | number | Date,
+  secondEnd: string | number | Date,
+): boolean {
+  const aStart = new Date(firstStart).getTime();
+  const aEnd = new Date(firstEnd).getTime();
+  const bStart = new Date(secondStart).getTime();
+  const bEnd = new Date(secondEnd).getTime();
+
+  if (![aStart, aEnd, bStart, bEnd].every(Number.isFinite)) {
+    return false;
+  }
+
+  return aStart < bEnd && aEnd > bStart;
+}
+
 export function validateBookingPeriod(input: BookingPeriodInput): BookingPeriodResult {
   if (input.isGBCottage) {
     const startDate = parseLocalDate(input.startDate);
@@ -92,8 +113,8 @@ export function validateBookingPeriod(input: BookingPeriodInput): BookingPeriodR
 
     return {
       ok: true,
-      startDateTime: `${input.startDate}T14:00:00`,
-      endDateTime: `${input.endDate}T12:00:00`,
+      startDateTime: `${input.startDate}T${DEFAULT_CHECK_IN_TIME}:00`,
+      endDateTime: `${input.endDate}T${DEFAULT_CHECK_OUT_TIME}:00`,
     };
   }
 
