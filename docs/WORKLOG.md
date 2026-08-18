@@ -2483,3 +2483,31 @@ Checks run:
 
 **Risks/TODOs**:
 - If a prebooking has no linked client and no existing client matches its phone, the contract form can prefill search text but still requires selecting/creating a client before saving.
+
+### 2026-08-18 03:09:14 +03:00 — Full verification pass
+
+Files changed:
+- `docs/WORKLOG.md`
+
+**Task**: Check the CRM after the booking/contract fixes for build, type, test, packaging, and local API errors.
+
+**Completed**:
+1. Ran TypeScript/lint, unit/regression tests, server build, Electron build, frontend build, Electron unpacked packaging, and local API smoke test.
+2. Verified the local API can start, authenticate, create temporary test client/contract records, reject an overlapping booking with `409`, list the saved contract, create a backup, and clean up test data.
+3. Confirmed the Git working tree was clean before the worklog entry.
+
+Checks run:
+- `npm run lint` — passed.
+- `npm test` — passed.
+- `npm run build:server` — passed.
+- `npm run build:electron` — passed.
+- `npm run build` — passed; expected Vite large chunk warnings remain.
+- `npm run electron:pack` — passed; non-blocking electron-builder/npm dependency warnings remain.
+- `LOCAL_API_BASE_URL=http://localhost:3002 npm run test:local-api` — passed.
+
+**Next**:
+- Do a manual click-through in the packaged app for the booking turnover and prebooking-to-contract workflow.
+
+**Risks/TODOs**:
+- `npm run electron:pack` still reports non-blocking metadata/dependency warnings: missing `description`/`author`, `asar` disabled, and npm peer/dependency collector warnings around React transitive dependencies.
+- Vite still warns about large chunks after minification.
