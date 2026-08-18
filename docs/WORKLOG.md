@@ -2511,3 +2511,31 @@ Checks run:
 **Risks/TODOs**:
 - `npm run electron:pack` still reports non-blocking metadata/dependency warnings: missing `description`/`author`, `asar` disabled, and npm peer/dependency collector warnings around React transitive dependencies.
 - Vite still warns about large chunks after minification.
+
+### 2026-08-18 03:19:03 +03:00 — Publish v0.1.4 release
+
+Files changed:
+- `docs/WORKLOG.md`
+
+**Task**: Build and publish a Windows release for the current CRM version.
+
+**Completed**:
+1. Confirmed the working tree was clean and current version was `0.1.4`.
+2. Built the Windows NSIS installer locally.
+3. Published GitHub Release `v0.1.4` for `make-make13/CRMteriberka`.
+4. Uploaded release assets:
+   - `Bolshaya-Medveditsa-CRM-Setup-0.1.4.exe`
+   - `latest.yml`
+5. Verified the public GitHub Release API returns `draft=false`, `prerelease=false`, and both required assets.
+6. Fetched the new `v0.1.4` tag locally.
+
+Checks run:
+- `npm run electron:installer:win` — passed; expected Vite/electron-builder warnings remain.
+- GitHub Releases API check for `v0.1.4` — passed.
+
+**Next**:
+- Install or launch an older packaged CRM and confirm it detects `v0.1.4` from GitHub Releases.
+
+**Risks/TODOs**:
+- Release is unsigned, so Windows SmartScreen warnings are still expected.
+- Auto-update still needs a real installed-client test from an older version.
