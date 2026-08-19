@@ -2574,3 +2574,31 @@ Checks run:
 **Risks/TODOs**:
 - Behaviour change worth confirming with the user: a deliberately late checkout (for example `17:00`) no longer blocks a `14:00` arrival on the same day, because overnight stays are now compared by nights. The two stays occupy different nights; the few hours of operational overlap are left to the front desk.
 - No database migration was added and no booking data was modified; legacy `17:00` checkouts stay as they are and simply no longer block the checkout day.
+
+### 2026-08-19 — Checkout day shown as partially occupied in the chessboard
+
+Files changed:
+- `src/utils/hotelCalendarGrid.ts`
+- `src/components/chessboard/Chessboard.tsx`
+- `tests/bookingWorkflow.test.ts`
+- `package.json`, `package-lock.json`
+- `docs/WORKLOG.md`
+
+**Task**: Requested by the user. A stay from the 25th to the 27th must paint the checkout day (27th) only partially, so it is visible that the room is still taken in the morning while the cell stays available for the next guest.
+
+**Completed**:
+1. Added `getBookingBarSpan()` and `CHECKOUT_TAIL_FRACTION` (0.2) to `hotelCalendarGrid.ts`. It is used only for drawing the booking bar and is deliberately separate from `getVisibleBookingSpan()`, which still decides cell occupancy and stays night-based, so the checkout day remains clickable and free of conflicts.
+2. The bar now also starts 20% into the check-in day. Without that offset two consecutive stays overlapped by 24px on the turnover day and the arriving guest's name was clipped. With it the bars meet exactly: the first 20% of the turnover day is the departing guest, the rest is the arriving one.
+3. Version bumped 0.1.5 to 0.1.6, because the 0.1.5 installer was already built without these changes.
+
+Checks run:
+- `npm test` — passed (32 tests, 5 new covering the checkout tail, clipping at week edges, same-day bookings and turnover-day tiling).
+- `npm run lint` — passed.
+- Browser check on the dev database: stay 25-27 in room 1 paints 79% / 100% / 19% across the 25th, 26th and 27th; a mouse click in the middle of the 27th opens "Создание предброни" for a new guest with 27 to 28 and 14:00 / 12:00, and saving it succeeds. Measured bar geometry directly: consecutive bars overlap by 0px, the departing tail covers 20% of the turnover cell and free space starts at 22% of its width.
+- Edge cases exercised through a throwaway script: stay starting before the visible week, ending after it, covering the whole week, starting on the last visible day, tail-only, same-day, legacy 17:00 checkout and invalid dates. No bar escapes the week and invalid dates are not drawn.
+- Responsive check at tablet and mobile widths: proportions hold, the grid keeps 94px columns behind a horizontal scroll.
+- Excel report and the emailed chessboard use `getBookingForObjectOnDay`, so they stay consistent with the cells and show the checkout day as free.
+
+**Risks/TODOs**:
+- Clicking the leftmost ~20% of a turnover day opens the departing booking instead of creating a new one, by design. The remaining 80% plus the bands above and below the bar create a new booking.
+- Still open, unchanged by this task: legacy 0.1.3 records whose check-in and checkout fall on the same day (14:00 to 17:00) occupy that day and block a check-in on it. Deciding what those records meant is a data question for the user.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { doBookingPeriodsOverlap, doBookingsConflict } from '../src/utils/bookingValidation';
-import { getVisibleBookingSpan } from '../src/utils/hotelCalendarGrid';
+import { CHECKOUT_TAIL_FRACTION, getBookingBarSpan, getVisibleBookingSpan } from '../src/utils/hotelCalendarGrid';
 import { parseMoneyInput, formatMoney } from '../src/utils/money';
 
 describe('booking turnover rules', () => {
@@ -76,5 +76,59 @@ describe('money input', () => {
 
   it('formats kopecks without dropping fractional part', () => {
     expect(formatMoney(8542.37).replace(/\s/g, ' ')).toBe('8 542,37');
+  });
+});
+
+describe('checkout day rendering', () => {
+  const week = Array.from({ length: 7 }, (_, i) => new Date(2026, 7, 24 + i)); // 24-30 августа
+
+  it('fills nights fully and the checkout day partially', () => {
+    // Бронь 25 -> 27: ночи 25 и 26 заняты, 27-е закрашено на 20%.
+    const span = getBookingBarSpan(new Date(2026, 7, 25, 14, 0), new Date(2026, 7, 27, 12, 0), week);
+    expect(span).toEqual({ startIndex: 1, daySpan: 2, tailFraction: CHECKOUT_TAIL_FRACTION, headFraction: CHECKOUT_TAIL_FRACTION });
+  });
+
+  it('keeps the checkout day free for a new check-in', () => {
+    // Та же бронь: ячейка 27-го числа не считается занятой.
+    expect(getVisibleBookingSpan(
+      new Date(2026, 7, 25, 14, 0),
+      new Date(2026, 7, 27, 12, 0),
+      [new Date(2026, 7, 27)],
+    )).toBeNull();
+  });
+
+  it('clips nights that started before the visible week', () => {
+    // Бронь 22 -> 25: из ночей в окно попала только ночь 24-го, плюс хвост 25-го.
+    const span = getBookingBarSpan(new Date(2026, 7, 22, 14, 0), new Date(2026, 7, 25, 12, 0), week);
+    expect(span).toEqual({ startIndex: 0, daySpan: 1, tailFraction: CHECKOUT_TAIL_FRACTION, headFraction: 0 });
+  });
+
+  it('shows only the tail when every night is before the visible week', () => {
+    // Бронь 22 -> 24: все ночи вне окна, видно только хвост дня выезда.
+    const span = getBookingBarSpan(new Date(2026, 7, 22, 14, 0), new Date(2026, 7, 24, 12, 0), week);
+    expect(span).toEqual({ startIndex: 0, daySpan: 0, tailFraction: CHECKOUT_TAIL_FRACTION, headFraction: 0 });
+  });
+
+  it('does not add a tail to a same-day booking', () => {
+    const span = getBookingBarSpan(new Date(2026, 7, 25, 14, 0), new Date(2026, 7, 25, 17, 0), week);
+    expect(span).toEqual({ startIndex: 1, daySpan: 1, tailFraction: 0, headFraction: CHECKOUT_TAIL_FRACTION });
+  });
+});
+
+describe('turnover day layout', () => {
+  const week = Array.from({ length: 7 }, (_, i) => new Date(2026, 7, 24 + i));
+  const barEdges = (start: Date, end: Date) => {
+    const s = getBookingBarSpan(start, end, week)!;
+    return {
+      from: s.startIndex + s.headFraction,
+      to: s.startIndex + s.daySpan + s.tailFraction,
+    };
+  };
+
+  it('lets consecutive stays meet on the turnover day without overlapping', () => {
+    const leaving = barEdges(new Date(2026, 7, 25, 14, 0), new Date(2026, 7, 27, 12, 0));
+    const arriving = barEdges(new Date(2026, 7, 27, 14, 0), new Date(2026, 7, 28, 12, 0));
+    expect(leaving.to).toBeCloseTo(arriving.from, 5);
+    expect(leaving.to).toBeLessThanOrEqual(arriving.from);
   });
 });

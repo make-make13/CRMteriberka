@@ -13,7 +13,7 @@ import { twMerge } from 'tailwind-merge';
 import { Booking, Contract, BaseType, Client, Settings, ObjectDefinition } from '../../types';
 import * as XLSX from 'xlsx';
 import { useToast } from '../../context/ToastContext';
-import { getVisibleBookingSpan } from '../../utils/hotelCalendarGrid';
+import { getBookingBarSpan, getVisibleBookingSpan, type BookingBarSpan } from '../../utils/hotelCalendarGrid';
 import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 import { apiRequest } from '../../services/localApi';
 
@@ -154,10 +154,10 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
     const objectBookings = bookingsByObject.get(objectId) ?? [];
     return objectBookings
       .map(booking => {
-        const span = getVisibleBookingSpan(new Date(booking.startTime), new Date(booking.endTime), visibleDays);
+        const span = getBookingBarSpan(new Date(booking.startTime), new Date(booking.endTime), visibleDays);
         return span ? { booking, span } : null;
       })
-      .filter((item): item is { booking: IndexedBooking; span: { startIndex: number; daySpan: number } } => item !== null);
+      .filter((item): item is { booking: IndexedBooking; span: BookingBarSpan } => item !== null);
   };
 
   const buildReportWorkbook = () => {
@@ -380,8 +380,8 @@ export default function Chessboard({ isDarkMode, contracts, clients, settings, o
                             getStatusClasses(bookingStatus),
                           )}
                           style={{
-                            left: `calc(${(span.startIndex / visibleDays.length) * 100}% + 4px)`,
-                            width: `calc(${(span.daySpan / visibleDays.length) * 100}% - 8px)`,
+                            left: `calc(${((span.startIndex + span.headFraction) / visibleDays.length) * 100}% + 2px)`,
+                            width: `max(12px, calc(${((span.daySpan + span.tailFraction - span.headFraction) / visibleDays.length) * 100}% - 4px))`,
                           }}
                           title={`${getStatusLabel(bookingStatus)}${client ? `: ${client.name}` : ''}`}
                         >
