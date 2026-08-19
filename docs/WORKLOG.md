@@ -2539,3 +2539,38 @@ Checks run:
 **Risks/TODOs**:
 - Release is unsigned, so Windows SmartScreen warnings are still expected.
 - Auto-update still needs a real installed-client test from an older version.
+
+### 2026-08-19 — Turnover on checkout day and manual time override
+
+Files changed:
+- `src/utils/bookingValidation.ts`
+- `server/localDatabase.ts`
+- `src/components/contracts/ContractModal.tsx`
+- `tests/bookingWorkflow.test.ts`
+- `docs/WORKLOG.md`
+
+**Task**: Administrator reported that a new booking could not be created and that a booking on a checkout day was rejected. Required behaviour: default stay is 14:00 to 12:00 next day, checkout day must be bookable, and times must stay manually editable.
+
+**Root cause**:
+1. The administrator runs CRM 0.1.3 (June build). The 0.1.4 turnover fix (`a107293`) was never installed there. In 0.1.3 the chessboard painted the checkout day as occupied, and clicking a free cell prefilled a Chunga-Changa prebooking as `00:00` to `03:00` of the same day instead of an overnight stay.
+2. Independently of the app version, stays saved by 0.1.3 carry a `17:00` checkout (the old default). Conflict detection compared raw timestamps, so a standard `14:00` arrival on the checkout day still collided with them. Reproduced in the browser against a copy of the database: `Объект уже занят на выбранное время. Конфликт с договором БМ5.`
+3. In daily (`ccIsDaily`) mode the contract form force-reset check-in/check-out times to the defaults on every check-in date change, so a manual time could not be kept.
+
+**Completed**:
+1. Added `doBookingsConflict()` to `bookingValidation.ts`. Two overnight stays are compared by occupied nights `[check-in date, checkout date)` rather than by exact timestamps, so the checkout day is always available to the next guest regardless of the stored checkout time. Bookings inside a single day (hourly services) keep exact-time comparison and still protect their slot.
+2. Backend conflict detection (`saveContract`, both the in-contract and the cross-contract loop) uses the new helper.
+3. Contract form occupied-room filtering uses the same helper, so the chessboard, the contract form and the backend now agree on what "occupied" means.
+4. Daily mode applies the `14:00`/`12:00` defaults only when the mode is switched on; afterwards a manually entered time survives a check-in date change, and the checkout date is recomputed from the actual check-in time.
+
+Checks run:
+- `npx vitest run tests/bookingWorkflow.test.ts` — passed (8 tests, 4 new).
+- `npm test` — passed (26 tests).
+- `npm run lint` — passed.
+- Browser check against a copy of `data/crm.sqlite` (real database untouched): prebooking on the checkout day of `БМ5` (12 Aug, room 7) saved successfully with defaults 12.08 14:00 to 13.08 12:00; room 7 then reads occupied 10-12 Aug and free from 13 Aug. An overlapping stay 11-14 Aug was still rejected with the conflict error. In the contract form a manual checkout time of `15:00` survived a check-in date change from 19 to 21 Aug.
+
+**Next**:
+- Deliver to the administrator: the fix only takes effect after a new build is installed. Note that two different builds have shipped as `0.1.4` (July room-prices build and the August turnover build), so a version bump before rebuilding would make the delivered state unambiguous.
+
+**Risks/TODOs**:
+- Behaviour change worth confirming with the user: a deliberately late checkout (for example `17:00`) no longer blocks a `14:00` arrival on the same day, because overnight stays are now compared by nights. The two stays occupy different nights; the few hours of operational overlap are left to the front desk.
+- No database migration was added and no booking data was modified; legacy `17:00` checkouts stay as they are and simply no longer block the checkout day.

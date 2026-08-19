@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { doBookingPeriodsOverlap } from '../src/utils/bookingValidation';
+import { doBookingPeriodsOverlap, doBookingsConflict } from '../src/utils/bookingValidation';
 import { getVisibleBookingSpan } from '../src/utils/hotelCalendarGrid';
 import { parseMoneyInput, formatMoney } from '../src/utils/money';
 
@@ -20,6 +20,43 @@ describe('booking turnover rules', () => {
       '2026-08-16T14:00:00',
       '2026-08-18T12:00:00',
     )).toBe(true);
+  });
+
+  it('allows check-in on checkout day of a stay saved with a non-standard checkout time', () => {
+    // Брони, созданные CRM до 0.1.4, лежат в БД с выездом 17:00.
+    // Заезд в 14:00 в день выезда всё равно должен быть доступен.
+    expect(doBookingsConflict(
+      '2026-08-12T14:00:00',
+      '2026-08-13T12:00:00',
+      '2026-08-10T14:00:00',
+      '2026-08-12T17:00:00',
+    )).toBe(false);
+  });
+
+  it('still blocks a stay that overlaps real nights', () => {
+    expect(doBookingsConflict(
+      '2026-08-11T14:00:00',
+      '2026-08-13T12:00:00',
+      '2026-08-10T14:00:00',
+      '2026-08-12T17:00:00',
+    )).toBe(true);
+  });
+
+  it('keeps hourly bookings protected by exact time', () => {
+    // Почасовая бронь внутри одного дня сравнивается по времени, а не по ночам.
+    expect(doBookingsConflict(
+      '2026-08-12T13:00:00',
+      '2026-08-12T16:00:00',
+      '2026-08-12T15:00:00',
+      '2026-08-12T18:00:00',
+    )).toBe(true);
+
+    expect(doBookingsConflict(
+      '2026-08-12T13:00:00',
+      '2026-08-12T16:00:00',
+      '2026-08-12T16:00:00',
+      '2026-08-12T19:00:00',
+    )).toBe(false);
   });
 
   it('does not render multi-day booking as occupying checkout day', () => {

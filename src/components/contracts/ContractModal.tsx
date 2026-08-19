@@ -16,7 +16,7 @@ import { useRoomCatalog } from '../../hooks/useRoomCatalog';
 import { buildClientContractHistory } from '../../utils/clientHistory';
 import { prepareContractDataFromContract } from '../../utils/contractDocumentData';
 import { phoneMatchesSearch } from '../../utils/phoneSearch';
-import { DEFAULT_CHECK_IN_TIME, DEFAULT_CHECK_OUT_TIME, doBookingPeriodsOverlap } from '../../utils/bookingValidation';
+import { DEFAULT_CHECK_IN_TIME, DEFAULT_CHECK_OUT_TIME, doBookingsConflict } from '../../utils/bookingValidation';
 import { formatMoney, parseMoneyInput } from '../../utils/money';
 import { useToast } from '../../context/ToastContext';
 
@@ -407,7 +407,7 @@ export default function ContractModal({
         const existStart = parseISO(booking.startTime);
         const existEnd = parseISO(booking.endTime);
         if (isNaN(existStart.getTime()) || isNaN(existEnd.getTime())) continue;
-        if (doBookingPeriodsOverlap(newStart, newEnd, existStart, existEnd)) {
+        if (doBookingsConflict(newStart, newEnd, existStart, existEnd)) {
           occupied.add(booking.objectId);
         }
       }
@@ -530,10 +530,17 @@ export default function ContractModal({
 
     if (ccCheckInDate) {
       if (ccIsDaily) {
-        if (getValues('ccCheckInTime') !== DEFAULT_CHECK_IN_TIME) {
+        // Стандартное время (14:00 / 12:00) подставляем только при переключении
+        // в посуточный режим. Дальше время можно изменить вручную, и правка
+        // не должна сбрасываться при смене даты заезда.
+        if (isDailyChanged) {
           setValue('ccCheckInTime', DEFAULT_CHECK_IN_TIME);
+          setValue('ccCheckOutTime', DEFAULT_CHECK_OUT_TIME);
         }
-        const checkInDateObj = parseISO(`${ccCheckInDate}T${DEFAULT_CHECK_IN_TIME}`);
+        const effectiveCheckInTime = isDailyChanged
+          ? DEFAULT_CHECK_IN_TIME
+          : getValues('ccCheckInTime') || DEFAULT_CHECK_IN_TIME;
+        const checkInDateObj = parseISO(`${ccCheckInDate}T${effectiveCheckInTime}`);
         if (!isNaN(checkInDateObj.getTime())) {
           let daysToAdd = 1;
           if (isCheckInDateChanged && !isDailyChanged) {
@@ -552,9 +559,6 @@ export default function ContractModal({
           const formattedOutDate = format(checkOutDateObj, "yyyy-MM-dd");
           if (getValues('ccCheckOutDate') !== formattedOutDate) {
             setValue('ccCheckOutDate', formattedOutDate);
-          }
-          if (getValues('ccCheckOutTime') !== DEFAULT_CHECK_OUT_TIME) {
-            setValue('ccCheckOutTime', DEFAULT_CHECK_OUT_TIME);
           }
         }
       } else if (ccCheckInTime) {

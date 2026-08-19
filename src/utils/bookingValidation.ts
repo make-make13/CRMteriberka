@@ -98,6 +98,52 @@ export function doBookingPeriodsOverlap(
   return aStart < bEnd && aEnd > bStart;
 }
 
+function toLocalDayStart(value: string | number | Date): number | null {
+  const date = new Date(value);
+  const time = date.getTime();
+  if (!Number.isFinite(time)) return null;
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+/**
+ * Суточное проживание — заезд и выезд в разные календарные дни.
+ * Такая бронь занимает НОЧИ в диапазоне [дата заезда, дата выезда):
+ * день выезда следующему гостю уже доступен.
+ */
+function getStayNights(start: string | number | Date, end: string | number | Date) {
+  const startDay = toLocalDayStart(start);
+  const endDay = toLocalDayStart(end);
+  if (startDay === null || endDay === null || endDay <= startDay) return null;
+  return { startDay, endDay };
+}
+
+/**
+ * Проверка занятости объекта.
+ *
+ * Для двух суточных проживаний сравниваем занятые НОЧИ, а не точное время.
+ * Поэтому заезд в день выезда предыдущего гостя всегда возможен — в том числе
+ * когда у старой брони время выезда отличается от стандартных 12:00
+ * (изменено вручную или сохранено версией CRM до 0.1.4).
+ *
+ * Почасовые брони (услуги, брони внутри одного дня) сравниваем по времени,
+ * чтобы они по-прежнему защищали свой интервал.
+ */
+export function doBookingsConflict(
+  firstStart: string | number | Date,
+  firstEnd: string | number | Date,
+  secondStart: string | number | Date,
+  secondEnd: string | number | Date,
+): boolean {
+  const first = getStayNights(firstStart, firstEnd);
+  const second = getStayNights(secondStart, secondEnd);
+
+  if (first && second) {
+    return first.startDay < second.endDay && first.endDay > second.startDay;
+  }
+
+  return doBookingPeriodsOverlap(firstStart, firstEnd, secondStart, secondEnd);
+}
+
 export function validateBookingPeriod(input: BookingPeriodInput): BookingPeriodResult {
   if (input.isGBCottage) {
     const startDate = parseLocalDate(input.startDate);
