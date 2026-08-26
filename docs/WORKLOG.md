@@ -2602,3 +2602,27 @@ Checks run:
 **Risks/TODOs**:
 - Clicking the leftmost ~20% of a turnover day opens the departing booking instead of creating a new one, by design. The remaining 80% plus the bands above and below the bar create a new booking.
 - Still open, unchanged by this task: legacy 0.1.3 records whose check-in and checkout fall on the same day (14:00 to 17:00) occupy that day and block a check-in on it. Deciding what those records meant is a data question for the user.
+
+### 2026-08-26 12:30:19 +03:00 — Push local 0.1.6 commits
+
+Files changed:
+- `docs/WORKLOG.md`
+
+**Task**: Push the local commits that contain the 0.1.6 booking/chessboard fixes.
+
+**Completed**:
+1. Confirmed the source checkout was clean and ahead of GitHub by 2 commits.
+2. Pushed:
+   - `d9560c2 Allow check-in on checkout day and keep manual booking times`
+   - `e5c7e7f Show the checkout day as partially occupied in the chessboard`
+
+Checks run:
+- `git status --short --branch`
+- `git log --oneline origin/bm-contract-current-working-20260530-060021..HEAD`
+- `git push` — passed.
+
+**Next**:
+- Build and publish GitHub Release `v0.1.6` so installed clients can update to this version.
+
+**Risks/TODOs**:
+- GitHub Releases still shows `v0.1.4` as the latest published installer until `v0.1.6` is built and released.
